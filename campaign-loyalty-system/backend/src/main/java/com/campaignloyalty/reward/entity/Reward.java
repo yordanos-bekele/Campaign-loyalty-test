@@ -1,10 +1,13 @@
 package com.campaignloyalty.reward.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reward")
+@Data
 public class Reward {
 
     @Id
@@ -22,44 +25,8 @@ public class Reward {
 
     private boolean redeemed;
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(Long customerId) {
-        this.customerId = customerId;
-    }
-
-    public Long getHotelId() {
-        return hotelId;
-    }
-
-    public void setHotelId(Long hotelId) {
-        this.hotelId = hotelId;
-    }
-
-    public LocalDateTime getEarnedAt() {
-        return earnedAt;
-    }
-
-    public void setEarnedAt(LocalDateTime earnedAt) {
-        this.earnedAt = earnedAt;
-    }
-
-    public boolean isRedeemed() {
-        return redeemed;
-    }
-
-    public void setRedeemed(boolean redeemed) {
-        this.redeemed = redeemed;
+    @PrePersist
+    protected void onCreate() {
+        earnedAt = LocalDateTime.now();
     }
 }

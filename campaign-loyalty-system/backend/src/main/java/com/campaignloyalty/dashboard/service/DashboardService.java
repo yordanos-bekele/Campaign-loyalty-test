@@ -3,6 +3,9 @@ package com.campaignloyalty.dashboard.service;
 import com.campaignloyalty.dashboard.dto.HotelStatsDto;
 import com.campaignloyalty.dashboard.dto.OverallStatsDto;
 import com.campaignloyalty.scan.repository.ScanHistoryRepository;
+
+import lombok.AllArgsConstructor;
+
 import com.campaignloyalty.reward.repository.RewardRepository;
 import com.campaignloyalty.common.util.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +14,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
 @Service
+@AllArgsConstructor
 public class DashboardService {
 
-    @Autowired
     private ScanHistoryRepository scanHistoryRepository;
 
-    @Autowired
     private RewardRepository rewardRepository;
 
     public HotelStatsDto getHotelStats(Long hotelId) {

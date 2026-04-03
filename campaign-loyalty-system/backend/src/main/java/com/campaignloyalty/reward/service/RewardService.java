@@ -2,15 +2,17 @@ package com.campaignloyalty.reward.service;
 
 import com.campaignloyalty.reward.entity.Reward;
 import com.campaignloyalty.reward.repository.RewardRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import lombok.AllArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 @Service
+@AllArgsConstructor
 public class RewardService {
 
-    @Autowired
     private RewardRepository rewardRepository;
 
     public Reward createReward(Long customerId, Long hotelId) {

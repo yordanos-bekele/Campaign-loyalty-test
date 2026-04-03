@@ -3,6 +3,9 @@ package com.campaignloyalty.scan.service;
 import com.campaignloyalty.scan.dto.ScanResponse;
 import com.campaignloyalty.scan.entity.ScanHistory;
 import com.campaignloyalty.scan.repository.ScanHistoryRepository;
+
+import lombok.AllArgsConstructor;
+
 import com.campaignloyalty.customer.entity.Customer;
 import com.campaignloyalty.customer.entity.CustomerHotelProgress;
 import com.campaignloyalty.customer.service.CustomerService;
@@ -12,31 +15,27 @@ import com.campaignloyalty.hotel.repository.HotelRepository;
 import com.campaignloyalty.qrtoken.entity.QrToken;
 import com.campaignloyalty.qrtoken.repository.QrTokenRepository;
 import com.campaignloyalty.reward.service.RewardService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
+@AllArgsConstructor
 public class ScanService {
 
-    @Autowired
+    
     private QrTokenRepository qrTokenRepository;
 
-    @Autowired
+  
     private HotelRepository hotelRepository;
 
-    @Autowired
     private CustomerService customerService;
 
-    @Autowired
     private CustomerHotelProgressRepository customerHotelProgressRepository;
 
-    @Autowired
     private ScanHistoryRepository scanHistoryRepository;
 
-    @Autowired
     private RewardService rewardService;
 
     public ScanResponse scan(String deviceId, String token, String ip, String userAgent) {
