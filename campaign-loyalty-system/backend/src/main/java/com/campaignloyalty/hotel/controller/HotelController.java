@@ -2,16 +2,16 @@ package com.campaignloyalty.hotel.controller;
 
 import com.campaignloyalty.hotel.entity.Hotel;
 import com.campaignloyalty.hotel.service.HotelService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/hotels")
+@AllArgsConstructor
 public class HotelController {
 
-    @Autowired
-    private HotelService hotelService;
+    private final HotelService hotelService;
 
     @GetMapping("/{id}")
     public ResponseEntity<Hotel> getHotel(@PathVariable Long id) {

@@ -2,16 +2,16 @@ package com.campaignloyalty.qrtoken.controller;
 
 import com.campaignloyalty.qrtoken.entity.QrToken;
 import com.campaignloyalty.qrtoken.service.QrTokenService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/qr-tokens")
+@AllArgsConstructor
 public class QrTokenController {
 
-    @Autowired
-    private QrTokenService qrTokenService;
+    private final QrTokenService qrTokenService;
 
     @PostMapping("/generate/{hotelId}")
     public ResponseEntity<QrToken> generateToken(@PathVariable Long hotelId) {

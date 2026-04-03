@@ -39,7 +39,8 @@ public class ScanHistory {
 
     @PrePersist
     protected void onCreate() {
-        scannedAt = LocalDateTime.now();
+        if (scannedAt == null) {
+            scannedAt = LocalDateTime.now();
+        }
     }
-    
 }

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class RewardService {
 
-    private RewardRepository rewardRepository;
+    private final RewardRepository rewardRepository;
 
     public Reward createReward(Long customerId, Long hotelId) {
         Reward reward = new Reward();

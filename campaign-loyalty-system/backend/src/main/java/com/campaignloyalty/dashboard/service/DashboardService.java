@@ -17,9 +17,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class DashboardService {
 
-    private ScanHistoryRepository scanHistoryRepository;
+    private final ScanHistoryRepository scanHistoryRepository;
 
-    private RewardRepository rewardRepository;
+    private final RewardRepository rewardRepository;
 
     public HotelStatsDto getHotelStats(Long hotelId) {
         LocalDateTime start = DateUtil.getStartOfDay();
