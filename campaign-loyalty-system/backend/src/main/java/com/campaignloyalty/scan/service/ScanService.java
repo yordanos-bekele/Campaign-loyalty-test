@@ -105,7 +105,6 @@ public class ScanService {
         scanHistory.setCustomerId(customerId);
         scanHistory.setHotelId(hotelId);
         scanHistory.setQrToken(qrToken);
-        scanHistory.setScannedAt(LocalDateTime.now());
         scanHistory.setIpAddress(ip);
         scanHistory.setUserAgent(userAgent);
         scanHistory.setValid(valid);

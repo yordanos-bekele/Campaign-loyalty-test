@@ -15,11 +15,12 @@ public class QrTokenService {
     private final QrTokenRepository qrTokenRepository;
 
     public QrToken generateToken(Long hotelId) {
+        LocalDateTime now = LocalDateTime.now();
         QrToken qrToken = new QrToken();
         qrToken.setHotelId(hotelId);
         qrToken.setToken(UUID.randomUUID().toString());
-        qrToken.setCreatedAt(LocalDateTime.now());
-        qrToken.setExpiresAt(LocalDateTime.now().plusMinutes(2));
+        qrToken.setCreatedAt(now);
+        qrToken.setExpiresAt(now.plusMinutes(2));
         return qrTokenRepository.save(qrToken);
     }
 

@@ -27,6 +27,8 @@ public class Reward {
 
     @PrePersist
     protected void onCreate() {
-        earnedAt = LocalDateTime.now();
+        if (earnedAt == null) {
+            earnedAt = LocalDateTime.now();
+        }
     }
 }

@@ -7,8 +7,6 @@ import lombok.AllArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 @Service
 @AllArgsConstructor
 public class RewardService {
@@ -19,7 +17,6 @@ public class RewardService {
         Reward reward = new Reward();
         reward.setCustomerId(customerId);
         reward.setHotelId(hotelId);
-        reward.setEarnedAt(LocalDateTime.now());
         reward.setRedeemed(false);
         return rewardRepository.save(reward);
     }
