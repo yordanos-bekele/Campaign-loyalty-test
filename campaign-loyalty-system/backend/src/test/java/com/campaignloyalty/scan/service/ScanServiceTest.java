@@ -25,6 +25,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -71,6 +72,30 @@ class ScanServiceTest {
         assertFalse(savedHistory.isValid());
         assertNull(savedHistory.getCustomerId());
         assertNull(savedHistory.getHotelId());
+        assertEquals("invalid token", savedHistory.getRejectReason());
+    }
+
+    @Test
+    void rejectsMissingTokenBeforeLookup() {
+        ScanResponse response = scanService.scan("device-1", " ", "127.0.0.1", "JUnit");
+
+        assertFalse(response.isSuccess());
+        assertEquals("Token is required", response.getMessage());
+        verify(qrTokenRepository, never()).findByToken(any());
+    }
+
+    @Test
+    void rejectsMissingDeviceIdAfterTokenValidation() {
+        QrToken qrToken = createToken(99L, LocalDateTime.now().plusMinutes(5));
+
+        when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
+        when(hotelRepository.findById(qrToken.getHotelId())).thenReturn(Optional.of(new Hotel()));
+
+        ScanResponse response = scanService.scan(" ", "active-token", "127.0.0.1", "JUnit");
+
+        assertFalse(response.isSuccess());
+        assertEquals("Device ID is required", response.getMessage());
+        verify(customerService, never()).findOrCreateByDeviceId(any());
     }
 
     @Test

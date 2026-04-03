@@ -39,6 +39,11 @@ public class ScanService {
     private final RewardService rewardService;
 
     public ScanResponse scan(String deviceId, String token, String ip, String userAgent) {
+        if (isBlank(token)) {
+            logScanHistory(null, null, token, ip, userAgent, false, "missing token");
+            return new ScanResponse(false, "Token is required", false);
+        }
+
         QrToken qrToken = qrTokenRepository.findByToken(token);
         if (qrToken == null || qrToken.getExpiresAt().isBefore(LocalDateTime.now())) {
             logScanHistory(null, null, token, ip, userAgent, false, "invalid token");
@@ -50,6 +55,11 @@ public class ScanService {
         if (hotel == null) {
             logScanHistory(null, hotelId, token, ip, userAgent, false, "hotel not found");
             return new ScanResponse(false, "Hotel not found", false);
+        }
+
+        if (isBlank(deviceId)) {
+            logScanHistory(null, hotelId, token, ip, userAgent, false, "missing device id");
+            return new ScanResponse(false, "Device ID is required", false);
         }
 
         Customer customer = customerService.findOrCreateByDeviceId(deviceId);
@@ -110,5 +120,9 @@ public class ScanService {
         scanHistory.setValid(valid);
         scanHistory.setRejectReason(rejectReason);
         scanHistoryRepository.save(scanHistory);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }
