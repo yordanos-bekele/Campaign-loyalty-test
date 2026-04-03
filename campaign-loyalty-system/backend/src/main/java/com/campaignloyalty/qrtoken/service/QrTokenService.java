@@ -1,5 +1,6 @@
 package com.campaignloyalty.qrtoken.service;
 
+import com.campaignloyalty.hotel.repository.HotelRepository;
 import com.campaignloyalty.qrtoken.entity.QrToken;
 import com.campaignloyalty.qrtoken.repository.QrTokenRepository;
 import lombok.AllArgsConstructor;
@@ -12,9 +13,13 @@ import java.util.UUID;
 @AllArgsConstructor
 public class QrTokenService {
 
+    private final HotelRepository hotelRepository;
+
     private final QrTokenRepository qrTokenRepository;
 
     public QrToken generateToken(Long hotelId) {
+        validateHotelId(hotelId);
+
         LocalDateTime now = LocalDateTime.now();
         QrToken qrToken = new QrToken();
         qrToken.setHotelId(hotelId);
@@ -26,5 +31,14 @@ public class QrTokenService {
 
     public QrToken findByToken(String token) {
         return qrTokenRepository.findByToken(token);
+    }
+
+    private void validateHotelId(Long hotelId) {
+        if (hotelId == null || hotelId <= 0) {
+            throw new IllegalArgumentException("hotelId must be greater than 0");
+        }
+        if (!hotelRepository.existsById(hotelId)) {
+            throw new IllegalArgumentException("Hotel not found");
+        }
     }
 }
