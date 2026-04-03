@@ -6,7 +6,10 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "customer_hotel_progress")
+@Table(
+        name = "customer_hotel_progress",
+        uniqueConstraints = @UniqueConstraint(name = "uk_customer_hotel_progress_customer_hotel", columnNames = {"customer_id", "hotel_id"})
+)
 @Data
 public class CustomerHotelProgress {
 
@@ -31,6 +34,13 @@ public class CustomerHotelProgress {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void onCreate() {
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+    }
 
     @PostUpdate
     public void onUpdate() {

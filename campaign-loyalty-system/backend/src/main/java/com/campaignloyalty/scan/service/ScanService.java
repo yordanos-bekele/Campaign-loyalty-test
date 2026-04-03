@@ -15,6 +15,7 @@ import com.campaignloyalty.hotel.repository.HotelRepository;
 import com.campaignloyalty.qrtoken.entity.QrToken;
 import com.campaignloyalty.qrtoken.repository.QrTokenRepository;
 import com.campaignloyalty.reward.service.RewardService;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,21 +23,20 @@ import java.time.LocalDateTime;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class ScanService {
 
-    
-    private QrTokenRepository qrTokenRepository;
+    private final QrTokenRepository qrTokenRepository;
 
-  
-    private HotelRepository hotelRepository;
+    private final HotelRepository hotelRepository;
 
-    private CustomerService customerService;
+    private final CustomerService customerService;
 
-    private CustomerHotelProgressRepository customerHotelProgressRepository;
+    private final CustomerHotelProgressRepository customerHotelProgressRepository;
 
-    private ScanHistoryRepository scanHistoryRepository;
+    private final ScanHistoryRepository scanHistoryRepository;
 
-    private RewardService rewardService;
+    private final RewardService rewardService;
 
     public ScanResponse scan(String deviceId, String token, String ip, String userAgent) {
         QrToken qrToken = qrTokenRepository.findByToken(token);
@@ -56,13 +56,7 @@ public class ScanService {
 
         CustomerHotelProgress progress = customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(), hotelId);
         if (progress == null) {
-            progress = new CustomerHotelProgress();
-            progress.setCustomerId(customer.getId());
-            progress.setHotelId(hotelId);
-            progress.setScanCount(0);
-            progress.setDailyScanCount(0);
-            progress.setLastScanAt(null);
-            progress.setUpdatedAt(LocalDateTime.now());
+            progress = createProgress(customer.getId(), hotelId);
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -85,7 +79,6 @@ public class ScanService {
         progress.setScanCount(progress.getScanCount() + 1);
         progress.setDailyScanCount(progress.getDailyScanCount() + 1);
         progress.setLastScanAt(now);
-        progress.setUpdatedAt(now);
         customerHotelProgressRepository.save(progress);
 
         boolean rewardEarned = false;
@@ -98,6 +91,13 @@ public class ScanService {
 
         logScanHistory(customer.getId(), hotelId, token, ip, userAgent, true, null);
         return new ScanResponse(true, "Scan successful", rewardEarned);
+    }
+
+    private CustomerHotelProgress createProgress(Long customerId, Long hotelId) {
+        CustomerHotelProgress progress = new CustomerHotelProgress();
+        progress.setCustomerId(customerId);
+        progress.setHotelId(hotelId);
+        return progress;
     }
 
     private void logScanHistory(Long customerId, Long hotelId, String qrToken, String ip, String userAgent, boolean valid, String rejectReason) {

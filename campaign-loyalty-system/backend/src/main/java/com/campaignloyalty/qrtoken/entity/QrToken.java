@@ -27,7 +27,11 @@ public class QrToken {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        expiresAt = createdAt.plusMinutes(10); // Token valid for 10 minutes
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (expiresAt == null) {
+            expiresAt = createdAt.plusMinutes(10); // Default token validity is 10 minutes
+        }
     }
 }

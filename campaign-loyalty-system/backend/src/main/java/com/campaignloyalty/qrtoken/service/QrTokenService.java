@@ -2,19 +2,17 @@ package com.campaignloyalty.qrtoken.service;
 
 import com.campaignloyalty.qrtoken.entity.QrToken;
 import com.campaignloyalty.qrtoken.repository.QrTokenRepository;
-
-import org.hibernate.internal.build.AllowPrintStacktrace;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-@AllowPrintStacktrace
+@AllArgsConstructor
 public class QrTokenService {
 
-    private QrTokenRepository qrTokenRepository;
+    private final QrTokenRepository qrTokenRepository;
 
     public QrToken generateToken(Long hotelId) {
         QrToken qrToken = new QrToken();
