@@ -1,0 +1,24 @@
+package com.campaignloyalty.reward.service;
+
+import com.campaignloyalty.reward.entity.Reward;
+import com.campaignloyalty.reward.repository.RewardRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
+@Service
+public class RewardService {
+
+    @Autowired
+    private RewardRepository rewardRepository;
+
+    public Reward createReward(Long customerId, Long hotelId) {
+        Reward reward = new Reward();
+        reward.setCustomerId(customerId);
+        reward.setHotelId(hotelId);
+        reward.setEarnedAt(LocalDateTime.now());
+        reward.setRedeemed(false);
+        return rewardRepository.save(reward);
+    }
+}
