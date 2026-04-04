@@ -1,0 +1,7 @@
+spring:
+  jpa:
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
+
+campaign:
+  cors:
+    allowed-origin-patterns: ${CAMPAIGN_CORS_ALLOWED_ORIGIN_PATTERNS:https://your-vercel-app.vercel.app}

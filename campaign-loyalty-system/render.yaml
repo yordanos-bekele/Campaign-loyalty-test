@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: campaign-loyalty-backend
+    runtime: docker
+    rootDir: campaign-loyalty-system/backend
+    dockerCommand: java -jar target/campaign-loyalty-backend-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: SPRING_JPA_SHOW_SQL
+        value: "false"
+      - key: CAMPAIGN_ADMIN_USERNAME
+        value: admin
+      - key: CAMPAIGN_ADMIN_PASSWORD
+        sync: false
+      - key: CAMPAIGN_CORS_ALLOWED_ORIGIN_PATTERNS
+        sync: false

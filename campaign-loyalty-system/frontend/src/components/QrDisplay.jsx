@@ -36,7 +36,9 @@ function QrDisplay({ hotelId, onHotelChange, onOpenScan }) {
       return '';
     }
 
-    const url = new URL(window.location.href);
+    const publicBaseUrl = import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin;
+    const url = new URL(publicBaseUrl);
+    url.pathname = '/';
     url.search = '';
     url.searchParams.set('view', 'scan');
     url.searchParams.set('hotelId', String(tokenPayload.hotelId));
@@ -154,6 +156,9 @@ function QrDisplay({ hotelId, onHotelChange, onOpenScan }) {
           <h2>Show a fresh QR code for guests</h2>
           <p className="section-copy">
             Use this screen on a front desk tablet, a reception monitor, or a hotel phone. The code refreshes automatically every 2 minutes.
+          </p>
+          <p className="hint">
+            Public scan URL: {import.meta.env.VITE_PUBLIC_APP_URL || 'Using current browser URL'}
           </p>
         </div>
       </div>
