@@ -5,9 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 
-public interface ScanHistoryRepository extends JpaRepository<ScanHistory, Long> {
+public interface ScanHistoryRepository extends JpaRepository<ScanHistory, Integer> {
 
-    long countByHotelIdAndScannedAtBetweenAndValid(Long hotelId, LocalDateTime start, LocalDateTime end, boolean valid);
+    long countByHotelIdAndScannedAtBetweenAndValid(Integer hotelId, LocalDateTime start, LocalDateTime end, boolean valid);
 
     long countByScannedAtBetweenAndValid(LocalDateTime start, LocalDateTime end, boolean valid);
 }

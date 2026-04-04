@@ -12,10 +12,10 @@ public class QrToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(name = "hotel_id")
-    private Long hotelId;
+    private Integer hotelId;
 
     private String token;
 

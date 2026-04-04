@@ -3,7 +3,7 @@ package com.campaignloyalty.customer.repository;
 import com.campaignloyalty.customer.entity.CustomerHotelProgress;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CustomerHotelProgressRepository extends JpaRepository<CustomerHotelProgress, Long> {
+public interface CustomerHotelProgressRepository extends JpaRepository<CustomerHotelProgress, Integer> {
 
-    CustomerHotelProgress findByCustomerIdAndHotelId(Long customerId, Long hotelId);
+    CustomerHotelProgress findByCustomerIdAndHotelId(Integer customerId, Integer hotelId);
 }

@@ -13,7 +13,7 @@ public class RewardService {
 
     private final RewardRepository rewardRepository;
 
-    public Reward createReward(Long customerId, Long hotelId) {
+    public Reward createReward(Integer customerId, Integer hotelId) {
         Reward reward = new Reward();
         reward.setCustomerId(customerId);
         reward.setHotelId(hotelId);

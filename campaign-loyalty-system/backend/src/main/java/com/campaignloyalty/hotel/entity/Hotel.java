@@ -1,5 +1,6 @@
 package com.campaignloyalty.hotel.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -12,11 +13,15 @@ public class Hotel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     private String name;
 
     private String location;
+
+    @JsonIgnore
+    @Column(name = "password", nullable = false)
+    private String password;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

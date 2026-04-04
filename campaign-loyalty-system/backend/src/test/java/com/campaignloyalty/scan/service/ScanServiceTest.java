@@ -65,6 +65,8 @@ class ScanServiceTest {
 
         assertFalse(response.isSuccess());
         assertFalse(response.isRewardEarned());
+        assertNull(response.getCurrentCount());
+        assertNull(response.getScansRemaining());
 
         ArgumentCaptor<ScanHistory> historyCaptor = ArgumentCaptor.forClass(ScanHistory.class);
         verify(scanHistoryRepository).save(historyCaptor.capture());
@@ -81,12 +83,13 @@ class ScanServiceTest {
 
         assertFalse(response.isSuccess());
         assertEquals("Token is required", response.getMessage());
+        assertNull(response.getCurrentCount());
         verify(qrTokenRepository, never()).findByToken(any());
     }
 
     @Test
     void rejectsMissingDeviceIdAfterTokenValidation() {
-        QrToken qrToken = createToken(99L, LocalDateTime.now().plusMinutes(5));
+        QrToken qrToken = createToken(99, LocalDateTime.now().plusMinutes(5));
 
         when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
         when(hotelRepository.findById(qrToken.getHotelId())).thenReturn(Optional.of(new Hotel()));
@@ -95,13 +98,14 @@ class ScanServiceTest {
 
         assertFalse(response.isSuccess());
         assertEquals("Device ID is required", response.getMessage());
+        assertNull(response.getCurrentCount());
         verify(customerService, never()).findOrCreateByDeviceId(any());
     }
 
     @Test
     void rejectsTooFrequentScanWithoutUpdatingProgress() {
-        Customer customer = createCustomer(10L);
-        QrToken qrToken = createToken(99L, LocalDateTime.now().plusMinutes(5));
+        Customer customer = createCustomer(10);
+        QrToken qrToken = createToken(99, LocalDateTime.now().plusMinutes(5));
         CustomerHotelProgress progress = createProgress(customer.getId(), qrToken.getHotelId(), 2, 1, LocalDateTime.now().minusMinutes(5));
 
         when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
@@ -112,14 +116,16 @@ class ScanServiceTest {
         ScanResponse response = scanService.scan("device-1", "active-token", "127.0.0.1", "JUnit");
 
         assertFalse(response.isSuccess());
+        assertEquals(2, response.getCurrentCount());
+        assertEquals(8, response.getScansRemaining());
         verify(customerHotelProgressRepository, never()).save(any(CustomerHotelProgress.class));
         verify(rewardService, never()).createReward(any(), any());
     }
 
     @Test
     void rejectsDailyLimitAfterResetCheck() {
-        Customer customer = createCustomer(10L);
-        QrToken qrToken = createToken(99L, LocalDateTime.now().plusMinutes(5));
+        Customer customer = createCustomer(10);
+        QrToken qrToken = createToken(99, LocalDateTime.now().plusMinutes(5));
         CustomerHotelProgress progress = createProgress(customer.getId(), qrToken.getHotelId(), 7, 3, LocalDateTime.now().minusHours(1));
 
         when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
@@ -131,13 +137,15 @@ class ScanServiceTest {
 
         assertFalse(response.isSuccess());
         assertFalse(response.isRewardEarned());
+        assertEquals(7, response.getCurrentCount());
+        assertEquals(3, response.getScansRemaining());
         verify(customerHotelProgressRepository, never()).save(any(CustomerHotelProgress.class));
     }
 
     @Test
     void awardsRewardAndResetsProgressAtTenScans() {
-        Customer customer = createCustomer(10L);
-        QrToken qrToken = createToken(99L, LocalDateTime.now().plusMinutes(5));
+        Customer customer = createCustomer(10);
+        QrToken qrToken = createToken(99, LocalDateTime.now().plusMinutes(5));
         CustomerHotelProgress progress = createProgress(customer.getId(), qrToken.getHotelId(), 9, 0, LocalDateTime.now().minusMinutes(30));
 
         when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
@@ -150,6 +158,9 @@ class ScanServiceTest {
 
         assertTrue(response.isSuccess());
         assertTrue(response.isRewardEarned());
+        assertEquals("Congratulations! You earned a free drink.", response.getMessage());
+        assertEquals(0, response.getCurrentCount());
+        assertEquals(10, response.getScansRemaining());
         verify(customerHotelProgressRepository, times(2)).save(progress);
         verify(rewardService).createReward(customer.getId(), qrToken.getHotelId());
 
@@ -161,8 +172,8 @@ class ScanServiceTest {
 
     @Test
     void createsNewProgressForFirstSuccessfulScan() {
-        Customer customer = createCustomer(10L);
-        QrToken qrToken = createToken(99L, LocalDateTime.now().plusMinutes(5));
+        Customer customer = createCustomer(10);
+        QrToken qrToken = createToken(99, LocalDateTime.now().plusMinutes(5));
 
         when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
         when(hotelRepository.findById(qrToken.getHotelId())).thenReturn(Optional.of(new Hotel()));
@@ -174,6 +185,9 @@ class ScanServiceTest {
 
         assertTrue(response.isSuccess());
         assertFalse(response.isRewardEarned());
+        assertEquals("Scan successful", response.getMessage());
+        assertEquals(1, response.getCurrentCount());
+        assertEquals(9, response.getScansRemaining());
 
         ArgumentCaptor<CustomerHotelProgress> progressCaptor = ArgumentCaptor.forClass(CustomerHotelProgress.class);
         verify(customerHotelProgressRepository).save(progressCaptor.capture());
@@ -184,14 +198,14 @@ class ScanServiceTest {
         assertTrue(savedProgress.getHotelId().equals(qrToken.getHotelId()));
     }
 
-    private Customer createCustomer(Long id) {
+    private Customer createCustomer(Integer id) {
         Customer customer = new Customer();
         customer.setId(id);
         customer.setDeviceId("device-1");
         return customer;
     }
 
-    private QrToken createToken(Long hotelId, LocalDateTime expiresAt) {
+    private QrToken createToken(Integer hotelId, LocalDateTime expiresAt) {
         QrToken qrToken = new QrToken();
         qrToken.setHotelId(hotelId);
         qrToken.setToken("active-token");
@@ -199,7 +213,7 @@ class ScanServiceTest {
         return qrToken;
     }
 
-    private CustomerHotelProgress createProgress(Long customerId, Long hotelId, int scanCount, int dailyScanCount, LocalDateTime lastScanAt) {
+    private CustomerHotelProgress createProgress(Integer customerId, Integer hotelId, int scanCount, int dailyScanCount, LocalDateTime lastScanAt) {
         CustomerHotelProgress progress = new CustomerHotelProgress();
         progress.setCustomerId(customerId);
         progress.setHotelId(hotelId);

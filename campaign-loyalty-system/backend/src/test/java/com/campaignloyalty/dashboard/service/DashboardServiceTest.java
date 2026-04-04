@@ -2,6 +2,7 @@ package com.campaignloyalty.dashboard.service;
 
 import com.campaignloyalty.dashboard.dto.HotelStatsDto;
 import com.campaignloyalty.dashboard.dto.OverallStatsDto;
+import com.campaignloyalty.hotel.service.HotelService;
 import com.campaignloyalty.reward.repository.RewardRepository;
 import com.campaignloyalty.scan.repository.ScanHistoryRepository;
 import org.junit.jupiter.api.Test;
@@ -28,26 +29,29 @@ class DashboardServiceTest {
     @Mock
     private RewardRepository rewardRepository;
 
+    @Mock
+    private HotelService hotelService;
+
     @InjectMocks
     private DashboardService dashboardService;
 
     @Test
     void returnsHotelStatsForToday() {
-        when(scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndValid(eq(7L), any(LocalDateTime.class), any(LocalDateTime.class), eq(true)))
+        when(scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndValid(eq(7), any(LocalDateTime.class), any(LocalDateTime.class), eq(true)))
                 .thenReturn(12L);
-        when(rewardRepository.countByHotelIdAndEarnedAtBetween(eq(7L), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(rewardRepository.countByHotelIdAndEarnedAtBetween(eq(7), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(3L);
-        when(scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndValid(eq(7L), any(LocalDateTime.class), any(LocalDateTime.class), eq(false)))
+        when(scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndValid(eq(7), any(LocalDateTime.class), any(LocalDateTime.class), eq(false)))
                 .thenReturn(2L);
 
-        HotelStatsDto stats = dashboardService.getHotelStats(7L);
+        HotelStatsDto stats = dashboardService.getHotelStats(7);
 
         assertEquals(12L, stats.getScansToday());
         assertEquals(3L, stats.getRewardsGiven());
         assertEquals(2L, stats.getSuspiciousScans());
-        verify(scanHistoryRepository).countByHotelIdAndScannedAtBetweenAndValid(eq(7L), eq(todayStart()), eq(todayEnd()), eq(true));
-        verify(rewardRepository).countByHotelIdAndEarnedAtBetween(eq(7L), eq(todayStart()), eq(todayEnd()));
-        verify(scanHistoryRepository).countByHotelIdAndScannedAtBetweenAndValid(eq(7L), eq(todayStart()), eq(todayEnd()), eq(false));
+        verify(scanHistoryRepository).countByHotelIdAndScannedAtBetweenAndValid(eq(7), eq(todayStart()), eq(todayEnd()), eq(true));
+        verify(rewardRepository).countByHotelIdAndEarnedAtBetween(eq(7), eq(todayStart()), eq(todayEnd()));
+        verify(scanHistoryRepository).countByHotelIdAndScannedAtBetweenAndValid(eq(7), eq(todayStart()), eq(todayEnd()), eq(false));
     }
 
     @Test

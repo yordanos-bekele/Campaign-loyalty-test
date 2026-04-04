@@ -17,7 +17,7 @@ public class QrTokenService {
 
     private final QrTokenRepository qrTokenRepository;
 
-    public QrToken generateToken(Long hotelId) {
+    public QrToken generateToken(Integer hotelId) {
         validateHotelId(hotelId);
 
         LocalDateTime now = LocalDateTime.now();
@@ -33,7 +33,7 @@ public class QrTokenService {
         return qrTokenRepository.findByToken(token);
     }
 
-    private void validateHotelId(Long hotelId) {
+    private void validateHotelId(Integer hotelId) {
         if (hotelId == null || hotelId <= 0) {
             throw new IllegalArgumentException("hotelId must be greater than 0");
         }

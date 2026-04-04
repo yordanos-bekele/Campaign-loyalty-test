@@ -41,25 +41,25 @@ public class ScanService {
     public ScanResponse scan(String deviceId, String token, String ip, String userAgent) {
         if (isBlank(token)) {
             logScanHistory(null, null, token, ip, userAgent, false, "missing token");
-            return new ScanResponse(false, "Token is required", false);
+            return new ScanResponse(false, "Token is required", false, null, null);
         }
 
         QrToken qrToken = qrTokenRepository.findByToken(token);
         if (qrToken == null || qrToken.getExpiresAt().isBefore(LocalDateTime.now())) {
             logScanHistory(null, null, token, ip, userAgent, false, "invalid token");
-            return new ScanResponse(false, "Invalid QR token", false);
+            return new ScanResponse(false, "Invalid QR token", false, null, null);
         }
 
-        Long hotelId = qrToken.getHotelId();
+        Integer hotelId = qrToken.getHotelId();
         Hotel hotel = hotelRepository.findById(hotelId).orElse(null);
         if (hotel == null) {
             logScanHistory(null, hotelId, token, ip, userAgent, false, "hotel not found");
-            return new ScanResponse(false, "Hotel not found", false);
+            return new ScanResponse(false, "Hotel not found", false, null, null);
         }
 
         if (isBlank(deviceId)) {
             logScanHistory(null, hotelId, token, ip, userAgent, false, "missing device id");
-            return new ScanResponse(false, "Device ID is required", false);
+            return new ScanResponse(false, "Device ID is required", false, null, null);
         }
 
         Customer customer = customerService.findOrCreateByDeviceId(deviceId);
@@ -77,12 +77,12 @@ public class ScanService {
 
         if (progress.getLastScanAt() != null && progress.getLastScanAt().isAfter(now.minusMinutes(20))) {
             logScanHistory(customer.getId(), hotelId, token, ip, userAgent, false, "too frequent");
-            return new ScanResponse(false, "Scans too frequent", false);
+            return new ScanResponse(false, "Scans too frequent", false, progress.getScanCount(), 10 - progress.getScanCount());
         }
 
         if (progress.getDailyScanCount() >= 3) {
             logScanHistory(customer.getId(), hotelId, token, ip, userAgent, false, "daily limit reached");
-            return new ScanResponse(false, "Daily scan limit reached", false);
+            return new ScanResponse(false, "Daily scan limit reached", false, progress.getScanCount(), 10 - progress.getScanCount());
         }
 
         // accept
@@ -92,25 +92,31 @@ public class ScanService {
         customerHotelProgressRepository.save(progress);
 
         boolean rewardEarned = false;
+        int currentCount = progress.getScanCount();
         if (progress.getScanCount() >= 10) {
             progress.setScanCount(0);
             customerHotelProgressRepository.save(progress);
             rewardService.createReward(customer.getId(), hotelId);
             rewardEarned = true;
+            currentCount = 0;
         }
 
         logScanHistory(customer.getId(), hotelId, token, ip, userAgent, true, null);
-        return new ScanResponse(true, "Scan successful", rewardEarned);
+        String message = rewardEarned
+                ? "Congratulations! You earned a free drink."
+                : "Scan successful";
+        int scansRemaining = rewardEarned ? 10 : 10 - currentCount;
+        return new ScanResponse(true, message, rewardEarned, currentCount, scansRemaining);
     }
 
-    private CustomerHotelProgress createProgress(Long customerId, Long hotelId) {
+    private CustomerHotelProgress createProgress(Integer customerId, Integer hotelId) {
         CustomerHotelProgress progress = new CustomerHotelProgress();
         progress.setCustomerId(customerId);
         progress.setHotelId(hotelId);
         return progress;
     }
 
-    private void logScanHistory(Long customerId, Long hotelId, String qrToken, String ip, String userAgent, boolean valid, String rejectReason) {
+    private void logScanHistory(Integer customerId, Integer hotelId, String qrToken, String ip, String userAgent, boolean valid, String rejectReason) {
         ScanHistory scanHistory = new ScanHistory();
         scanHistory.setCustomerId(customerId);
         scanHistory.setHotelId(hotelId);

@@ -1,9 +1,3 @@
--- Create database if not exists
--- CREATE DATABASE campaign_loyalty;
-
--- Use the database
--- \c campaign_loyalty;
-
 CREATE TABLE hotel (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -57,7 +51,6 @@ CREATE TABLE reward (
     redeemed BOOLEAN DEFAULT FALSE
 );
 
--- Indexes for performance
 CREATE INDEX idx_qr_token_token ON qr_token(token);
 CREATE INDEX idx_qr_token_hotel_id ON qr_token(hotel_id);
 CREATE INDEX idx_customer_device_id ON customer(device_id);

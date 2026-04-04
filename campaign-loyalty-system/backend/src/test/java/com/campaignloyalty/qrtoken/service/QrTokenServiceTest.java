@@ -33,7 +33,7 @@ class QrTokenServiceTest {
     void rejectsNonPositiveHotelId() {
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> qrTokenService.generateToken(0L)
+                () -> qrTokenService.generateToken(0)
         );
 
         assertEquals("hotelId must be greater than 0", exception.getMessage());
@@ -43,11 +43,11 @@ class QrTokenServiceTest {
 
     @Test
     void rejectsUnknownHotel() {
-        when(hotelRepository.existsById(99L)).thenReturn(false);
+        when(hotelRepository.existsById(99)).thenReturn(false);
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> qrTokenService.generateToken(99L)
+                () -> qrTokenService.generateToken(99)
         );
 
         assertEquals("Hotel not found", exception.getMessage());
@@ -56,12 +56,12 @@ class QrTokenServiceTest {
 
     @Test
     void generatesTokenForExistingHotel() {
-        when(hotelRepository.existsById(99L)).thenReturn(true);
+        when(hotelRepository.existsById(99)).thenReturn(true);
         when(qrTokenRepository.save(any(QrToken.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        QrToken qrToken = qrTokenService.generateToken(99L);
+        QrToken qrToken = qrTokenService.generateToken(99);
 
-        assertEquals(99L, qrToken.getHotelId());
+        assertEquals(99, qrToken.getHotelId());
         assertNotNull(qrToken.getToken());
         assertNotNull(qrToken.getCreatedAt());
         assertNotNull(qrToken.getExpiresAt());

@@ -15,13 +15,13 @@ public class CustomerHotelProgress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(name = "customer_id")
-    private Long customerId;
+    private Integer customerId;
 
     @Column(name = "hotel_id")
-    private Long hotelId;
+    private Integer hotelId;
 
     @Column(name = "scan_count")
     private int scanCount;

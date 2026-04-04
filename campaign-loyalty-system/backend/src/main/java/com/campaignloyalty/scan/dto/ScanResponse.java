@@ -10,4 +10,6 @@ public class ScanResponse {
     private boolean success;
     private String message;
     private boolean rewardEarned;
+    private Integer currentCount;
+    private Integer scansRemaining;
 }
