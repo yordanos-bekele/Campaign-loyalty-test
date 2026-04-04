@@ -3,6 +3,9 @@ package com.campaignloyalty.scan.service;
 import com.campaignloyalty.scan.dto.ScanResponse;
 import com.campaignloyalty.scan.entity.ScanHistory;
 import com.campaignloyalty.scan.repository.ScanHistoryRepository;
+
+import lombok.AllArgsConstructor;
+
 import com.campaignloyalty.customer.entity.Customer;
 import com.campaignloyalty.customer.entity.CustomerHotelProgress;
 import com.campaignloyalty.customer.service.CustomerService;
@@ -12,34 +15,35 @@ import com.campaignloyalty.hotel.repository.HotelRepository;
 import com.campaignloyalty.qrtoken.entity.QrToken;
 import com.campaignloyalty.qrtoken.repository.QrTokenRepository;
 import com.campaignloyalty.reward.service.RewardService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
+@AllArgsConstructor
+@Transactional
 public class ScanService {
 
-    @Autowired
-    private QrTokenRepository qrTokenRepository;
+    private final QrTokenRepository qrTokenRepository;
 
-    @Autowired
-    private HotelRepository hotelRepository;
+    private final HotelRepository hotelRepository;
 
-    @Autowired
-    private CustomerService customerService;
+    private final CustomerService customerService;
 
-    @Autowired
-    private CustomerHotelProgressRepository customerHotelProgressRepository;
+    private final CustomerHotelProgressRepository customerHotelProgressRepository;
 
-    @Autowired
-    private ScanHistoryRepository scanHistoryRepository;
+    private final ScanHistoryRepository scanHistoryRepository;
 
-    @Autowired
-    private RewardService rewardService;
+    private final RewardService rewardService;
 
     public ScanResponse scan(String deviceId, String token, String ip, String userAgent) {
+        if (isBlank(token)) {
+            logScanHistory(null, null, token, ip, userAgent, false, "missing token");
+            return new ScanResponse(false, "Token is required", false);
+        }
+
         QrToken qrToken = qrTokenRepository.findByToken(token);
         if (qrToken == null || qrToken.getExpiresAt().isBefore(LocalDateTime.now())) {
             logScanHistory(null, null, token, ip, userAgent, false, "invalid token");
@@ -53,17 +57,16 @@ public class ScanService {
             return new ScanResponse(false, "Hotel not found", false);
         }
 
+        if (isBlank(deviceId)) {
+            logScanHistory(null, hotelId, token, ip, userAgent, false, "missing device id");
+            return new ScanResponse(false, "Device ID is required", false);
+        }
+
         Customer customer = customerService.findOrCreateByDeviceId(deviceId);
 
         CustomerHotelProgress progress = customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(), hotelId);
         if (progress == null) {
-            progress = new CustomerHotelProgress();
-            progress.setCustomerId(customer.getId());
-            progress.setHotelId(hotelId);
-            progress.setScanCount(0);
-            progress.setDailyScanCount(0);
-            progress.setLastScanAt(null);
-            progress.setUpdatedAt(LocalDateTime.now());
+            progress = createProgress(customer.getId(), hotelId);
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -86,7 +89,6 @@ public class ScanService {
         progress.setScanCount(progress.getScanCount() + 1);
         progress.setDailyScanCount(progress.getDailyScanCount() + 1);
         progress.setLastScanAt(now);
-        progress.setUpdatedAt(now);
         customerHotelProgressRepository.save(progress);
 
         boolean rewardEarned = false;
@@ -101,16 +103,26 @@ public class ScanService {
         return new ScanResponse(true, "Scan successful", rewardEarned);
     }
 
+    private CustomerHotelProgress createProgress(Long customerId, Long hotelId) {
+        CustomerHotelProgress progress = new CustomerHotelProgress();
+        progress.setCustomerId(customerId);
+        progress.setHotelId(hotelId);
+        return progress;
+    }
+
     private void logScanHistory(Long customerId, Long hotelId, String qrToken, String ip, String userAgent, boolean valid, String rejectReason) {
         ScanHistory scanHistory = new ScanHistory();
         scanHistory.setCustomerId(customerId);
         scanHistory.setHotelId(hotelId);
         scanHistory.setQrToken(qrToken);
-        scanHistory.setScannedAt(LocalDateTime.now());
         scanHistory.setIpAddress(ip);
         scanHistory.setUserAgent(userAgent);
         scanHistory.setValid(valid);
         scanHistory.setRejectReason(rejectReason);
         scanHistoryRepository.save(scanHistory);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }
