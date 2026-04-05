@@ -41,7 +41,7 @@ class DashboardServiceTest {
                 .thenReturn(12L);
         when(rewardRepository.countByHotelIdAndEarnedAtBetween(eq(7), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(3L);
-        when(scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndValid(eq(7), any(LocalDateTime.class), any(LocalDateTime.class), eq(false)))
+        when(scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndSuspiciousTrue(eq(7), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(2L);
 
         HotelStatsDto stats = dashboardService.getHotelStats(7);
@@ -51,7 +51,7 @@ class DashboardServiceTest {
         assertEquals(2L, stats.getSuspiciousScans());
         verify(scanHistoryRepository).countByHotelIdAndScannedAtBetweenAndValid(eq(7), eq(todayStart()), eq(todayEnd()), eq(true));
         verify(rewardRepository).countByHotelIdAndEarnedAtBetween(eq(7), eq(todayStart()), eq(todayEnd()));
-        verify(scanHistoryRepository).countByHotelIdAndScannedAtBetweenAndValid(eq(7), eq(todayStart()), eq(todayEnd()), eq(false));
+        verify(scanHistoryRepository).countByHotelIdAndScannedAtBetweenAndSuspiciousTrue(eq(7), eq(todayStart()), eq(todayEnd()));
     }
 
     @Test
@@ -60,7 +60,7 @@ class DashboardServiceTest {
                 .thenReturn(40L);
         when(rewardRepository.countByEarnedAtBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(9L);
-        when(scanHistoryRepository.countByScannedAtBetweenAndValid(any(LocalDateTime.class), any(LocalDateTime.class), eq(false)))
+        when(scanHistoryRepository.countByScannedAtBetweenAndSuspiciousTrue(any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(4L);
 
         OverallStatsDto stats = dashboardService.getOverallStats();
@@ -70,7 +70,7 @@ class DashboardServiceTest {
         assertEquals(4L, stats.getTotalSuspiciousScans());
         verify(scanHistoryRepository).countByScannedAtBetweenAndValid(eq(todayStart()), eq(todayEnd()), eq(true));
         verify(rewardRepository).countByEarnedAtBetween(eq(todayStart()), eq(todayEnd()));
-        verify(scanHistoryRepository).countByScannedAtBetweenAndValid(eq(todayStart()), eq(todayEnd()), eq(false));
+        verify(scanHistoryRepository).countByScannedAtBetweenAndSuspiciousTrue(eq(todayStart()), eq(todayEnd()));
     }
 
     private LocalDateTime todayStart() {
