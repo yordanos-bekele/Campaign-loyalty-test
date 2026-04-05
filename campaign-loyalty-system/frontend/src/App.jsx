@@ -4,10 +4,11 @@ import LoyalCustomerRegistration from './components/LoyalCustomerRegistration';
 import QrDisplay from './components/QrDisplay';
 import ScanPage from './components/ScanPage';
 
+const DEVICE_ID_STORAGE_KEY = 'marathon_klassics_device_id';
+
 const views = [
   { id: 'home', label: 'Home' },
   { id: 'hotel', label: 'Hotel Login' },
-  { id: 'loyalty', label: 'Loyal Signup' },
   { id: 'qr', label: 'Hotel QR' },
 ];
 
@@ -22,6 +23,7 @@ function getInitialState() {
     token: params.get('token') || '',
     hotelId: params.get('hotelId') || '1',
     admin: window.location.pathname === '/admin',
+    register: window.location.pathname === '/register',
   };
 }
 
@@ -34,17 +36,23 @@ function createDeviceId() {
 }
 
 function ensureDeviceCookie() {
+  const storedDeviceId = window.localStorage.getItem(DEVICE_ID_STORAGE_KEY);
   const existingCookie = document.cookie
     .split('; ')
     .find((row) => row.startsWith('device_id='));
 
   if (existingCookie) {
-    return existingCookie.split('=')[1];
+    const cookieDeviceId = existingCookie.split('=')[1];
+    if (storedDeviceId !== cookieDeviceId) {
+      window.localStorage.setItem(DEVICE_ID_STORAGE_KEY, cookieDeviceId);
+    }
+    return cookieDeviceId;
   }
 
-  const deviceId = createDeviceId();
+  const deviceId = storedDeviceId || createDeviceId();
   const maxAge = 60 * 60 * 24 * 365;
   document.cookie = `device_id=${deviceId}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  window.localStorage.setItem(DEVICE_ID_STORAGE_KEY, deviceId);
   return deviceId;
 }
 
@@ -55,6 +63,7 @@ function App() {
   const [scanToken, setScanToken] = useState(initialState.token);
   const [deviceId, setDeviceId] = useState('');
   const [adminMode] = useState(initialState.admin);
+  const [registerMode] = useState(initialState.register);
 
   useEffect(() => {
     setDeviceId(ensureDeviceCookie());
@@ -63,7 +72,7 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams();
 
-    if (view !== 'home' && !adminMode) {
+    if (view !== 'home' && !adminMode && !registerMode) {
       params.set('view', view);
     }
 
@@ -76,16 +85,26 @@ function App() {
     }
 
     const query = params.toString();
-    const basePath = adminMode ? '/admin' : window.location.pathname;
+    const basePath = adminMode ? '/admin' : registerMode ? '/register' : window.location.pathname;
     const nextUrl = query ? `${basePath}?${query}` : basePath;
     window.history.replaceState({}, '', nextUrl);
-  }, [view, hotelId, scanToken, adminMode]);
+  }, [view, hotelId, scanToken, adminMode, registerMode]);
 
   if (adminMode) {
     return (
       <div className="app-shell app-shell--admin">
         <main className="page-grid">
           <Dashboard mode="admin" />
+        </main>
+      </div>
+    );
+  }
+
+  if (registerMode) {
+    return (
+      <div className="app-shell app-shell--register">
+        <main className="page-grid">
+          <LoyalCustomerRegistration deviceId={deviceId} standalone />
         </main>
       </div>
     );
@@ -105,7 +124,7 @@ function App() {
             <button className="button button--primary" onClick={() => setView('qr')}>
               Show hotel QR
             </button>
-            <button className="button button--secondary" onClick={() => setView('loyalty')}>
+            <button className="button button--secondary" onClick={() => window.location.assign('/register')}>
               Loyal customer signup
             </button>
             <button className="button button--ghost" onClick={() => setView('hotel')}>
@@ -173,13 +192,10 @@ function App() {
           />
         )}
 
-        {view === 'loyalty' && <LoyalCustomerRegistration />}
-
         {view === 'scan' && (
           <ScanPage
             hotelId={hotelId}
             initialToken={scanToken}
-            onOpenQr={() => setView('qr')}
           />
         )}
 
