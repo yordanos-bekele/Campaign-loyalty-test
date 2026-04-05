@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingRequestCookieException.class)
     public ResponseEntity<String> handleMissingCookie(MissingRequestCookieException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("device_id cookie is required");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("device_id cookie or X-Device-Id header is required");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

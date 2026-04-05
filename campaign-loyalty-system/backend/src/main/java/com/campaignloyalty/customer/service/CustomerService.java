@@ -46,7 +46,7 @@ public class CustomerService {
 
     public Customer registerLoyalCustomer(String deviceId, String fullName, String phoneNumber, String email) {
         if (deviceId == null || deviceId.isBlank()) {
-            throw new IllegalArgumentException("device_id cookie is required");
+            throw new IllegalArgumentException("device_id cookie or X-Device-Id header is required");
         }
 
         String normalizedFullName = requireValue(fullName, "full name is required");

@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+const DEVICE_ID_STORAGE_KEY = 'marathon_klassics_device_id';
+
 function normalizeApiBaseUrl(rawBaseUrl) {
   if (!rawBaseUrl) {
     return '/api';
@@ -24,6 +26,17 @@ function normalizeApiBaseUrl(rawBaseUrl) {
 const apiClient = axios.create({
   baseURL: normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL || '/api'),
   withCredentials: true,
+});
+
+apiClient.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const deviceId = window.localStorage.getItem(DEVICE_ID_STORAGE_KEY);
+    if (deviceId) {
+      config.headers = config.headers || {};
+      config.headers['X-Device-Id'] = deviceId;
+    }
+  }
+  return config;
 });
 
 export function getReadableError(error, fallbackMessage) {

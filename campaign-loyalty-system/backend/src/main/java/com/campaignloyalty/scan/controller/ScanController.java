@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -30,12 +31,13 @@ public class ScanController {
             description = "Validates a QR token, applies scan limits, updates customer progress, and awards a reward on the 10th valid scan.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Scan processed successfully"),
-                    @ApiResponse(responseCode = "400", description = "Invalid request or missing device cookie", content = @Content(schema = @Schema(implementation = String.class)))
+                    @ApiResponse(responseCode = "400", description = "Invalid request or missing device identifier", content = @Content(schema = @Schema(implementation = String.class)))
             }
     )
     public ResponseEntity<ScanResponse> scan(
             @Parameter(description = "Unique device identifier stored as a cookie", example = "device-1")
-            @CookieValue("device_id") String deviceId,
+            @CookieValue(value = "device_id", required = false) String cookieDeviceId,
+            @RequestHeader(value = "X-Device-Id", required = false) String headerDeviceId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "QR token payload",
                     required = true,
@@ -45,9 +47,20 @@ public class ScanController {
             )
             @Valid @RequestBody ScanRequest request,
             HttpServletRequest httpRequest) {
+        String deviceId = resolveDeviceId(cookieDeviceId, headerDeviceId);
         String ip = httpRequest.getRemoteAddr();
         String userAgent = httpRequest.getHeader("User-Agent");
         ScanResponse response = scanService.scan(deviceId, request.getToken(), ip, userAgent);
         return ResponseEntity.ok(response);
+    }
+
+    private String resolveDeviceId(String cookieDeviceId, String headerDeviceId) {
+        if (StringUtils.hasText(cookieDeviceId)) {
+            return cookieDeviceId;
+        }
+        if (StringUtils.hasText(headerDeviceId)) {
+            return headerDeviceId;
+        }
+        throw new IllegalArgumentException("device_id cookie or X-Device-Id header is required");
     }
 }

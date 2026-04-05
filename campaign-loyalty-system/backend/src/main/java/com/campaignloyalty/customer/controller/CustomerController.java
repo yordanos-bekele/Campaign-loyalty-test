@@ -15,10 +15,12 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,15 +40,17 @@ public class CustomerController {
     @PostMapping("/register")
     @Operation(
             summary = "Register the current device as a loyal customer",
-            description = "Stores a loyalty profile against the current device_id cookie so future scans continue building reward progress.",
+            description = "Stores a loyalty profile against the current device_id cookie or X-Device-Id header so future scans continue building reward progress.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Customer registered"),
                     @ApiResponse(responseCode = "400", description = "Invalid registration data", content = @Content(schema = @Schema(implementation = String.class)))
             }
     )
     public ResponseEntity<LoyalCustomerDto> registerCustomer(
-            @CookieValue("device_id") String deviceId,
+            @CookieValue(value = "device_id", required = false) String cookieDeviceId,
+            @RequestHeader(value = "X-Device-Id", required = false) String headerDeviceId,
             @Valid @RequestBody RegisterCustomerRequest request) {
+        String deviceId = resolveDeviceId(cookieDeviceId, headerDeviceId);
         Customer customer = customerService.registerLoyalCustomer(
                 deviceId,
                 request.getFullName(),
@@ -58,13 +62,16 @@ public class CustomerController {
     @GetMapping("/me")
     @Operation(
             summary = "Get the loyal customer profile for the current device",
-            description = "Returns the registered loyal customer profile for the current device_id cookie.",
+            description = "Returns the registered loyal customer profile for the current device_id cookie or X-Device-Id header.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Customer profile returned"),
                     @ApiResponse(responseCode = "204", description = "No loyal customer profile exists yet")
             }
     )
-    public ResponseEntity<LoyalCustomerDto> getCurrentCustomer(@CookieValue("device_id") String deviceId) {
+    public ResponseEntity<LoyalCustomerDto> getCurrentCustomer(
+            @CookieValue(value = "device_id", required = false) String cookieDeviceId,
+            @RequestHeader(value = "X-Device-Id", required = false) String headerDeviceId) {
+        String deviceId = resolveDeviceId(cookieDeviceId, headerDeviceId);
         Customer customer = customerService.getRegisteredCustomerByDeviceId(deviceId);
         if (customer == null) {
             return ResponseEntity.noContent().build();
@@ -110,5 +117,15 @@ public class CustomerController {
                 customer.getEmail(),
                 customer.getRegisteredAt(),
                 customer.getCreatedAt());
+    }
+
+    private String resolveDeviceId(String cookieDeviceId, String headerDeviceId) {
+        if (StringUtils.hasText(cookieDeviceId)) {
+            return cookieDeviceId;
+        }
+        if (StringUtils.hasText(headerDeviceId)) {
+            return headerDeviceId;
+        }
+        throw new IllegalArgumentException("device_id cookie or X-Device-Id header is required");
     }
 }
