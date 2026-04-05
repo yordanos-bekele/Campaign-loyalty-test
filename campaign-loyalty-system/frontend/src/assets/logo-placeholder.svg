@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Brand placeholder">
+  <defs>
+    <linearGradient id="brand-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d78a26"/>
+      <stop offset="100%" stop-color="#1e5b3b"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="52" fill="#fff7ec"/>
+  <circle cx="120" cy="120" r="84" fill="url(#brand-gradient)" opacity="0.14"/>
+  <path d="M96 58h48c10 0 18 8 18 18v12c0 16-10 31-26 37l-4 2v24c0 9 5 17 13 21l9 4v10H86v-10l9-4c8-4 13-12 13-21v-24l-4-2c-16-6-26-21-26-37V76c0-10 8-18 18-18z" fill="url(#brand-gradient)"/>
+  <path d="M85 88c0 14 8 26 21 32l14 6 14-6c13-6 21-18 21-32V76a6 6 0 0 0-6-6H91a6 6 0 0 0-6 6v12z" fill="#fff7ec"/>
+  <circle cx="120" cy="98" r="13" fill="#d78a26"/>
+  <path d="M104 156h32" stroke="#fff7ec" stroke-width="12" stroke-linecap="round"/>
+</svg>

@@ -22,6 +22,13 @@ export async function createHotel(data) {
   return response.data;
 }
 
+export async function importHotels(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await apiClient.post('/hotels/import', formData);
+  return response.data;
+}
+
 export async function getHotel(hotelId) {
   const response = await apiClient.get(`/hotels/${hotelId}`);
   return response.data;
@@ -53,7 +60,7 @@ export async function hotelLogin(data) {
 }
 
 export async function adminLogin(data) {
-  const response = await apiClient.post('/auth/admin/login', data);
+  const response = await apiClient.post('/admin/login', data);
   return response.data;
 }
 
@@ -64,6 +71,28 @@ export async function getSessionUser() {
 
 export async function logout() {
   await apiClient.post('/auth/logout');
+}
+
+export async function registerLoyalCustomer(data) {
+  const response = await apiClient.post('/customers/register', data);
+  return response.data;
+}
+
+export async function getCurrentCustomer() {
+  const response = await apiClient.get('/customers/me');
+  return response.status === 204 ? null : response.data;
+}
+
+export async function getRegisteredCustomers() {
+  const response = await apiClient.get('/customers');
+  return response.data;
+}
+
+export async function importCustomers(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await apiClient.post('/customers/import', formData);
+  return response.data;
 }
 
 export async function getCurrentHotelStats() {

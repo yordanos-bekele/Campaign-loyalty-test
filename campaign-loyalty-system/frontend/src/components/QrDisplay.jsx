@@ -20,7 +20,7 @@ const emptyHotelForm = {
   password: '',
 };
 
-function QrDisplay({ hotelId, onHotelChange, onOpenScan }) {
+function QrDisplay({ hotelId, onHotelChange }) {
   const [lookupHotel, setLookupHotel] = useState(null);
   const [hotelError, setHotelError] = useState('');
   const [loadingHotel, setLoadingHotel] = useState(false);
@@ -237,7 +237,7 @@ function QrDisplay({ hotelId, onHotelChange, onOpenScan }) {
         <article className="card qr-card">
           <div className="qr-card__badge">Guest-facing</div>
           <h3>Active QR code</h3>
-          <p className="hint">Guests can scan this code to open the customer scan page automatically.</p>
+          <p className="hint">Guests scan this code on their phone and the loyalty scan is submitted automatically in their mobile browser.</p>
 
           {qrImage ? (
             <>
@@ -253,11 +253,8 @@ function QrDisplay({ hotelId, onHotelChange, onOpenScan }) {
                 </div>
               </div>
               <div className="button-group">
-                <button className="button button--primary" onClick={() => onOpenScan(tokenPayload.token, tokenPayload.hotelId)}>
-                  Preview customer page
-                </button>
                 <button
-                  className="button button--secondary"
+                  className="button button--primary"
                   onClick={() => window.navigator.clipboard?.writeText(scanLink)}
                 >
                   Copy scan link

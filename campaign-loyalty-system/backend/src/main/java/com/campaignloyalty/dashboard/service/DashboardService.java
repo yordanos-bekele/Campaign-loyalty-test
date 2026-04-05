@@ -12,6 +12,7 @@ import com.campaignloyalty.scan.entity.ScanHistory;
 import com.campaignloyalty.scan.repository.ScanHistoryRepository;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import com.campaignloyalty.reward.repository.RewardRepository;
 import com.campaignloyalty.common.util.DateUtil;
@@ -24,6 +25,7 @@ import java.util.List;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class DashboardService {
 
     private final ScanHistoryRepository scanHistoryRepository;
@@ -33,25 +35,32 @@ public class DashboardService {
     private final HotelService hotelService;
 
     public HotelStatsDto getHotelStats(Integer hotelId) {
+        log.info("Loading hotel dashboard stats hotelId={}", hotelId);
         LocalDateTime start = DateUtil.getStartOfDay();
         LocalDateTime end = DateUtil.getEndOfDay();
         long scansToday = scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndValid(hotelId, start, end, true);
         long rewardsGiven = rewardRepository.countByHotelIdAndEarnedAtBetween(hotelId, start, end);
         long suspiciousScans = scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndSuspiciousTrue(hotelId, start, end);
+        log.info("Hotel dashboard stats loaded hotelId={} scansToday={} rewardsGiven={} suspiciousScans={}",
+                hotelId, scansToday, rewardsGiven, suspiciousScans);
         return new HotelStatsDto(scansToday, rewardsGiven, suspiciousScans);
     }
 
     public OverallStatsDto getOverallStats() {
+        log.info("Loading overall dashboard stats");
         LocalDateTime start = DateUtil.getStartOfDay();
         LocalDateTime end = DateUtil.getEndOfDay();
         long totalScansToday = scanHistoryRepository.countByScannedAtBetweenAndValid(start, end, true);
         long totalRewardsGiven = rewardRepository.countByEarnedAtBetween(start, end);
         long totalSuspiciousScans = scanHistoryRepository.countByScannedAtBetweenAndSuspiciousTrue(start, end);
+        log.info("Overall dashboard stats loaded totalScansToday={} totalRewardsGiven={} totalSuspiciousScans={}",
+                totalScansToday, totalRewardsGiven, totalSuspiciousScans);
         return new OverallStatsDto(totalScansToday, totalRewardsGiven, totalSuspiciousScans);
     }
 
     public List<HotelListItemDto> getRegisteredHotels() {
-        return hotelService.findAll().stream()
+        log.info("Loading registered hotel list");
+        List<HotelListItemDto> hotels = hotelService.findAll().stream()
                 .sorted(Comparator.comparing(Hotel::getName, String.CASE_INSENSITIVE_ORDER))
                 .map(hotel -> new HotelListItemDto(
                         hotel.getId(),
@@ -59,24 +68,34 @@ public class DashboardService {
                         hotel.getLocation(),
                         hotel.getCreatedAt()))
                 .toList();
+        log.info("Loaded {} registered hotels", hotels.size());
+        return hotels;
     }
 
     public AdminDashboardDto getAdminDashboard() {
+        log.info("Loading admin dashboard");
         return new AdminDashboardDto(getOverallStats(), getRegisteredHotels());
     }
 
     public List<SuspiciousScanLogDto> getSuspiciousScansForHotel(Integer hotelId) {
-        return scanHistoryRepository.findTop50ByHotelIdAndSuspiciousTrueOrderByScannedAtDesc(hotelId).stream()
+        log.info("Loading suspicious scan logs hotelId={}", hotelId);
+        List<SuspiciousScanLogDto> suspiciousScans = scanHistoryRepository.findTop50ByHotelIdAndSuspiciousTrueOrderByScannedAtDesc(hotelId).stream()
                 .map(this::toSuspiciousScanLogDto)
                 .toList();
+        log.info("Loaded {} suspicious scan logs hotelId={}", suspiciousScans.size(), hotelId);
+        return suspiciousScans;
     }
 
     public FraudSummaryDto getFraudSummary() {
-        return new FraudSummaryDto(
+        log.info("Loading fraud summary");
+        FraudSummaryDto summary = new FraudSummaryDto(
                 scanHistoryRepository.countByValidFalse(),
                 scanHistoryRepository.countBySuspiciousTrue(),
                 scanHistoryRepository.findTopCustomersByRejectedScans(PageRequest.of(0, 5)),
                 scanHistoryRepository.findTopHotelsByRejectedScans(PageRequest.of(0, 5)));
+        log.info("Fraud summary loaded totalRejectedScans={} totalSuspiciousFlags={}",
+                summary.getTotalRejectedScans(), summary.getTotalSuspiciousFlags());
+        return summary;
     }
 
     private SuspiciousScanLogDto toSuspiciousScanLogDto(ScanHistory scanHistory) {

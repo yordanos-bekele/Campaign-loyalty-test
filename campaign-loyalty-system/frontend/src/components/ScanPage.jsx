@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getReadableError, scanQr } from '../services/api';
+import logoFallback from '../assets/logo-placeholder.svg';
 
 function ProgressDots({ currentCount }) {
   return (
@@ -14,21 +15,33 @@ function ProgressDots({ currentCount }) {
   );
 }
 
-function ScanPage({ hotelId, initialToken, onOpenQr }) {
-  const [token, setToken] = useState(initialToken || '');
+function formatNextAllowedScan(value) {
+  if (!value) {
+    return '';
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(value));
+}
+
+function ScanPage({ hotelId, initialToken }) {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [brandLogo, setBrandLogo] = useState('/src/assets/logo.png');
   const hasAutoSubmitted = useRef(false);
 
   useEffect(() => {
-    setToken(initialToken || '');
     setResult(null);
     setError('');
     hasAutoSubmitted.current = false;
   }, [initialToken]);
 
-  const submitScan = async (providedToken = token) => {
+  const submitScan = async (providedToken = initialToken) => {
     if (!providedToken) {
       setError('We could not find a valid QR token. Please scan again or ask the hotel to refresh the code.');
       return;
@@ -58,89 +71,96 @@ function ScanPage({ hotelId, initialToken, onOpenQr }) {
   }, [initialToken]);
 
   const currentCount = result?.currentCount ?? 0;
-  const scansRemaining = result?.scansRemaining ?? 10;
-  const isSuccess = Boolean(result?.success);
-  const statusClass = result?.rewardEarned
+  const scansRemaining = result?.remainingToReward ?? 10;
+  const isRewardEarned = result?.status === 'reward_earned';
+  const isSuccess = result?.status === 'success';
+  const isRejected = result?.status === 'rejected';
+  const statusClass = isRewardEarned
     ? 'status-card status-card--reward'
     : isSuccess
       ? 'status-card status-card--success'
-      : 'status-card';
+      : isRejected
+        ? 'status-card status-card--warning'
+    : 'status-card';
+
+  const statusTitle = isRewardEarned
+    ? 'Congratulations! You earned a free beer.'
+    : isSuccess
+      ? 'Your scan counted successfully.'
+      : isRejected
+        ? result?.reason === 'MIN_TIME_NOT_REACHED'
+          ? 'This scan is too soon after your previous valid visit.'
+          : result?.reason === 'DAILY_LIMIT_REACHED'
+            ? 'You have already reached today’s valid scan limit for this hotel.'
+            : 'This QR code is invalid or expired.'
+        : 'Ready to scan your code';
+
+  const statusHint = isRewardEarned
+    ? 'Show this result to the hotel team if they need to confirm your free beer reward.'
+    : isSuccess
+      ? `${scansRemaining} more valid ${scansRemaining === 1 ? 'scan' : 'scans'} until your next free beer.`
+      : isRejected && result?.reason === 'MIN_TIME_NOT_REACHED' && result?.nextAllowedScanAt
+        ? `You can scan again after ${formatNextAllowedScan(result.nextAllowedScanAt)}.`
+        : isRejected && result?.reason === 'DAILY_LIMIT_REACHED'
+          ? 'Try again tomorrow after the daily count resets.'
+          : isRejected
+            ? 'Ask the hotel to refresh the QR code and scan again.'
+            : 'Your scan result will appear here automatically after the QR code opens.';
 
   return (
-    <section className="panel panel--wide">
-      <div className="panel__header">
-        <div>
-          <p className="eyebrow">Customer scan</p>
-          <h2>One quick step for your next drink reward</h2>
-          <p className="section-copy">
-            Customers only need to scan once and wait for the result. The app checks the campaign rules automatically.
-          </p>
+    <section className="scan-experience">
+      <article className="scan-hero-card">
+        <div className="scan-hero-card__topline">
+          <span className="eyebrow">Beverage Loyalty</span>
+          <span className="scan-hero-card__hotel">Hotel #{hotelId || '--'}</span>
         </div>
-      </div>
 
-      <div className="two-column">
-        <article className="card card--soft">
-          <h3>Scan now</h3>
-          <p className="hint">
-            If you arrived here from the hotel QR code, your scan will run automatically. You can also paste a token manually if needed.
-          </p>
-
-          <div className="form-stack">
-            <label className="field">
-              <span>Hotel</span>
-              <input value={hotelId || ''} disabled />
-            </label>
-
-            <label className="field">
-              <span>QR token</span>
-              <textarea
-                rows="4"
-                value={token}
-                onChange={(event) => setToken(event.target.value)}
-                placeholder="Paste the QR token here if it was not filled automatically"
-              />
-            </label>
-
-            <div className="button-group">
-              <button className="button button--primary" onClick={() => submitScan()}>
-                {busy ? 'Checking scan...' : 'Confirm scan'}
-              </button>
-              <button className="button button--secondary" onClick={onOpenQr}>
-                Back to QR display
-              </button>
-            </div>
+        <div className="scan-brand">
+          <img
+            className="scan-brand__logo"
+            src={brandLogo}
+            alt="Beverage company logo"
+            onError={() => setBrandLogo(logoFallback)}
+          />
+          <div>
+            <h1>{result?.message || statusTitle}</h1>
+            <p>{statusHint}</p>
           </div>
-
-          {error && <p className="message message--error">{error}</p>}
-        </article>
+        </div>
 
         <article className={statusClass}>
           <div className="status-card__badge">
-            {result?.rewardEarned ? 'Reward earned' : isSuccess ? 'Scan counted' : 'Waiting for scan'}
+            {isRewardEarned ? 'Reward earned' : isSuccess ? 'Scan counted' : isRejected ? 'Scan rejected' : 'Waiting for scan'}
           </div>
-          <h3>{result?.message || 'Ready to scan your code'}</h3>
-          <p className="hint">
-            {result?.rewardEarned
-              ? 'The customer has reached the reward threshold for this hotel.'
-              : isSuccess
-                ? `${scansRemaining} more valid ${scansRemaining === 1 ? 'scan' : 'scans'} until the next free drink.`
-                : 'Once the scan is accepted, progress will appear here in a simple visual tracker.'}
-          </p>
 
           <ProgressDots currentCount={currentCount} />
 
-          <div className="info-list info-list--compact">
-            <div>
+          <div className="scan-metrics">
+            <article className="scan-metrics__card">
               <span>Valid scans collected</span>
               <strong>{currentCount}/10</strong>
-            </div>
-            <div>
+            </article>
+            <article className="scan-metrics__card">
               <span>Scans remaining</span>
               <strong>{scansRemaining}</strong>
-            </div>
+            </article>
           </div>
+
+          {result?.nextAllowedScanAt && (
+            <div className="scan-next-window">
+              <span>Next valid scan</span>
+              <strong>{formatNextAllowedScan(result.nextAllowedScanAt)}</strong>
+            </div>
+          )}
         </article>
-      </div>
+
+        <div className="scan-hero-card__footer">
+          <span>{busy ? 'Checking your visit...' : result ? 'Result ready' : 'Waiting for QR scan result...'}</span>
+          <span>{error ? 'There was a scan issue.' : 'No extra action needed from the guest.'}</span>
+        </div>
+
+        {error && <p className="message message--error">{error}</p>}
+      </article>
     </section>
   );
 }

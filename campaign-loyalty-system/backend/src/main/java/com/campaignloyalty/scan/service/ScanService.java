@@ -6,6 +6,7 @@ import com.campaignloyalty.scan.entity.ScanHistory;
 import com.campaignloyalty.scan.repository.ScanHistoryRepository;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import com.campaignloyalty.customer.entity.Customer;
 import com.campaignloyalty.customer.entity.CustomerHotelProgress;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 @Service
 @AllArgsConstructor
 @Transactional
+@Slf4j
 public class ScanService {
 
     private static final int MIN_SCAN_GAP_MINUTES = 60;
@@ -45,6 +47,7 @@ public class ScanService {
     private final RewardService rewardService;
 
     public ScanResponse scan(String deviceId, String token, String ip, String userAgent) {
+        log.info("Processing scan request deviceId={} token={} ip={}", deviceId, token, ip);
         if (isBlank(token)) {
             return rejectForInvalidToken(token, ip, userAgent);
         }
@@ -66,6 +69,7 @@ public class ScanService {
         }
 
         Customer customer = customerService.findOrCreateByDeviceId(deviceId);
+        log.debug("Resolved scan customerId={} hotelId={}", customer.getId(), hotelId);
 
         CustomerHotelProgress progress = customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(), hotelId);
         if (progress == null) {
@@ -80,6 +84,8 @@ public class ScanService {
         if (progress.getLastScanAt() != null) {
             LocalDateTime nextAllowedScanAt = progress.getLastScanAt().plusMinutes(MIN_SCAN_GAP_MINUTES);
             if (now.isBefore(nextAllowedScanAt)) {
+                log.warn("Scan rejected due to minimum time gap customerId={} hotelId={} nextAllowedScanAt={}",
+                        customer.getId(), hotelId, nextAllowedScanAt);
                 return rejectScan(
                         customer.getId(),
                         hotelId,
@@ -93,6 +99,8 @@ public class ScanService {
         }
 
         if (progress.getDailyScanCount() >= MAX_DAILY_VALID_SCANS) {
+            log.warn("Scan rejected due to daily limit customerId={} hotelId={} dailyScanCount={}",
+                    customer.getId(), hotelId, progress.getDailyScanCount());
             return rejectScan(
                     customer.getId(),
                     hotelId,
@@ -108,6 +116,8 @@ public class ScanService {
         progress.setDailyScanCount(progress.getDailyScanCount() + 1);
         progress.setLastScanAt(now);
         customerHotelProgressRepository.save(progress);
+        log.info("Valid scan accepted customerId={} hotelId={} currentCount={} dailyScanCount={}",
+                customer.getId(), hotelId, progress.getScanCount(), progress.getDailyScanCount());
 
         int currentCount = progress.getScanCount();
         if (progress.getScanCount() >= REWARD_THRESHOLD) {
@@ -116,6 +126,7 @@ public class ScanService {
             Reward reward = rewardService.createReward(customer.getId(), hotelId);
             currentCount = 0;
             logScanHistory(customer.getId(), hotelId, token, ip, userAgent, true, null, false);
+            log.info("Reward earned customerId={} hotelId={} rewardId={}", customer.getId(), hotelId, reward.getId());
             return new ScanResponse(
                     "reward_earned",
                     currentCount,
@@ -127,6 +138,8 @@ public class ScanService {
         }
 
         logScanHistory(customer.getId(), hotelId, token, ip, userAgent, true, null, false);
+        log.debug("Scan completed without reward customerId={} hotelId={} remainingToReward={}",
+                customer.getId(), hotelId, REWARD_THRESHOLD - currentCount);
         return new ScanResponse(
                 "success",
                 currentCount,
@@ -145,6 +158,7 @@ public class ScanService {
     }
 
     private ScanResponse rejectForInvalidToken(String token, String ip, String userAgent) {
+        log.warn("Scan rejected due to invalid or expired token token={} ip={}", token, ip);
         logScanHistory(null, null, token, ip, userAgent, false, RejectionReason.INVALID_OR_EXPIRED_TOKEN, false);
         return new ScanResponse(
                 "rejected",
@@ -166,6 +180,8 @@ public class ScanService {
             RejectionReason rejectionReason,
             LocalDateTime nextAllowedScanAt) {
         boolean suspicious = isSuspiciousViolation(customerId, hotelId, rejectionReason);
+        log.warn("Scan rejected customerId={} hotelId={} reason={} suspicious={} nextAllowedScanAt={}",
+                customerId, hotelId, rejectionReason, suspicious, nextAllowedScanAt);
         logScanHistory(customerId, hotelId, token, ip, userAgent, false, rejectionReason, suspicious);
         return new ScanResponse(
                 "rejected",
@@ -186,6 +202,8 @@ public class ScanService {
                 hotelId,
                 now.minusMinutes(10));
         if (rejectedInTenMinutes >= 2) {
+            log.warn("Suspicious scan pattern detected by 10-minute rejection threshold customerId={} hotelId={} rejectedCount={}",
+                    customerId, hotelId, rejectedInTenMinutes + 1);
             return true;
         }
 
@@ -196,6 +214,10 @@ public class ScanService {
                 hotelId,
                 rejectionReason,
                 now.minusHours(1));
+        if (sameReasonInHour >= 1) {
+            log.warn("Suspicious scan pattern detected by repeated hourly violations customerId={} hotelId={} reason={} priorCount={}",
+                    customerId, hotelId, rejectionReason, sameReasonInHour);
+        }
         return sameReasonInHour >= 1;
     }
 
@@ -218,6 +240,8 @@ public class ScanService {
         scanHistory.setRejectionReason(rejectionReason);
         scanHistory.setSuspicious(suspicious);
         scanHistoryRepository.save(scanHistory);
+        log.debug("Scan history saved customerId={} hotelId={} valid={} rejectionReason={} suspicious={}",
+                customerId, hotelId, valid, rejectionReason, suspicious);
     }
 
     private boolean isBlank(String value) {

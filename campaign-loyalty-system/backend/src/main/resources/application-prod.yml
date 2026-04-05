@@ -13,6 +13,13 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: ${SERVER_SESSION_COOKIE_SAME_SITE:None}
+        secure: ${SERVER_SESSION_COOKIE_SECURE:true}
+
 campaign:
   cors:
-    allowed-origin-patterns: ${CAMPAIGN_CORS_ALLOWED_ORIGIN_PATTERNS:https://your-vercel-app.vercel.app}
+    allowed-origin-patterns: ${CAMPAIGN_CORS_ALLOWED_ORIGIN_PATTERNS:https://*.vercel.app,https://*.ngrok-free.app,https://*.ngrok.app,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174}

@@ -1,24 +1,27 @@
 import { useEffect, useMemo, useState } from 'react';
 import Dashboard from './components/Dashboard';
+import LoyalCustomerRegistration from './components/LoyalCustomerRegistration';
 import QrDisplay from './components/QrDisplay';
 import ScanPage from './components/ScanPage';
 
 const views = [
   { id: 'home', label: 'Home' },
+  { id: 'hotel', label: 'Hotel Login' },
+  { id: 'loyalty', label: 'Loyal Signup' },
   { id: 'qr', label: 'Hotel QR' },
-  { id: 'scan', label: 'Scan Drink Code' },
-  { id: 'dashboard', label: 'Dashboard' },
 ];
 
 function getInitialState() {
   const params = new URLSearchParams(window.location.search);
   const view = params.get('view');
-  const safeView = views.some((item) => item.id === view) ? view : 'home';
+  const safeViews = new Set([...views.map((item) => item.id), 'scan']);
+  const safeView = safeViews.has(view) ? view : 'home';
 
   return {
     view: safeView,
     token: params.get('token') || '',
     hotelId: params.get('hotelId') || '1',
+    admin: window.location.pathname === '/admin',
   };
 }
 
@@ -51,6 +54,7 @@ function App() {
   const [hotelId, setHotelId] = useState(initialState.hotelId);
   const [scanToken, setScanToken] = useState(initialState.token);
   const [deviceId, setDeviceId] = useState('');
+  const [adminMode] = useState(initialState.admin);
 
   useEffect(() => {
     setDeviceId(ensureDeviceCookie());
@@ -59,7 +63,7 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams();
 
-    if (view !== 'home') {
+    if (view !== 'home' && !adminMode) {
       params.set('view', view);
     }
 
@@ -72,40 +76,47 @@ function App() {
     }
 
     const query = params.toString();
-    const nextUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+    const basePath = adminMode ? '/admin' : window.location.pathname;
+    const nextUrl = query ? `${basePath}?${query}` : basePath;
     window.history.replaceState({}, '', nextUrl);
-  }, [view, hotelId, scanToken]);
+  }, [view, hotelId, scanToken, adminMode]);
 
-  const openScanView = (token, nextHotelId) => {
-    setScanToken(token);
-    setHotelId(String(nextHotelId));
-    setView('scan');
-  };
+  if (adminMode) {
+    return (
+      <div className="app-shell app-shell--admin">
+        <main className="page-grid">
+          <Dashboard mode="admin" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="app-shell">
-      <header className="hero">
+      <header className="hero hero--mono">
         <div className="hero__content">
-          <p className="eyebrow">Campaign Loyalty System</p>
-          <h1>Help guests earn their free drink with a scan flow that feels easy.</h1>
+          <p className="eyebrow">Marathon Klassics</p>
+          <h1>Loyality customer giveaway built for fast hotel redemption.</h1>
           <p className="hero__text">
-            This app is designed for everyday customers, not technical users. Guests can scan,
-            see a clear result, and track progress without dealing with codes, forms, or staff approval.
+            Marathon Klassics uses this platform to help hotel guests earn a free beer after 10 valid scans.
+            Hotels display the QR code, guests scan with their own phone, and the result appears instantly in the browser.
           </p>
           <div className="hero__actions">
-            <button className="button button--primary" onClick={() => setView('scan')}>
-              Open customer scan page
+            <button className="button button--primary" onClick={() => setView('qr')}>
+              Show hotel QR
             </button>
-            <button className="button button--secondary" onClick={() => setView('qr')}>
-              Show hotel QR code
+            <button className="button button--secondary" onClick={() => setView('loyalty')}>
+              Loyal customer signup
+            </button>
+            <button className="button button--ghost" onClick={() => setView('hotel')}>
+              Hotel login
             </button>
           </div>
         </div>
         <aside className="hero__panel">
-          <h2>Device ready</h2>
+          <h2>Campaign purpose</h2>
           <p>
-            This browser already has a private customer device ID, so repeat scans can be tracked
-            fairly.
+            This application tracks valid guest scans fairly and turns repeated visits into a clear Marathon Klassics free-beer reward.
           </p>
           <code className="device-pill">{deviceId || 'Preparing device...'}</code>
         </aside>
@@ -135,31 +146,34 @@ function App() {
             <div className="feature-grid">
               <article className="feature-card">
                 <h3>1. Display hotel QR</h3>
-                <p>Generate a hotel-specific QR code that refreshes on time and opens the scan page automatically.</p>
+                <p>Hotels display a rotating Marathon Klassics QR code that opens the guest result page automatically.</p>
               </article>
               <article className="feature-card">
-                <h3>2. Guest scans once</h3>
-                <p>The customer only scans and confirms. The app handles device tracking, timing rules, and validation behind the scenes.</p>
+                <h3>2. Reward loyal guests</h3>
+                <p>Guests earn one free beer after 10 valid scans under the campaign rules configured in the backend.</p>
               </article>
               <article className="feature-card">
-                <h3>3. Show clear feedback</h3>
-                <p>Every result is displayed in plain language so customers immediately know whether the scan counted.</p>
+                <h3>3. Keep the guest flow simple</h3>
+                <p>No OTP, no manual approval, no extra form on the scan page. Guests only scan and see the result.</p>
               </article>
               <article className="feature-card">
-                <h3>4. Review hotel stats</h3>
-                <p>Hotel teams can quickly see today&apos;s scans, rewards, and suspicious activity from one screen.</p>
+                <h3>4. Separate hotel and admin controls</h3>
+                <p>Hotels only access their own dashboard, while Marathon Klassics admin uses a separate admin URL for registrations and imports.</p>
               </article>
             </div>
           </section>
         )}
 
+        {view === 'hotel' && <Dashboard mode="hotel" />}
+
         {view === 'qr' && (
           <QrDisplay
             hotelId={hotelId}
             onHotelChange={setHotelId}
-            onOpenScan={openScanView}
           />
         )}
+
+        {view === 'loyalty' && <LoyalCustomerRegistration />}
 
         {view === 'scan' && (
           <ScanPage
@@ -169,7 +183,6 @@ function App() {
           />
         )}
 
-        {view === 'dashboard' && <Dashboard />}
       </main>
     </div>
   );

@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import {
   adminLogin,
+  createHotel,
   getAdminDashboard,
   getCurrentHotelStats,
+  getRegisteredCustomers,
   getSessionUser,
   getReadableError,
   hotelLogin,
+  importCustomers,
+  importHotels,
   logout,
 } from '../services/api';
 
@@ -28,14 +32,25 @@ const emptyAdminLogin = {
   password: '',
 };
 
-function Dashboard() {
+const emptyHotelForm = {
+  name: '',
+  location: '',
+  password: '',
+};
+
+function Dashboard({ mode = 'hotel' }) {
   const [sessionUser, setSessionUser] = useState(null);
   const [hotelLoginForm, setHotelLoginForm] = useState(emptyHotelLogin);
   const [adminLoginForm, setAdminLoginForm] = useState(emptyAdminLogin);
+  const [createHotelForm, setCreateHotelForm] = useState(emptyHotelForm);
   const [hotelStats, setHotelStats] = useState(null);
   const [adminDashboard, setAdminDashboard] = useState(null);
+  const [registeredCustomers, setRegisteredCustomers] = useState([]);
+  const [customerImportResult, setCustomerImportResult] = useState(null);
+  const [hotelImportResult, setHotelImportResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const loadCurrentSession = async () => {
     try {
@@ -55,16 +70,31 @@ function Dashboard() {
 
     setBusy(true);
     setError('');
+    setSuccessMessage('');
 
     try {
       if (knownSession.role === 'hotel') {
         const stats = await getCurrentHotelStats();
         setHotelStats(stats);
         setAdminDashboard(null);
+        setRegisteredCustomers([]);
       } else if (knownSession.role === 'admin') {
-        const dashboard = await getAdminDashboard();
-        setAdminDashboard(dashboard);
+        const [dashboardResult, customersResult] = await Promise.allSettled([
+          getAdminDashboard(),
+          getRegisteredCustomers(),
+        ]);
+
+        if (dashboardResult.status !== 'fulfilled') {
+          throw dashboardResult.reason;
+        }
+
+        setAdminDashboard(dashboardResult.value);
+        setRegisteredCustomers(customersResult.status === 'fulfilled' ? customersResult.value : []);
         setHotelStats(null);
+
+        if (customersResult.status !== 'fulfilled') {
+          setError('Admin dashboard loaded, but loyal customer records are not available from this backend yet.');
+        }
       }
     } catch (requestError) {
       setError(getReadableError(requestError, 'Could not load dashboard data right now.'));
@@ -76,18 +106,21 @@ function Dashboard() {
   useEffect(() => {
     const boot = async () => {
       const session = await loadCurrentSession();
-      if (session) {
+      if (session && (mode === 'admin' ? session.role === 'admin' : session.role === 'hotel')) {
         await loadDashboardData(session);
+      } else if (session) {
+        setSessionUser(null);
       }
     };
 
     boot();
-  }, []);
+  }, [mode]);
 
   const handleHotelLogin = async (event) => {
     event.preventDefault();
     setBusy(true);
     setError('');
+    setSuccessMessage('');
 
     try {
       const session = await hotelLogin(hotelLoginForm);
@@ -105,6 +138,7 @@ function Dashboard() {
     event.preventDefault();
     setBusy(true);
     setError('');
+    setSuccessMessage('');
 
     try {
       const session = await adminLogin(adminLoginForm);
@@ -121,12 +155,16 @@ function Dashboard() {
   const handleLogout = async () => {
     setBusy(true);
     setError('');
+    setSuccessMessage('');
 
     try {
       await logout();
       setSessionUser(null);
       setHotelStats(null);
       setAdminDashboard(null);
+      setRegisteredCustomers([]);
+      setCustomerImportResult(null);
+      setHotelImportResult(null);
     } catch (requestError) {
       setError(getReadableError(requestError, 'Could not log out right now.'));
     } finally {
@@ -134,17 +172,66 @@ function Dashboard() {
     }
   };
 
-  const hotelView = sessionUser?.role === 'hotel';
-  const adminView = sessionUser?.role === 'admin';
+  const handleHotelCreate = async (event) => {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      await createHotel(createHotelForm);
+      setCreateHotelForm(emptyHotelForm);
+      setSuccessMessage('Hotel registered successfully.');
+      await loadDashboardData();
+    } catch (requestError) {
+      setError(getReadableError(requestError, 'Could not create hotel.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleImport = async (type, event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setBusy(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      if (type === 'customers') {
+        const result = await importCustomers(file);
+        setCustomerImportResult(result);
+        setSuccessMessage('Customer Excel import completed.');
+      } else {
+        const result = await importHotels(file);
+        setHotelImportResult(result);
+        setSuccessMessage('Hotel Excel import completed.');
+      }
+      await loadDashboardData();
+    } catch (requestError) {
+      setError(getReadableError(requestError, 'Import failed.'));
+    } finally {
+      event.target.value = '';
+      setBusy(false);
+    }
+  };
+
+  const hotelView = mode === 'hotel' && sessionUser?.role === 'hotel';
+  const adminView = mode === 'admin' && sessionUser?.role === 'admin';
 
   return (
-    <section className="panel panel--wide">
+    <section className="panel panel--wide role-panel">
       <div className="panel__header">
         <div>
-          <p className="eyebrow">Dashboard access</p>
-          <h2>Separate views for hotels and campaign admin</h2>
+          <p className="eyebrow">{mode === 'admin' ? 'Admin Access' : 'Hotel Access'}</p>
+          <h2>{mode === 'admin' ? 'Marathon Klassics admin control room' : 'Hotel loyalty dashboard'}</h2>
           <p className="section-copy">
-            Hotel teams only see their own campaign information. The admin account can review the full campaign and every registered hotel.
+            {mode === 'admin'
+              ? 'Admin access is kept separate from the hotel experience. Use this space to manage hotels, loyal customers, and imports.'
+              : 'Hotel teams only see their own campaign information, including scans, rewards, and suspicious activity.'}
           </p>
         </div>
         {sessionUser && (
@@ -159,7 +246,7 @@ function Dashboard() {
         )}
       </div>
 
-      {!sessionUser && (
+      {!sessionUser && mode === 'hotel' && (
         <div className="dashboard-grid">
           <article className="card">
             <h3>Hotel login</h3>
@@ -190,9 +277,14 @@ function Dashboard() {
             </form>
           </article>
 
+        </div>
+      )}
+
+      {!sessionUser && mode === 'admin' && (
+        <div className="dashboard-grid">
           <article className="card">
             <h3>Admin login</h3>
-            <p className="hint">Use the admin credentials from the backend config to review all hotels and the full campaign.</p>
+            <p className="hint">Use the Marathon Klassics admin credentials to open company-wide controls.</p>
             <form className="form-stack" onSubmit={handleAdminLogin}>
               <label className="field">
                 <span>Username</span>
@@ -222,6 +314,7 @@ function Dashboard() {
       )}
 
       {error && <p className="message message--error">{error}</p>}
+      {successMessage && <p className="message message--success">{successMessage}</p>}
 
       {hotelView && (
         <div className="dashboard-grid">
@@ -254,6 +347,85 @@ function Dashboard() {
           </section>
 
           <section className="card">
+            <h3>Register a hotel</h3>
+            <p className="hint">Create one hotel manually, or use the import tools below for bulk onboarding.</p>
+            <form className="form-stack" onSubmit={handleHotelCreate}>
+              <label className="field">
+                <span>Hotel name</span>
+                <input
+                  value={createHotelForm.name}
+                  onChange={(event) => setCreateHotelForm((current) => ({ ...current, name: event.target.value }))}
+                  placeholder="Ocean View Hotel"
+                  required
+                />
+              </label>
+              <label className="field">
+                <span>Location</span>
+                <input
+                  value={createHotelForm.location}
+                  onChange={(event) => setCreateHotelForm((current) => ({ ...current, location: event.target.value }))}
+                  placeholder="Mogadishu"
+                />
+              </label>
+              <label className="field">
+                <span>Password</span>
+                <input
+                  type="password"
+                  value={createHotelForm.password}
+                  onChange={(event) => setCreateHotelForm((current) => ({ ...current, password: event.target.value }))}
+                  placeholder="Hotel dashboard password"
+                  required
+                />
+              </label>
+              <button className="button button--primary" type="submit">
+                {busy ? 'Saving...' : 'Register hotel'}
+              </button>
+            </form>
+          </section>
+
+          <section className="card">
+            <h3>Bulk import from Excel</h3>
+            <p className="hint">
+              Customer sheet headers: <code>full name</code>, <code>phone number</code>, optional <code>email</code>, <code>device id</code>.
+              Hotel sheet headers: <code>name</code>, <code>password</code>, optional <code>location</code>.
+            </p>
+            <div className="dashboard-grid">
+              <label className="field">
+                <span>Import loyal customers (.xlsx)</span>
+                <input type="file" accept=".xlsx" onChange={(event) => handleImport('customers', event)} />
+              </label>
+              <label className="field">
+                <span>Import hotels (.xlsx)</span>
+                <input type="file" accept=".xlsx" onChange={(event) => handleImport('hotels', event)} />
+              </label>
+            </div>
+            {customerImportResult && (
+              <div className="info-box import-summary">
+                <strong>Customer import</strong>
+                <span>
+                  Processed {customerImportResult.processedCount}, created {customerImportResult.createdCount},
+                  updated {customerImportResult.updatedCount}, skipped {customerImportResult.skippedCount}
+                </span>
+                {customerImportResult.errors?.slice(0, 5).map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            )}
+            {hotelImportResult && (
+              <div className="info-box import-summary">
+                <strong>Hotel import</strong>
+                <span>
+                  Processed {hotelImportResult.processedCount}, created {hotelImportResult.createdCount},
+                  updated {hotelImportResult.updatedCount}, skipped {hotelImportResult.skippedCount}
+                </span>
+                {hotelImportResult.errors?.slice(0, 5).map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="card">
             <h3>Registered hotels</h3>
             <div className="hotel-list">
               {adminDashboard?.hotels?.length ? adminDashboard.hotels.map((hotel) => (
@@ -266,6 +438,24 @@ function Dashboard() {
                 </article>
               )) : (
                 <p className="hint">No hotels have been registered yet.</p>
+              )}
+            </div>
+          </section>
+
+          <section className="card">
+            <h3>Registered loyal customers</h3>
+            <div className="hotel-list">
+              {registeredCustomers.length ? registeredCustomers.map((customer) => (
+                <article className="hotel-list__item" key={customer.id}>
+                  <div>
+                    <strong>{customer.fullName}</strong>
+                    <span>{customer.phoneNumber}</span>
+                    <span>{customer.email || 'No email provided'}</span>
+                  </div>
+                  <code>#{customer.id}</code>
+                </article>
+              )) : (
+                <p className="hint">No loyal customers have registered yet.</p>
               )}
             </div>
           </section>
