@@ -13,5 +13,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
 
     Customer findByEmailIgnoreCase(String email);
 
+    long countByRegisteredAtIsNotNull();
+
     List<Customer> findAllByRegisteredAtIsNotNullOrderByRegisteredAtDesc();
 }

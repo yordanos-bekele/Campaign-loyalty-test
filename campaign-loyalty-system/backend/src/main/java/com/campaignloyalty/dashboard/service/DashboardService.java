@@ -1,6 +1,10 @@
 package com.campaignloyalty.dashboard.service;
 
+import com.campaignloyalty.customer.entity.Customer;
+import com.campaignloyalty.customer.repository.CustomerRepository;
+import com.campaignloyalty.dashboard.dto.AdminCustomerSummaryDto;
 import com.campaignloyalty.dashboard.dto.AdminDashboardDto;
+import com.campaignloyalty.dashboard.dto.CustomerMetricCountDto;
 import com.campaignloyalty.dashboard.dto.FraudSummaryDto;
 import com.campaignloyalty.dashboard.dto.HotelListItemDto;
 import com.campaignloyalty.dashboard.dto.HotelStatsDto;
@@ -22,6 +26,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -33,6 +40,8 @@ public class DashboardService {
     private final RewardRepository rewardRepository;
 
     private final HotelService hotelService;
+
+    private final CustomerRepository customerRepository;
 
     public HotelStatsDto getHotelStats(Integer hotelId) {
         log.info("Loading hotel dashboard stats hotelId={}", hotelId);
@@ -74,7 +83,40 @@ public class DashboardService {
 
     public AdminDashboardDto getAdminDashboard() {
         log.info("Loading admin dashboard");
-        return new AdminDashboardDto(getOverallStats(), getRegisteredHotels());
+        return new AdminDashboardDto(
+                getOverallStats(),
+                customerRepository.countByRegisteredAtIsNotNull(),
+                getRegisteredHotels());
+    }
+
+    public List<AdminCustomerSummaryDto> getRegisteredCustomerSummaries() {
+        log.info("Loading admin customer summaries");
+        List<Customer> customers = customerRepository.findAllByRegisteredAtIsNotNullOrderByRegisteredAtDesc();
+        if (customers.isEmpty()) {
+            log.info("No registered loyal customers found for admin summary");
+            return List.of();
+        }
+
+        List<Integer> customerIds = customers.stream()
+                .map(Customer::getId)
+                .toList();
+
+        Map<Integer, Long> rewardCounts = toMetricMap(rewardRepository.countRewardsByCustomerIds(customerIds));
+        Map<Integer, Long> validScanCounts = toMetricMap(scanHistoryRepository.countValidScansByCustomerIds(customerIds));
+
+        List<AdminCustomerSummaryDto> summaries = customers.stream()
+                .map(customer -> new AdminCustomerSummaryDto(
+                        customer.getId(),
+                        customer.getFullName(),
+                        customer.getPhoneNumber(),
+                        customer.getEmail(),
+                        rewardCounts.getOrDefault(customer.getId(), 0L),
+                        validScanCounts.getOrDefault(customer.getId(), 0L),
+                        customer.getRegisteredAt()))
+                .toList();
+
+        log.info("Loaded {} admin customer summaries", summaries.size());
+        return summaries;
     }
 
     public List<SuspiciousScanLogDto> getSuspiciousScansForHotel(Integer hotelId) {
@@ -108,5 +150,13 @@ public class DashboardService {
                 scanHistory.getIpAddress(),
                 scanHistory.getUserAgent(),
                 scanHistory.getScannedAt());
+    }
+
+    private Map<Integer, Long> toMetricMap(List<CustomerMetricCountDto> metrics) {
+        return metrics.stream()
+                .collect(Collectors.toMap(
+                        CustomerMetricCountDto::getCustomerId,
+                        CustomerMetricCountDto::getCount,
+                        Long::max));
     }
 }

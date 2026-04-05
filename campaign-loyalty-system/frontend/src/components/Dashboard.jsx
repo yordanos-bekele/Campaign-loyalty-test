@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import {
   adminLogin,
   createHotel,
+  getAdminCustomers,
   getAdminDashboard,
   getCurrentHotelStats,
-  getRegisteredCustomers,
   getSessionUser,
   getReadableError,
   hotelLogin,
@@ -13,9 +13,20 @@ import {
   logout,
 } from '../services/api';
 
-function StatCard({ label, value, accent }) {
+function StatCard({ label, value, accent, onClick, active = false }) {
   return (
-    <article className={`stat-card stat-card--${accent}`}>
+    <article
+      className={`stat-card stat-card--${accent}${onClick ? ' stat-card--interactive' : ''}${active ? ' stat-card--active' : ''}`}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onClick();
+        }
+      } : undefined}
+    >
       <span>{label}</span>
       <strong>{value}</strong>
     </article>
@@ -45,7 +56,8 @@ function Dashboard({ mode = 'hotel' }) {
   const [createHotelForm, setCreateHotelForm] = useState(emptyHotelForm);
   const [hotelStats, setHotelStats] = useState(null);
   const [adminDashboard, setAdminDashboard] = useState(null);
-  const [registeredCustomers, setRegisteredCustomers] = useState([]);
+  const [adminCustomers, setAdminCustomers] = useState([]);
+  const [showCustomerList, setShowCustomerList] = useState(false);
   const [customerImportResult, setCustomerImportResult] = useState(null);
   const [hotelImportResult, setHotelImportResult] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -77,11 +89,11 @@ function Dashboard({ mode = 'hotel' }) {
         const stats = await getCurrentHotelStats();
         setHotelStats(stats);
         setAdminDashboard(null);
-        setRegisteredCustomers([]);
+        setAdminCustomers([]);
       } else if (knownSession.role === 'admin') {
         const [dashboardResult, customersResult] = await Promise.allSettled([
           getAdminDashboard(),
-          getRegisteredCustomers(),
+          getAdminCustomers(),
         ]);
 
         if (dashboardResult.status !== 'fulfilled') {
@@ -89,11 +101,11 @@ function Dashboard({ mode = 'hotel' }) {
         }
 
         setAdminDashboard(dashboardResult.value);
-        setRegisteredCustomers(customersResult.status === 'fulfilled' ? customersResult.value : []);
+        setAdminCustomers(customersResult.status === 'fulfilled' ? customersResult.value : []);
         setHotelStats(null);
 
         if (customersResult.status !== 'fulfilled') {
-          setError('Admin dashboard loaded, but loyal customer records are not available from this backend yet.');
+          setError('Admin dashboard loaded, but customer analytics are not available from this backend yet.');
         }
       }
     } catch (requestError) {
@@ -162,7 +174,8 @@ function Dashboard({ mode = 'hotel' }) {
       setSessionUser(null);
       setHotelStats(null);
       setAdminDashboard(null);
-      setRegisteredCustomers([]);
+      setAdminCustomers([]);
+      setShowCustomerList(false);
       setCustomerImportResult(null);
       setHotelImportResult(null);
     } catch (requestError) {
@@ -343,7 +356,15 @@ function Dashboard({ mode = 'hotel' }) {
               <StatCard label="Total scans today" value={adminDashboard?.overallStats?.totalScansToday ?? '--'} accent="warm" />
               <StatCard label="Total rewards" value={adminDashboard?.overallStats?.totalRewardsGiven ?? '--'} accent="green" />
               <StatCard label="Total suspicious" value={adminDashboard?.overallStats?.totalSuspiciousScans ?? '--'} accent="red" />
+              <StatCard
+                label="Registered customers"
+                value={adminDashboard?.registeredCustomerCount ?? '--'}
+                accent="dark"
+                onClick={() => setShowCustomerList((current) => !current)}
+                active={showCustomerList}
+              />
             </div>
+            <p className="hint">Click the registered customers card to {showCustomerList ? 'hide' : 'view'} the full customer list with scan and reward totals.</p>
           </section>
 
           <section className="card">
@@ -443,21 +464,47 @@ function Dashboard({ mode = 'hotel' }) {
           </section>
 
           <section className="card">
-            <h3>Registered loyal customers</h3>
-            <div className="hotel-list">
-              {registeredCustomers.length ? registeredCustomers.map((customer) => (
-                <article className="hotel-list__item" key={customer.id}>
-                  <div>
-                    <strong>{customer.fullName}</strong>
-                    <span>{customer.phoneNumber}</span>
-                    <span>{customer.email || 'No email provided'}</span>
-                  </div>
-                  <code>#{customer.id}</code>
-                </article>
-              )) : (
-                <p className="hint">No loyal customers have registered yet.</p>
-              )}
+            <div className="section-title-row">
+              <div>
+                <h3>Registered loyal customers</h3>
+                <p className="hint">Admin-only view of each customer’s reward count and valid scan history.</p>
+              </div>
+              <button className="button button--secondary" type="button" onClick={() => setShowCustomerList((current) => !current)}>
+                {showCustomerList ? 'Hide list' : 'Show list'}
+              </button>
             </div>
+            {showCustomerList ? (
+              adminCustomers.length ? (
+                <div className="customer-summary-list">
+                  {adminCustomers.map((customer) => (
+                    <article className="customer-summary-card" key={customer.id}>
+                      <div className="customer-summary-card__identity">
+                        <div>
+                          <strong>{customer.fullName}</strong>
+                          <span>{customer.phoneNumber}</span>
+                          <span>{customer.email || 'No email provided'}</span>
+                        </div>
+                        <code>#{customer.id}</code>
+                      </div>
+                      <div className="customer-summary-card__metrics">
+                        <div>
+                          <span>Rewards earned</span>
+                          <strong>{customer.rewardCount}</strong>
+                        </div>
+                        <div>
+                          <span>Valid scans</span>
+                          <strong>{customer.validScanCount}</strong>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="hint">No loyal customers have registered yet.</p>
+              )
+            ) : (
+              <p className="hint">Customer analytics are hidden until you open the registered customers card above.</p>
+            )}
           </section>
         </div>
       )}

@@ -10,5 +10,6 @@ import java.util.List;
 public class AdminDashboardDto {
 
     private OverallStatsDto overallStats;
+    private long registeredCustomerCount;
     private List<HotelListItemDto> hotels;
 }

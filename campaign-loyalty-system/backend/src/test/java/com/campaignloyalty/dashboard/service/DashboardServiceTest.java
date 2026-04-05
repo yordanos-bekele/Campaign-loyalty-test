@@ -1,5 +1,6 @@
 package com.campaignloyalty.dashboard.service;
 
+import com.campaignloyalty.customer.repository.CustomerRepository;
 import com.campaignloyalty.dashboard.dto.HotelStatsDto;
 import com.campaignloyalty.dashboard.dto.OverallStatsDto;
 import com.campaignloyalty.hotel.service.HotelService;
@@ -31,6 +32,9 @@ class DashboardServiceTest {
 
     @Mock
     private HotelService hotelService;
+
+    @Mock
+    private CustomerRepository customerRepository;
 
     @InjectMocks
     private DashboardService dashboardService;

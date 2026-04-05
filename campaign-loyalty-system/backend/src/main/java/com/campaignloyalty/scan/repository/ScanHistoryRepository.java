@@ -1,5 +1,6 @@
 package com.campaignloyalty.scan.repository;
 
+import com.campaignloyalty.dashboard.dto.CustomerMetricCountDto;
 import com.campaignloyalty.dashboard.dto.RejectedScanLeaderDto;
 import com.campaignloyalty.scan.entity.RejectionReason;
 import com.campaignloyalty.scan.entity.ScanHistory;
@@ -34,6 +35,17 @@ public interface ScanHistoryRepository extends JpaRepository<ScanHistory, Intege
             LocalDateTime scannedAtAfter);
 
     List<ScanHistory> findTop50ByHotelIdAndSuspiciousTrueOrderByScannedAtDesc(Integer hotelId);
+
+    @Query("""
+            select new com.campaignloyalty.dashboard.dto.CustomerMetricCountDto(
+                sh.customerId,
+                count(sh.id)
+            )
+            from ScanHistory sh
+            where sh.customerId in :customerIds and sh.valid = true
+            group by sh.customerId
+            """)
+    List<CustomerMetricCountDto> countValidScansByCustomerIds(List<Integer> customerIds);
 
     @Query("""
             select new com.campaignloyalty.dashboard.dto.RejectedScanLeaderDto(

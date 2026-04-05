@@ -1,6 +1,7 @@
 package com.campaignloyalty.dashboard.controller;
 
 import com.campaignloyalty.auth.service.AuthService;
+import com.campaignloyalty.dashboard.dto.AdminCustomerSummaryDto;
 import com.campaignloyalty.dashboard.dto.AdminDashboardDto;
 import com.campaignloyalty.dashboard.dto.FraudSummaryDto;
 import com.campaignloyalty.dashboard.dto.HotelStatsDto;
@@ -91,6 +92,19 @@ public class DashboardController {
     public ResponseEntity<AdminDashboardDto> getAdminDashboard(HttpSession session) {
         authService.requireAdmin(session);
         return ResponseEntity.ok(dashboardService.getAdminDashboard());
+    }
+
+    @GetMapping("/admin/customers")
+    @Operation(
+            summary = "Get admin loyal customer summaries",
+            description = "Returns registered loyal customers with their valid scan totals and reward totals for the admin dashboard.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Customer summaries returned")
+            }
+    )
+    public ResponseEntity<List<AdminCustomerSummaryDto>> getAdminCustomers(HttpSession session) {
+        authService.requireAdmin(session);
+        return ResponseEntity.ok(dashboardService.getRegisteredCustomerSummaries());
     }
 
     @GetMapping("/admin/fraud-summary")

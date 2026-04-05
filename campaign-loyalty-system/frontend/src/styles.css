@@ -148,6 +148,15 @@ button {
   transform: translateY(-1px);
 }
 
+.stat-card--interactive {
+  cursor: pointer;
+}
+
+.stat-card--active {
+  outline: 2px solid rgba(0, 0, 0, 0.65);
+  outline-offset: 2px;
+}
+
 .tab-bar__button {
   background: rgba(255, 255, 255, 0.94);
   color: #303030;
@@ -171,9 +180,61 @@ button {
   border: 1px solid rgba(17, 17, 17, 0.12);
 }
 
+.stat-card--dark {
+  background: linear-gradient(135deg, #181818, #3b3b3b);
+  color: #ffffff;
+}
+
+.stat-card--dark span {
+  color: rgba(255, 255, 255, 0.78);
+}
+
 .page-grid {
   display: grid;
   gap: 1.25rem;
+}
+
+.section-title-row,
+.customer-summary-card__identity,
+.customer-summary-card__metrics {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.customer-summary-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.customer-summary-card {
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(241, 241, 241, 0.96));
+  border-radius: 18px;
+  padding: 1rem 1.1rem;
+}
+
+.customer-summary-card__identity span,
+.customer-summary-card__metrics span {
+  display: block;
+  color: #4f5a4f;
+}
+
+.customer-summary-card__metrics {
+  justify-content: flex-start;
+  gap: 1.4rem;
+  margin-top: 0.9rem;
+}
+
+.customer-summary-card__metrics div {
+  min-width: 120px;
+}
+
+.customer-summary-card__metrics strong {
+  display: block;
+  font-size: 1.6rem;
+  color: #111111;
 }
 
 .register-experience {
