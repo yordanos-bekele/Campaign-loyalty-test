@@ -138,3 +138,8 @@ export async function getAdminDashboard() {
   const response = await apiClient.get('/dashboard/admin');
   return response.data;
 }
+
+export async function getAdminCustomers() {
+  const response = await apiClient.get('/dashboard/admin/customers');
+  return response.data;
+}
