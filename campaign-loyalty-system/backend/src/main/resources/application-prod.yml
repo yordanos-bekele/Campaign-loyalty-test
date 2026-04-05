@@ -1,6 +1,17 @@
 spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://ep-wandering-water-amhf6lj7-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require}
+    username: ${SPRING_DATASOURCE_USERNAME:neondb_owner}
+    password: ${SPRING_DATASOURCE_PASSWORD:npg_qJNb2L7mZHMP}
+  flyway:
+    baseline-on-migrate: ${SPRING_FLYWAY_BASELINE_ON_MIGRATE:true}
   jpa:
-    show-sql: ${SPRING_JPA_SHOW_SQL:false}
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 campaign:
   cors:

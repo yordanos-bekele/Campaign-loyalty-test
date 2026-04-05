@@ -34,8 +34,11 @@ public class ScanHistory {
 
     private boolean valid;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "reject_reason")
-    private String rejectReason;
+    private RejectionReason rejectionReason;
+
+    private boolean suspicious;
 
     @PrePersist
     protected void onCreate() {

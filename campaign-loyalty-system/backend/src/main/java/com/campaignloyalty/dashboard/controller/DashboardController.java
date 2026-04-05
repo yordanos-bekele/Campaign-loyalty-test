@@ -2,8 +2,10 @@ package com.campaignloyalty.dashboard.controller;
 
 import com.campaignloyalty.auth.service.AuthService;
 import com.campaignloyalty.dashboard.dto.AdminDashboardDto;
+import com.campaignloyalty.dashboard.dto.FraudSummaryDto;
 import com.campaignloyalty.dashboard.dto.HotelStatsDto;
 import com.campaignloyalty.dashboard.dto.OverallStatsDto;
+import com.campaignloyalty.dashboard.dto.SuspiciousScanLogDto;
 import com.campaignloyalty.dashboard.service.DashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -12,6 +14,8 @@ import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/dashboard")
@@ -48,6 +52,21 @@ public class DashboardController {
         return ResponseEntity.ok(dashboardService.getHotelStats(hotelId));
     }
 
+    @GetMapping("/hotel/{hotelId}/suspicious-scans")
+    @Operation(
+            summary = "Get recent suspicious scan logs for a hotel",
+            description = "Returns the latest 50 suspicious scan history entries for the requested hotel.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Suspicious scan logs returned")
+            }
+    )
+    public ResponseEntity<List<SuspiciousScanLogDto>> getSuspiciousScans(
+            @PathVariable Integer hotelId,
+            HttpSession session) {
+        authService.assertCanViewHotel(session, hotelId);
+        return ResponseEntity.ok(dashboardService.getSuspiciousScansForHotel(hotelId));
+    }
+
     @GetMapping("/overall")
     @Operation(
             summary = "Get overall daily statistics",
@@ -72,5 +91,18 @@ public class DashboardController {
     public ResponseEntity<AdminDashboardDto> getAdminDashboard(HttpSession session) {
         authService.requireAdmin(session);
         return ResponseEntity.ok(dashboardService.getAdminDashboard());
+    }
+
+    @GetMapping("/admin/fraud-summary")
+    @Operation(
+            summary = "Get admin fraud summary",
+            description = "Returns rejected-scan totals, suspicious flag totals, and the top customers and hotels by rejected scans.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Fraud summary returned")
+            }
+    )
+    public ResponseEntity<FraudSummaryDto> getFraudSummary(HttpSession session) {
+        authService.requireAdmin(session);
+        return ResponseEntity.ok(dashboardService.getFraudSummary());
     }
 }

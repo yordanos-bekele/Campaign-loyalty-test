@@ -3,13 +3,17 @@ package com.campaignloyalty.scan.dto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @AllArgsConstructor
 public class ScanResponse {
 
-    private boolean success;
-    private String message;
-    private boolean rewardEarned;
+    private String status;
     private Integer currentCount;
-    private Integer scansRemaining;
+    private Integer remainingToReward;
+    private String reason;
+    private Integer rewardId;
+    private LocalDateTime nextAllowedScanAt;
+    private String message;
 }
