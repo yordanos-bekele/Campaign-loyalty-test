@@ -1,7 +1,28 @@
 import axios from 'axios';
 
+function normalizeApiBaseUrl(rawBaseUrl) {
+  if (!rawBaseUrl) {
+    return '/api';
+  }
+
+  const trimmedBaseUrl = rawBaseUrl.trim().replace(/\/+$/, '');
+  if (trimmedBaseUrl === '') {
+    return '/api';
+  }
+
+  if (trimmedBaseUrl === '/api' || trimmedBaseUrl.endsWith('/api')) {
+    return trimmedBaseUrl;
+  }
+
+  if (trimmedBaseUrl.startsWith('http://') || trimmedBaseUrl.startsWith('https://')) {
+    return `${trimmedBaseUrl}/api`;
+  }
+
+  return trimmedBaseUrl;
+}
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL || '/api'),
   withCredentials: true,
 });
 
