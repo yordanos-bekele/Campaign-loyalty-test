@@ -20,7 +20,7 @@ const emptyHotelForm = {
   password: '',
 };
 
-function QrDisplay({ hotelId, onHotelChange }) {
+function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
   const [lookupHotel, setLookupHotel] = useState(null);
   const [hotelError, setHotelError] = useState('');
   const [loadingHotel, setLoadingHotel] = useState(false);
@@ -192,46 +192,48 @@ function QrDisplay({ hotelId, onHotelChange }) {
             {tokenError && <p className="message message--error">{tokenError}</p>}
           </article>
 
-          <article className="card">
-            <h3>Create a hotel</h3>
-            <p className="hint">If this is your first setup, create the hotel here and start using QR codes right away.</p>
+          {allowHotelCreation && (
+            <article className="card">
+              <h3>Create a hotel</h3>
+              <p className="hint">If this is your first setup, create the hotel here and start using QR codes right away.</p>
 
-            <form className="form-stack" onSubmit={handleCreateHotel}>
-              <label className="field">
-                <span>Hotel name</span>
-                <input
-                  value={hotelForm.name}
-                  onChange={(event) => setHotelForm((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="Ocean View Hotel"
-                  required
-                />
-              </label>
+              <form className="form-stack" onSubmit={handleCreateHotel}>
+                <label className="field">
+                  <span>Hotel name</span>
+                  <input
+                    value={hotelForm.name}
+                    onChange={(event) => setHotelForm((current) => ({ ...current, name: event.target.value }))}
+                    placeholder="Ocean View Hotel"
+                    required
+                  />
+                </label>
 
-              <label className="field">
-                <span>Location</span>
-                <input
-                  value={hotelForm.location}
-                  onChange={(event) => setHotelForm((current) => ({ ...current, location: event.target.value }))}
-                  placeholder="Mogadishu"
-                />
-              </label>
+                <label className="field">
+                  <span>Location</span>
+                  <input
+                    value={hotelForm.location}
+                    onChange={(event) => setHotelForm((current) => ({ ...current, location: event.target.value }))}
+                    placeholder="Mogadishu"
+                  />
+                </label>
 
-              <label className="field">
-                <span>Hotel password</span>
-                <input
-                  type="password"
-                  value={hotelForm.password}
-                  onChange={(event) => setHotelForm((current) => ({ ...current, password: event.target.value }))}
-                  placeholder="Create a hotel password"
-                  required
-                />
-              </label>
+                <label className="field">
+                  <span>Hotel password</span>
+                  <input
+                    type="password"
+                    value={hotelForm.password}
+                    onChange={(event) => setHotelForm((current) => ({ ...current, password: event.target.value }))}
+                    placeholder="Create a hotel password"
+                    required
+                  />
+                </label>
 
-              <button className="button button--primary" type="submit">
-                {creatingHotel ? 'Creating hotel...' : 'Create hotel'}
-              </button>
-            </form>
-          </article>
+                <button className="button button--primary" type="submit">
+                  {creatingHotel ? 'Creating hotel...' : 'Create hotel'}
+                </button>
+              </form>
+            </article>
+          )}
         </div>
 
         <article className="card qr-card">

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Dashboard from './components/Dashboard';
 import LoyalCustomerRegistration from './components/LoyalCustomerRegistration';
-import QrDisplay from './components/QrDisplay';
 import ScanPage from './components/ScanPage';
 
 const DEVICE_ID_STORAGE_KEY = 'marathon_klassics_device_id';
@@ -9,7 +8,6 @@ const DEVICE_ID_STORAGE_KEY = 'marathon_klassics_device_id';
 const views = [
   { id: 'home', label: 'Home' },
   { id: 'hotel', label: 'Hotel Login' },
-  { id: 'qr', label: 'Hotel QR' },
 ];
 
 function getInitialState() {
@@ -121,10 +119,7 @@ function App() {
             Hotels display the QR code, guests scan with their own phone, and the result appears instantly in the browser.
           </p>
           <div className="hero__actions">
-            <button className="button button--primary" onClick={() => setView('qr')}>
-              Show hotel QR
-            </button>
-            <button className="button button--secondary" onClick={() => window.location.assign('/register')}>
+            <button className="button button--primary" onClick={() => window.location.assign('/register')}>
               Loyal customer signup
             </button>
             <button className="button button--ghost" onClick={() => setView('hotel')}>
@@ -165,7 +160,7 @@ function App() {
             <div className="feature-grid">
               <article className="feature-card">
                 <h3>1. Display hotel QR</h3>
-                <p>Hotels display a rotating Marathon Klassics QR code that opens the guest result page automatically.</p>
+                <p>Marathon Klassics admin controls the hotel QR experience and provides the rotating code used for guest scans.</p>
               </article>
               <article className="feature-card">
                 <h3>2. Reward loyal guests</h3>
@@ -177,20 +172,13 @@ function App() {
               </article>
               <article className="feature-card">
                 <h3>4. Separate hotel and admin controls</h3>
-                <p>Hotels only access their own dashboard, while Marathon Klassics admin uses a separate admin URL for registrations and imports.</p>
+                <p>Hotels only access their own dashboard, while Marathon Klassics admin uses a separate admin URL for registrations, imports, and QR management.</p>
               </article>
             </div>
           </section>
         )}
 
         {view === 'hotel' && <Dashboard mode="hotel" />}
-
-        {view === 'qr' && (
-          <QrDisplay
-            hotelId={hotelId}
-            onHotelChange={setHotelId}
-          />
-        )}
 
         {view === 'scan' && (
           <ScanPage

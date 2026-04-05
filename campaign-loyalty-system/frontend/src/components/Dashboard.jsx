@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import QrDisplay from './QrDisplay';
 import {
   adminLogin,
   createHotel,
@@ -58,6 +59,7 @@ function Dashboard({ mode = 'hotel' }) {
   const [adminDashboard, setAdminDashboard] = useState(null);
   const [adminCustomers, setAdminCustomers] = useState([]);
   const [showCustomerList, setShowCustomerList] = useState(false);
+  const [adminQrHotelId, setAdminQrHotelId] = useState('1');
   const [customerImportResult, setCustomerImportResult] = useState(null);
   const [hotelImportResult, setHotelImportResult] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -403,6 +405,12 @@ function Dashboard({ mode = 'hotel' }) {
               </button>
             </form>
           </section>
+
+          <QrDisplay
+            hotelId={adminQrHotelId}
+            onHotelChange={setAdminQrHotelId}
+            allowHotelCreation={false}
+          />
 
           <section className="card">
             <h3>Bulk import from Excel</h3>
