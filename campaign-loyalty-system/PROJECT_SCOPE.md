@@ -12,10 +12,18 @@ This document captures the agreed project scope for the `Campaign Loyalty System
 
 Build a beverage loyalty marketing campaign system where users scan hotel-specific QR codes and earn a free drink after 10 valid scans at the same hotel.
 
+Brand context:
+
+- Beverage company: `Marathon Klassics`
+- Campaign theme: loyal customer giveaway
+- Reward copy used in the product: free beer after 10 valid scans
+- UI direction: black and white base with restrained supporting accents
+
 ## Core Rules
 
 - Users are identified by a `device_id` cookie.
-- A valid scan must be at least 20 minutes after the previous valid scan for the same user at the same hotel.
+- For cross-origin deployed environments, the same device identity may also be sent through the `X-Device-Id` header.
+- A valid scan must be at least 60 minutes after the previous valid scan for the same user at the same hotel.
 - A user can have at most 3 valid scans per hotel per day.
 - QR tokens rotate every 2 minutes and must expire.
 - The flow is fully automatic:
@@ -23,6 +31,11 @@ Build a beverage loyalty marketing campaign system where users scan hotel-specif
   - no staff approval
 - All scans, valid and invalid, must be logged for fraud analysis.
 - Rewards must be counted and stored.
+- Invalid token scans must be rejected.
+- Rejected scans caused by time-gap or daily-limit violations must be logged with fraud metadata.
+- Suspicious activity must be flagged when:
+  - there are more than 2 rejected scans within 10 minutes
+  - or the same violation repeats within 1 hour
 
 ## Backend Feature Modules
 
@@ -47,6 +60,8 @@ Build a beverage loyalty marketing campaign system where users scan hotel-specif
 - `Customer` entity with `device_id`
 - `CustomerRepository`
 - `CustomerService`
+- loyal customer registration profile fields
+- bulk customer import from Excel
 
 ### 4. scan
 
@@ -67,6 +82,8 @@ Build a beverage loyalty marketing campaign system where users scan hotel-specif
 - `DashboardController`
 - `DashboardService`
 - Hotel stats and overall stats APIs
+- fraud monitoring APIs
+- admin customer analytics
 
 ### 7. common
 
@@ -78,57 +95,123 @@ Build a beverage loyalty marketing campaign system where users scan hotel-specif
 
 When `POST /api/scan` is called:
 
-1. Validate the hotel exists.
-2. Validate the QR token:
+1. Validate the QR token:
    - exists
    - matches the hotel
    - is not expired
-3. Identify or create the customer using the `device_id` cookie.
-4. Check `last_scan_at` for that customer and hotel:
-   - if less than 20 minutes ago, reject
-5. Check `daily_scan_count`:
-   - if already 3 or more for that day, reject
-6. If valid:
+2. Identify or create the customer using the device identity.
+3. Check `last_scan_at` for that customer and hotel:
+   - if less than 60 minutes ago, reject with `MIN_TIME_NOT_REACHED`
+4. Check `daily_scan_count`:
+   - if already 3 or more for that day, reject with `DAILY_LIMIT_REACHED`
+5. If token is invalid or expired:
+   - reject with `INVALID_OR_EXPIRED_TOKEN`
+6. For rejected scans caused by business-rule violations:
+   - log `scan_history`
+   - include IP
+   - include user agent
+   - include `valid = false`
+   - include rejection reason
+   - include suspicious flag when thresholds are met
+7. If valid:
    - accept the scan
    - increment `scan_count`
    - increment `daily_scan_count`
    - update `last_scan_at`
-7. Log `scan_history` with:
+8. Log `scan_history` with:
    - IP
    - user agent
    - whether the scan was valid
    - reject reason if invalid
-8. If `scan_count` reaches 10:
+9. If `scan_count` reaches 10:
    - reset `scan_count` to 0
    - insert a reward record
-   - return a reward-earned response
+   - return a `reward_earned` response with reward id and congratulation message
+
+Standard scan response shape:
+
+- `status`
+- `currentCount`
+- `remainingToReward`
+- optional `reason`
+- optional `rewardId`
+- optional `nextAllowedScanAt`
 
 ## Frontend Requirements
 
-### Hotel QR Display Page
+### Public Home Page
 
-- Fetch QR tokens from the backend
-- Display the current QR code
-- Auto-refresh every 2 minutes
+- Present Marathon Klassics campaign overview
+- Explain the loyalty giveaway
+- Provide hotel login entry
+- Provide loyal customer registration entry
+- Do not expose hotel QR controls publicly
 
-### Scan Page
+### Loyal Customer Registration Page
+
+- Separate public route
+- Collect only:
+  - username
+  - phone number
+- Persist browser device identity in local storage and cookie
+- Show confirmation message after successful registration
+
+### Scan Result Page
 
 - Open after scanning the QR code
-- Perform `POST /api/scan`
+- Perform `POST /api/scan` automatically on page load
 - Show current progress count
+- Show next allowed scan time when rejected by time rule
 - Show reward-earned message when applicable
+- Keep guest interaction minimal
 
 ### Hotel Dashboard
 
+- Hotel login only
 - Show number of scans today
 - Show rewards given
 - Show suspicious scans
 
+### Admin Dashboard
+
+- Separate admin route in the frontend
+- Separate admin login flow
+- Show overall campaign stats
+- Show registered hotel list
+- Support hotel registration
+- Support hotel Excel import
+- Support loyal customer Excel import
+- Show registered customer count
+- Show clickable customer analytics list with:
+  - customer identity
+  - reward count
+  - valid scan count
+- Control hotel QR generation from admin only
+- Show recent suspicious scans and fraud summary data from backend APIs
+
+### Hotel QR Management
+
+- Managed by admin, not exposed on the public home page
+- Generate hotel-specific QR tokens
+- Display QR code for guest scanning
+- Auto-refresh every 2 minutes
+- Provide guest-facing scan URL copy action
+
 ## Database
 
 - PostgreSQL
-- SQL schema included
+- Flyway migrations included and preferred for ongoing schema changes
 - Docker setup included
+
+Current schema-related additions include:
+
+- fraud fields on `scan_history`
+  - `valid`
+  - `rejection_reason`
+  - `suspicious`
+  - `ip_address`
+  - `user_agent`
+- loyal customer profile fields on `customer`
 
 ## Delivery Expectation
 
@@ -143,6 +226,14 @@ Generate the project cleanly in feature folders and include:
 - frontend API calls
 
 The codebase should be runnable with Maven and npm.
+
+## Deployment Notes
+
+- Frontend is built with Vite.
+- Backend active profile is selected through environment variable.
+- Cross-origin local and deployed setups must allow cookie/session usage and CORS correctly.
+- Deployed frontend and backend must work across Vercel and Render.
+- Device identity fallback via `X-Device-Id` is part of the expected deployed behavior.
 
 ## Working Agreement
 
