@@ -5,7 +5,6 @@ import com.campaignloyalty.scan.entity.RejectionReason;
 import com.campaignloyalty.scan.entity.ScanHistory;
 import com.campaignloyalty.scan.repository.ScanHistoryRepository;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import com.campaignloyalty.customer.entity.Customer;
@@ -26,17 +25,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
-@AllArgsConstructor
 @Transactional
 @Slf4j
 public class ScanService {
 
-    @Value("${campaign.time-gap-minutes}")
-    private final int MIN_SCAN_GAP_MINUTES;
-    @Value("${campaign.daily-scan-limit}")
-    private final int MAX_DAILY_VALID_SCANS;
-    @Value("${campaign.reward-threshold}")
-    private final int REWARD_THRESHOLD;
+    private final int minScanGapMinutes;
+    private final int maxDailyValidScans;
+    private final int rewardThreshold;
 
     private final QrTokenRepository qrTokenRepository;
 
@@ -49,6 +44,27 @@ public class ScanService {
     private final ScanHistoryRepository scanHistoryRepository;
 
     private final RewardService rewardService;
+
+    public ScanService(
+            @Value("${campaign.time-gap-minutes:60}") int minScanGapMinutes,
+            @Value("${campaign.daily-scan-limit:3}") int maxDailyValidScans,
+            @Value("${campaign.reward-threshold:10}") int rewardThreshold,
+            QrTokenRepository qrTokenRepository,
+            HotelRepository hotelRepository,
+            CustomerService customerService,
+            CustomerHotelProgressRepository customerHotelProgressRepository,
+            ScanHistoryRepository scanHistoryRepository,
+            RewardService rewardService) {
+        this.minScanGapMinutes = minScanGapMinutes;
+        this.maxDailyValidScans = maxDailyValidScans;
+        this.rewardThreshold = rewardThreshold;
+        this.qrTokenRepository = qrTokenRepository;
+        this.hotelRepository = hotelRepository;
+        this.customerService = customerService;
+        this.customerHotelProgressRepository = customerHotelProgressRepository;
+        this.scanHistoryRepository = scanHistoryRepository;
+        this.rewardService = rewardService;
+    }
 
     public ScanResponse scan(String deviceId, String token, String ip, String userAgent) {
         log.info("Processing scan request deviceId={} token={} ip={}", deviceId, token, ip);
@@ -86,7 +102,7 @@ public class ScanService {
         }
 
         if (progress.getLastScanAt() != null) {
-            LocalDateTime nextAllowedScanAt = progress.getLastScanAt().plusMinutes(MIN_SCAN_GAP_MINUTES);
+            LocalDateTime nextAllowedScanAt = progress.getLastScanAt().plusMinutes(minScanGapMinutes);
             if (now.isBefore(nextAllowedScanAt)) {
                 log.warn("Scan rejected due to minimum time gap customerId={} hotelId={} nextAllowedScanAt={}",
                         customer.getId(), hotelId, nextAllowedScanAt);
@@ -102,7 +118,7 @@ public class ScanService {
             }
         }
 
-        if (progress.getDailyScanCount() >= MAX_DAILY_VALID_SCANS) {
+        if (progress.getDailyScanCount() >= maxDailyValidScans) {
             log.warn("Scan rejected due to daily limit customerId={} hotelId={} dailyScanCount={}",
                     customer.getId(), hotelId, progress.getDailyScanCount());
             return rejectScan(
@@ -124,7 +140,7 @@ public class ScanService {
                 customer.getId(), hotelId, progress.getScanCount(), progress.getDailyScanCount());
 
         int currentCount = progress.getScanCount();
-        if (progress.getScanCount() >= REWARD_THRESHOLD) {
+        if (progress.getScanCount() >= rewardThreshold) {
             progress.setScanCount(0);
             customerHotelProgressRepository.save(progress);
             Reward reward = rewardService.createReward(customer.getId(), hotelId);
@@ -134,7 +150,7 @@ public class ScanService {
             return new ScanResponse(
                     "reward_earned",
                     currentCount,
-                    REWARD_THRESHOLD,
+                    rewardThreshold,
                     null,
                     reward.getId(),
                     null,
@@ -143,11 +159,11 @@ public class ScanService {
 
         logScanHistory(customer.getId(), hotelId, token, ip, userAgent, true, null, false);
         log.debug("Scan completed without reward customerId={} hotelId={} remainingToReward={}",
-                customer.getId(), hotelId, REWARD_THRESHOLD - currentCount);
+                customer.getId(), hotelId, rewardThreshold - currentCount);
         return new ScanResponse(
                 "success",
                 currentCount,
-                REWARD_THRESHOLD - currentCount,
+                rewardThreshold - currentCount,
                 null,
                 null,
                 null,
@@ -167,7 +183,7 @@ public class ScanService {
         return new ScanResponse(
                 "rejected",
                 0,
-                REWARD_THRESHOLD,
+                rewardThreshold,
                 RejectionReason.INVALID_OR_EXPIRED_TOKEN.name(),
                 null,
                 null,
@@ -190,7 +206,7 @@ public class ScanService {
         return new ScanResponse(
                 "rejected",
                 progress.getScanCount(),
-                REWARD_THRESHOLD - progress.getScanCount(),
+                rewardThreshold - progress.getScanCount(),
                 rejectionReason.name(),
                 null,
                 nextAllowedScanAt,
