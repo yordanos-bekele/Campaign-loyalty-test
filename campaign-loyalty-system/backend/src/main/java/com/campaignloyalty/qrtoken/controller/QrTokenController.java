@@ -1,11 +1,12 @@
 package com.campaignloyalty.qrtoken.controller;
 
+import com.campaignloyalty.auth.service.AuthService;
 import com.campaignloyalty.qrtoken.entity.QrToken;
 import com.campaignloyalty.qrtoken.service.QrTokenService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class QrTokenController {
 
     private final QrTokenService qrTokenService;
+    private final AuthService authService;
 
     @PostMapping("/generate/{hotelId}")
     @Operation(
@@ -27,7 +29,8 @@ public class QrTokenController {
                     @ApiResponse(responseCode = "400", description = "Hotel does not exist or hotelId is invalid")
             }
     )
-    public ResponseEntity<QrToken> generateToken(@PathVariable Integer hotelId) {
+    public ResponseEntity<QrToken> generateToken(@PathVariable Integer hotelId, HttpSession session) {
+        authService.requireAdmin(session);
         QrToken qrToken = qrTokenService.generateToken(hotelId);
         return ResponseEntity.ok(qrToken);
     }

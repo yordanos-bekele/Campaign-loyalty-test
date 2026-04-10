@@ -43,7 +43,7 @@ class ScanControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"token\":\"abc\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("device_id cookie is required"));
+                .andExpect(content().string("device_id cookie or X-Device-Id header is required"));
 
         verifyNoInteractions(scanService);
     }

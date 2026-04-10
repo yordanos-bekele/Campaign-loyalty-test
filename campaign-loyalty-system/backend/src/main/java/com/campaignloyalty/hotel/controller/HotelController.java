@@ -36,7 +36,10 @@ public class HotelController {
                     @ApiResponse(responseCode = "400", description = "Invalid hotel payload", content = @Content(schema = @Schema(implementation = String.class)))
             }
     )
-    public ResponseEntity<Hotel> createHotel(@Valid @RequestBody CreateHotelRequest request) {
+    public ResponseEntity<Hotel> createHotel(
+            @Valid @RequestBody CreateHotelRequest request,
+            HttpSession session) {
+        authService.requireAdmin(session);
         Hotel hotel = new Hotel();
         hotel.setName(request.getName());
         hotel.setLocation(request.getLocation());

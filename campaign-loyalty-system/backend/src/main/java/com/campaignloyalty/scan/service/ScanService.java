@@ -30,9 +30,12 @@ import java.time.LocalDateTime;
 @Slf4j
 public class ScanService {
 
-    private static final int MIN_SCAN_GAP_MINUTES = 1;
-    private static final int MAX_DAILY_VALID_SCANS = 10;
-    private static final int REWARD_THRESHOLD = 10;
+    @Value("${campaign.time-gap-minutes}")
+    private final int MIN_SCAN_GAP_MINUTES;
+    @Value("${campaign.daily-scan-limit}")
+    private final int MAX_DAILY_VALID_SCANS;
+    @Value("${campaign.reward-threshold}")
+    private final int REWARD_THRESHOLD;
 
     private final QrTokenRepository qrTokenRepository;
 
