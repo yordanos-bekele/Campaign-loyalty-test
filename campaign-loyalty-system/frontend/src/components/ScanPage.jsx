@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { getReadableError, scanQr } from '../services/api';
+import { confirmReward, getReadableError, scanQr } from '../services/api';
 import logoFallback from '../assets/logo-placeholder.svg';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
+import { Button } from './ui/button';
 
 function ProgressDots({ currentCount }) {
   return (
@@ -76,11 +77,14 @@ function ScanPage({ hotelId, initialToken }) {
   const currentCount = result?.currentCount ?? 0;
   const scansRemaining = result?.remainingToReward ?? 10;
   const isRewardEarned = result?.status === 'reward_earned';
+  const isConfirmationRequired = result?.status === 'confirmation_required';
   const isSuccess = result?.status === 'success';
   const isRejected = result?.status === 'rejected';
 
   const statusCardColors = isRewardEarned
     ? 'bg-primary/10 border-primary shadow-none'
+    : isConfirmationRequired
+      ? 'bg-primary/5 border-primary shadow-none'
     : isSuccess
       ? 'bg-primary/5 border-primary shadow-none'
       : isRejected
@@ -89,10 +93,14 @@ function ScanPage({ hotelId, initialToken }) {
 
   const statusTitle = isRewardEarned
     ? 'Congratulations! You earned a free beer.'
+    : isConfirmationRequired
+      ? 'Confirm your reward to finish.'
     : isSuccess
       ? 'Your scan counted successfully.'
       : isRejected
-        ? result?.reason === 'MIN_TIME_NOT_REACHED'
+        ? result?.reason === 'UNREGISTERED_DEVICE'
+          ? 'This device is not registered yet.'
+          : result?.reason === 'MIN_TIME_NOT_REACHED'
           ? 'This scan is too soon after your previous valid visit.'
           : result?.reason === 'DAILY_LIMIT_REACHED'
             ? 'You have already reached today’s valid scan limit for this hotel.'
@@ -101,8 +109,12 @@ function ScanPage({ hotelId, initialToken }) {
 
   const statusHint = isRewardEarned
     ? 'Show this result to the hotel team if they need to confirm your free beer reward.'
+    : isConfirmationRequired
+      ? 'Tap confirm to claim your reward for completing 10 valid scans at this hotel.'
     : isSuccess
       ? `${scansRemaining} more valid ${scansRemaining === 1 ? 'scan' : 'scans'} until your next free beer.`
+      : isRejected && result?.reason === 'UNREGISTERED_DEVICE'
+        ? 'Register your username and phone number first, then scan the QR code again.'
       : isRejected && result?.reason === 'MIN_TIME_NOT_REACHED' && result?.nextAllowedScanAt
         ? `You can scan again after ${formatNextAllowedScan(result.nextAllowedScanAt)}.`
         : isRejected && result?.reason === 'DAILY_LIMIT_REACHED'
@@ -140,7 +152,7 @@ function ScanPage({ hotelId, initialToken }) {
           <div className={`p-6 sm:p-8 transition-colors border shadow-sm rounded-none ${statusCardColors}`}>
             <div className="flex justify-between items-center mb-6 border-b border-border/20 pb-4">
               <Badge variant="outline" className="bg-background/80 pointer-events-none uppercase tracking-wide text-xs rounded-none border-border">
-                {isRewardEarned ? 'Reward earned' : isSuccess ? 'Scan counted' : isRejected ? 'Scan rejected' : 'Waiting for scan'}
+                {isRewardEarned ? 'Reward earned' : isConfirmationRequired ? 'Confirmation needed' : isSuccess ? 'Scan counted' : isRejected ? 'Scan rejected' : 'Waiting for scan'}
               </Badge>
             </div>
 
@@ -156,6 +168,34 @@ function ScanPage({ hotelId, initialToken }) {
             </div>
 
             <ProgressDots currentCount={currentCount} />
+
+            {isConfirmationRequired && result?.rewardId && (
+              <div className="mt-8 grid gap-3">
+                <Button
+                  type="button"
+                  size="lg"
+                  className="w-full h-12 text-md shadow-md rounded-none"
+                  disabled={busy}
+                  onClick={async () => {
+                    setBusy(true);
+                    setError('');
+                    try {
+                      const response = await confirmReward(result.rewardId);
+                      setResult(response);
+                    } catch (requestError) {
+                      setError(getReadableError(requestError, 'Could not confirm your reward right now.'));
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  {busy ? 'Confirming...' : 'Confirm reward'}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  This confirmation is required to count the reward.
+                </p>
+              </div>
+            )}
 
             {result?.nextAllowedScanAt && (
               <div className="mt-8 bg-background/60 p-4 border border-border flex justify-between items-center rounded-none">

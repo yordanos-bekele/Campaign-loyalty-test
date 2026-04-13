@@ -78,6 +78,11 @@ export async function scanQr(data) {
   return response.data;
 }
 
+export async function confirmReward(rewardId) {
+  const response = await apiClient.post(`/scan/confirm/${rewardId}`);
+  return response.data;
+}
+
 export async function getHotelStats(hotelId) {
   const response = await apiClient.get(`/dashboard/hotel/${hotelId}`);
   return response.data;

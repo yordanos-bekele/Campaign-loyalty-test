@@ -100,7 +100,35 @@ class ScanServiceTest {
         assertEquals("rejected", response.getStatus());
         assertEquals("INVALID_OR_EXPIRED_TOKEN", response.getReason());
         assertEquals(0, response.getCurrentCount());
-        verify(customerService, never()).findOrCreateByDeviceId(any());
+        verify(customerService, never()).getRegisteredCustomerByDeviceId(any());
+    }
+
+    @Test
+    void rejectsUnregisteredDeviceWithoutCreatingProgress() {
+        QrToken qrToken = createToken(99, LocalDateTime.now().plusMinutes(5));
+
+        when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
+        when(hotelRepository.findById(qrToken.getHotelId())).thenReturn(Optional.of(new Hotel()));
+        when(customerService.getRegisteredCustomerByDeviceId("device-1")).thenReturn(null);
+
+        ScanResponse response = scanService.scan("device-1", "active-token", "127.0.0.1", "JUnit");
+
+        assertEquals("rejected", response.getStatus());
+        assertEquals("UNREGISTERED_DEVICE", response.getReason());
+        assertEquals(0, response.getCurrentCount());
+        assertEquals("Please register your username and phone number before scanning.", response.getMessage());
+
+        verify(customerHotelProgressRepository, never()).findByCustomerIdAndHotelId(any(), any());
+        verify(customerHotelProgressRepository, never()).save(any(CustomerHotelProgress.class));
+        verify(rewardService, never()).createPendingReward(any(), any());
+
+        ArgumentCaptor<ScanHistory> historyCaptor = ArgumentCaptor.forClass(ScanHistory.class);
+        verify(scanHistoryRepository).save(historyCaptor.capture());
+        ScanHistory savedHistory = historyCaptor.getValue();
+        assertFalse(savedHistory.isValid());
+        assertNull(savedHistory.getCustomerId());
+        assertEquals(qrToken.getHotelId(), savedHistory.getHotelId());
+        assertEquals(RejectionReason.UNREGISTERED_DEVICE, savedHistory.getRejectionReason());
     }
 
     @Test
@@ -111,7 +139,7 @@ class ScanServiceTest {
 
         when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
         when(hotelRepository.findById(qrToken.getHotelId())).thenReturn(Optional.of(new Hotel()));
-        when(customerService.findOrCreateByDeviceId("device-1")).thenReturn(customer);
+        when(customerService.getRegisteredCustomerByDeviceId("device-1")).thenReturn(customer);
         when(customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(), qrToken.getHotelId())).thenReturn(progress);
         when(scanHistoryRepository.countByCustomerIdAndHotelIdAndValidFalseAndScannedAtAfter(eq(customer.getId()), eq(qrToken.getHotelId()), any(LocalDateTime.class))).thenReturn(0L);
         when(scanHistoryRepository.countByCustomerIdAndHotelIdAndValidFalseAndRejectionReasonAndScannedAtAfter(eq(customer.getId()), eq(qrToken.getHotelId()), eq(RejectionReason.MIN_TIME_NOT_REACHED), any(LocalDateTime.class))).thenReturn(0L);
@@ -124,7 +152,7 @@ class ScanServiceTest {
         assertEquals(8, response.getRemainingToReward());
         assertEquals(progress.getLastScanAt().plusMinutes(60), response.getNextAllowedScanAt());
         verify(customerHotelProgressRepository, never()).save(any(CustomerHotelProgress.class));
-        verify(rewardService, never()).createReward(any(), any());
+        verify(rewardService, never()).createPendingReward(any(), any());
     }
 
     @Test
@@ -135,7 +163,7 @@ class ScanServiceTest {
 
         when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
         when(hotelRepository.findById(qrToken.getHotelId())).thenReturn(Optional.of(new Hotel()));
-        when(customerService.findOrCreateByDeviceId("device-1")).thenReturn(customer);
+        when(customerService.getRegisteredCustomerByDeviceId("device-1")).thenReturn(customer);
         when(customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(), qrToken.getHotelId())).thenReturn(progress);
         when(scanHistoryRepository.countByCustomerIdAndHotelIdAndValidFalseAndScannedAtAfter(eq(customer.getId()), eq(qrToken.getHotelId()), any(LocalDateTime.class))).thenReturn(0L);
         when(scanHistoryRepository.countByCustomerIdAndHotelIdAndValidFalseAndRejectionReasonAndScannedAtAfter(eq(customer.getId()), eq(qrToken.getHotelId()), eq(RejectionReason.DAILY_LIMIT_REACHED), any(LocalDateTime.class))).thenReturn(0L);
@@ -159,25 +187,55 @@ class ScanServiceTest {
 
         when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
         when(hotelRepository.findById(qrToken.getHotelId())).thenReturn(Optional.of(new Hotel()));
-        when(customerService.findOrCreateByDeviceId("device-1")).thenReturn(customer);
+        when(customerService.getRegisteredCustomerByDeviceId("device-1")).thenReturn(customer);
         when(customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(), qrToken.getHotelId())).thenReturn(progress);
         when(customerHotelProgressRepository.save(any(CustomerHotelProgress.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(rewardService.createReward(customer.getId(), qrToken.getHotelId())).thenReturn(reward);
+        when(rewardService.createPendingReward(customer.getId(), qrToken.getHotelId())).thenReturn(reward);
 
         ScanResponse response = scanService.scan("device-1", "active-token", "127.0.0.1", "JUnit");
+
+        assertEquals("confirmation_required", response.getStatus());
+        assertEquals("Confirm to claim your free beer reward.", response.getMessage());
+        assertEquals(10, response.getCurrentCount());
+        assertEquals(0, response.getRemainingToReward());
+        assertEquals(123, response.getRewardId());
+        verify(customerHotelProgressRepository, times(2)).save(progress);
+        verify(rewardService).createPendingReward(customer.getId(), qrToken.getHotelId());
+
+        ArgumentCaptor<ScanHistory> historyCaptor = ArgumentCaptor.forClass(ScanHistory.class);
+        verify(scanHistoryRepository).save(historyCaptor.capture());
+        assertTrue(historyCaptor.getValue().isValid());
+        assertNull(historyCaptor.getValue().getRejectionReason());
+    }
+
+    @Test
+    void confirmsPendingRewardAndResetsProgress() {
+        Customer customer = createCustomer(10);
+        com.campaignloyalty.reward.entity.Reward reward = new com.campaignloyalty.reward.entity.Reward();
+        reward.setId(123);
+        reward.setCustomerId(customer.getId());
+        reward.setHotelId(99);
+
+        CustomerHotelProgress progress = createProgress(customer.getId(), 99, 10, 1, LocalDateTime.now().minusMinutes(5));
+        progress.setPendingRewardId(123);
+
+        when(customerService.getRegisteredCustomerByDeviceId("device-1")).thenReturn(customer);
+        when(rewardService.findReward(123)).thenReturn(reward);
+        when(customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(), 99)).thenReturn(progress);
+        when(customerHotelProgressRepository.save(any(CustomerHotelProgress.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ScanResponse response = scanService.confirmReward("device-1", 123, "127.0.0.1", "JUnit");
 
         assertEquals("reward_earned", response.getStatus());
         assertEquals("Congratulations! You earned a free beer.", response.getMessage());
         assertEquals(0, response.getCurrentCount());
         assertEquals(10, response.getRemainingToReward());
         assertEquals(123, response.getRewardId());
-        verify(customerHotelProgressRepository, times(2)).save(progress);
-        verify(rewardService).createReward(customer.getId(), qrToken.getHotelId());
 
-        ArgumentCaptor<ScanHistory> historyCaptor = ArgumentCaptor.forClass(ScanHistory.class);
-        verify(scanHistoryRepository).save(historyCaptor.capture());
-        assertTrue(historyCaptor.getValue().isValid());
-        assertNull(historyCaptor.getValue().getRejectionReason());
+        verify(rewardService).confirmReward(123, customer.getId(), 99);
+        verify(customerHotelProgressRepository).save(progress);
+        assertEquals(0, progress.getScanCount());
+        assertNull(progress.getPendingRewardId());
     }
 
     @Test
@@ -187,7 +245,7 @@ class ScanServiceTest {
 
         when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
         when(hotelRepository.findById(qrToken.getHotelId())).thenReturn(Optional.of(new Hotel()));
-        when(customerService.findOrCreateByDeviceId("device-1")).thenReturn(customer);
+        when(customerService.getRegisteredCustomerByDeviceId("device-1")).thenReturn(customer);
         when(customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(), qrToken.getHotelId())).thenReturn(null);
         when(customerHotelProgressRepository.save(any(CustomerHotelProgress.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -215,7 +273,7 @@ class ScanServiceTest {
 
         when(qrTokenRepository.findByToken("active-token")).thenReturn(qrToken);
         when(hotelRepository.findById(qrToken.getHotelId())).thenReturn(Optional.of(new Hotel()));
-        when(customerService.findOrCreateByDeviceId("device-1")).thenReturn(customer);
+        when(customerService.getRegisteredCustomerByDeviceId("device-1")).thenReturn(customer);
         when(customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(), qrToken.getHotelId())).thenReturn(progress);
         when(scanHistoryRepository.countByCustomerIdAndHotelIdAndValidFalseAndScannedAtAfter(eq(customer.getId()), eq(qrToken.getHotelId()), any(LocalDateTime.class))).thenReturn(2L);
 

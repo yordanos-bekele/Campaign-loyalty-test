@@ -10,22 +10,22 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class RewardTest {
 
     @Test
-    void onCreateSetsEarnedAtWhenMissing() {
+    void onCreateSetsCreatedAtWhenMissing() {
         Reward reward = new Reward();
 
         reward.onCreate();
 
-        assertNotNull(reward.getEarnedAt());
+        assertNotNull(reward.getCreatedAt());
     }
 
     @Test
-    void onCreateKeepsExistingEarnedAt() {
+    void onCreateKeepsExistingCreatedAt() {
         Reward reward = new Reward();
-        LocalDateTime earnedAt = LocalDateTime.of(2026, 4, 3, 12, 0);
-        reward.setEarnedAt(earnedAt);
+        LocalDateTime createdAt = LocalDateTime.of(2026, 4, 3, 12, 0);
+        reward.setCreatedAt(createdAt);
 
         reward.onCreate();
 
-        assertEquals(earnedAt, reward.getEarnedAt());
+        assertEquals(createdAt, reward.getCreatedAt());
     }
 }

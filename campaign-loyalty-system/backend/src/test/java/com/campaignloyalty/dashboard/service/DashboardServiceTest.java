@@ -43,7 +43,7 @@ class DashboardServiceTest {
     void returnsHotelStatsForToday() {
         when(scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndValid(eq(7), any(LocalDateTime.class), any(LocalDateTime.class), eq(true)))
                 .thenReturn(12L);
-        when(rewardRepository.countByHotelIdAndEarnedAtBetween(eq(7), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(rewardRepository.countConfirmedByHotelIdAndEarnedAtBetween(eq(7), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(3L);
         when(scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndSuspiciousTrue(eq(7), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(2L);
@@ -54,7 +54,7 @@ class DashboardServiceTest {
         assertEquals(3L, stats.getRewardsGiven());
         assertEquals(2L, stats.getSuspiciousScans());
         verify(scanHistoryRepository).countByHotelIdAndScannedAtBetweenAndValid(eq(7), eq(todayStart()), eq(todayEnd()), eq(true));
-        verify(rewardRepository).countByHotelIdAndEarnedAtBetween(eq(7), eq(todayStart()), eq(todayEnd()));
+        verify(rewardRepository).countConfirmedByHotelIdAndEarnedAtBetween(eq(7), eq(todayStart()), eq(todayEnd()));
         verify(scanHistoryRepository).countByHotelIdAndScannedAtBetweenAndSuspiciousTrue(eq(7), eq(todayStart()), eq(todayEnd()));
     }
 
@@ -62,7 +62,7 @@ class DashboardServiceTest {
     void returnsOverallStatsForToday() {
         when(scanHistoryRepository.countByScannedAtBetweenAndValid(any(LocalDateTime.class), any(LocalDateTime.class), eq(true)))
                 .thenReturn(40L);
-        when(rewardRepository.countByEarnedAtBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(rewardRepository.countConfirmedByEarnedAtBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(9L);
         when(scanHistoryRepository.countByScannedAtBetweenAndSuspiciousTrue(any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(4L);
@@ -73,7 +73,7 @@ class DashboardServiceTest {
         assertEquals(9L, stats.getTotalRewardsGiven());
         assertEquals(4L, stats.getTotalSuspiciousScans());
         verify(scanHistoryRepository).countByScannedAtBetweenAndValid(eq(todayStart()), eq(todayEnd()), eq(true));
-        verify(rewardRepository).countByEarnedAtBetween(eq(todayStart()), eq(todayEnd()));
+        verify(rewardRepository).countConfirmedByEarnedAtBetween(eq(todayStart()), eq(todayEnd()));
         verify(scanHistoryRepository).countByScannedAtBetweenAndSuspiciousTrue(eq(todayStart()), eq(todayEnd()));
     }
 

@@ -73,7 +73,16 @@ public class CustomerService {
             return null;
         }
         Customer customer = customerRepository.findByDeviceId(deviceId);
-        return customer != null && customer.getRegisteredAt() != null ? customer : null;
+        if (customer == null || customer.getRegisteredAt() == null) {
+            return null;
+        }
+        if (customer.getFullName() == null || customer.getFullName().isBlank()) {
+            return null;
+        }
+        if (customer.getPhoneNumber() == null || customer.getPhoneNumber().isBlank()) {
+            return null;
+        }
+        return customer;
     }
 
     public List<Customer> findRegisteredCustomers() {

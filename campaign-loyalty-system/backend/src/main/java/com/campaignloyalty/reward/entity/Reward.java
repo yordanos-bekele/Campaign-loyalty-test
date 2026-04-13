@@ -23,12 +23,18 @@ public class Reward {
     @Column(name = "earned_at")
     private LocalDateTime earnedAt;
 
+    @Column(name = "confirmed_at")
+    private LocalDateTime confirmedAt;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
     private boolean redeemed;
 
     @PrePersist
     protected void onCreate() {
-        if (earnedAt == null) {
-            earnedAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
     }
 }
