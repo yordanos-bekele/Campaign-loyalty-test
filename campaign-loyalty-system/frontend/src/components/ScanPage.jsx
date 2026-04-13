@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { getReadableError, scanQr } from '../services/api';
 import logoFallback from '../assets/logo-placeholder.svg';
+import { Card, CardContent } from './ui/card';
+import { Badge } from './ui/badge';
+import { Alert, AlertDescription } from './ui/alert';
 
 function ProgressDots({ currentCount }) {
   return (
-    <div className="progress-dots" aria-label={`Current progress is ${currentCount} out of 10`}>
+    <div className="grid grid-cols-10 gap-1 sm:gap-2 mt-6" aria-label={`Current progress is ${currentCount} out of 10`}>
       {Array.from({ length: 10 }).map((_, index) => (
         <span
           key={index}
-          className={index < currentCount ? 'progress-dots__item progress-dots__item--filled' : 'progress-dots__item'}
+          className={`h-4 sm:h-5 transition-all duration-0 ${index < currentCount ? 'bg-primary' : 'bg-muted border border-border'}`}
         />
       ))}
     </div>
@@ -75,13 +78,14 @@ function ScanPage({ hotelId, initialToken }) {
   const isRewardEarned = result?.status === 'reward_earned';
   const isSuccess = result?.status === 'success';
   const isRejected = result?.status === 'rejected';
-  const statusClass = isRewardEarned
-    ? 'status-card status-card--reward'
+
+  const statusCardColors = isRewardEarned
+    ? 'bg-primary/10 border-primary shadow-none'
     : isSuccess
-      ? 'status-card status-card--success'
+      ? 'bg-primary/5 border-primary shadow-none'
       : isRejected
-        ? 'status-card status-card--warning'
-    : 'status-card';
+        ? 'bg-destructive/10 border-destructive shadow-none'
+    : 'bg-card border-border';
 
   const statusTitle = isRewardEarned
     ? 'Congratulations! You earned a free beer.'
@@ -108,60 +112,72 @@ function ScanPage({ hotelId, initialToken }) {
             : 'Your scan result will appear here automatically after the QR code opens.';
 
   return (
-    <section className="scan-experience">
-      <article className="scan-hero-card">
-        <div className="scan-hero-card__topline">
-          <span className="eyebrow">Beverage Loyalty</span>
-          <span className="scan-hero-card__hotel">Hotel #{hotelId || '--'}</span>
-        </div>
-
-        <div className="scan-brand">
-          <img
-            className="scan-brand__logo"
-            src={brandLogo}
-            alt="Beverage company logo"
-            onError={() => setBrandLogo(logoFallback)}
-          />
-          <div>
-            <h1>{result?.message || statusTitle}</h1>
-            <p>{statusHint}</p>
-          </div>
-        </div>
-
-        <article className={statusClass}>
-          <div className="status-card__badge">
-            {isRewardEarned ? 'Reward earned' : isSuccess ? 'Scan counted' : isRejected ? 'Scan rejected' : 'Waiting for scan'}
+    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl bg-background shadow-2xl border-border rounded-none overflow-hidden">
+        <div className="p-6 md:p-10">
+          <div className="flex flex-wrap justify-between items-center gap-4 mb-6 border-b border-border pb-4">
+            <span className="text-sm font-bold font-display uppercase tracking-[0.1em] text-muted-foreground">Marathon Spirits Loyalty</span>
+            <Badge variant="secondary" className="bg-transparent text-foreground border border-border pointer-events-none px-3 py-1 text-sm font-bold rounded-none uppercase">
+              Hotel #{hotelId || '--'}
+            </Badge>
           </div>
 
-          <ProgressDots currentCount={currentCount} />
-
-          <div className="scan-metrics">
-            <article className="scan-metrics__card">
-              <span>Valid scans collected</span>
-              <strong>{currentCount}/10</strong>
-            </article>
-            <article className="scan-metrics__card">
-              <span>Scans remaining</span>
-              <strong>{scansRemaining}</strong>
-            </article>
-          </div>
-
-          {result?.nextAllowedScanAt && (
-            <div className="scan-next-window">
-              <span>Next valid scan</span>
-              <strong>{formatNextAllowedScan(result.nextAllowedScanAt)}</strong>
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left mb-8">
+            <div className="w-24 h-24 bg-card p-2 border border-border shadow-inner shrink-0 rounded-none">
+              <img
+                className="w-full h-full object-contain rounded-none"
+                src={brandLogo}
+                alt="Marathon Spirits logo"
+                onError={() => setBrandLogo(logoFallback)}
+              />
             </div>
+            <div className="mt-2 md:mt-0">
+              <h1 className="text-3xl font-extrabold font-display uppercase text-foreground mb-3 leading-tight tracking-tight">{result?.message || statusTitle}</h1>
+              <p className="text-muted-foreground text-lg">{statusHint}</p>
+            </div>
+          </div>
+
+          <div className={`p-6 sm:p-8 transition-colors border shadow-sm rounded-none ${statusCardColors}`}>
+            <div className="flex justify-between items-center mb-6 border-b border-border/20 pb-4">
+              <Badge variant="outline" className="bg-background/80 pointer-events-none uppercase tracking-wide text-xs rounded-none border-border">
+                {isRewardEarned ? 'Reward earned' : isSuccess ? 'Scan counted' : isRejected ? 'Scan rejected' : 'Waiting for scan'}
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="bg-background/80 p-4 border border-border shadow-sm rounded-none">
+                <span className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">Valid scans collected</span>
+                <strong className="block text-3xl font-bold font-display text-foreground">{currentCount}<span className="text-muted-foreground text-2xl font-medium">/10</span></strong>
+              </div>
+              <div className="bg-background/80 p-4 border border-border shadow-sm rounded-none">
+                <span className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">Scans remaining</span>
+                <strong className="block text-3xl font-bold font-display text-foreground">{scansRemaining}</strong>
+              </div>
+            </div>
+
+            <ProgressDots currentCount={currentCount} />
+
+            {result?.nextAllowedScanAt && (
+              <div className="mt-8 bg-background/60 p-4 border border-border flex justify-between items-center rounded-none">
+                <span className="text-sm font-medium text-muted-foreground font-display uppercase">Next valid scan</span>
+                <strong className="text-foreground font-semibold">{formatNextAllowedScan(result.nextAllowedScanAt)}</strong>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-8 pt-6 border-t border-border gap-4 text-sm text-muted-foreground text-center sm:text-left">
+            <span>{busy ? 'Checking your visit...' : result ? 'Result ready' : 'Waiting for QR scan result...'}</span>
+            <span>{error ? 'There was a scan issue.' : 'No extra action needed from the guest.'}</span>
+          </div>
+
+          {error && (
+            <Alert variant="destructive" className="mt-6 rounded-none">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
-        </article>
-
-        <div className="scan-hero-card__footer">
-          <span>{busy ? 'Checking your visit...' : result ? 'Result ready' : 'Waiting for QR scan result...'}</span>
-          <span>{error ? 'There was a scan issue.' : 'No extra action needed from the guest.'}</span>
         </div>
-
-        {error && <p className="message message--error">{error}</p>}
-      </article>
-    </section>
+      </Card>
+    </div>
   );
 }
 

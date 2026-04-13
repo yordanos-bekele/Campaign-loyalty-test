@@ -12,6 +12,11 @@ export default defineConfig(({ mode }) => {
   return {
     root: projectRoot,
     plugins: [react()],
+    resolve: {
+      alias: {
+        "@": resolve(projectRoot, "./src"),
+      },
+    },
     build: {
       outDir: resolve(projectRoot, 'dist'),
       emptyOutDir: true,
