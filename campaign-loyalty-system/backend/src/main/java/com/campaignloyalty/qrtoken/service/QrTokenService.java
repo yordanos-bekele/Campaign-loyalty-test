@@ -3,21 +3,28 @@ package com.campaignloyalty.qrtoken.service;
 import com.campaignloyalty.hotel.repository.HotelRepository;
 import com.campaignloyalty.qrtoken.entity.QrToken;
 import com.campaignloyalty.qrtoken.repository.QrTokenRepository;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
 @Slf4j
 public class QrTokenService {
 
     private final HotelRepository hotelRepository;
 
     private final QrTokenRepository qrTokenRepository;
+
+    @Value("${campaign.qr-token-validity-minutes:3}")
+    private int tokenValidityMinutes = 3;
+
+    public QrTokenService(HotelRepository hotelRepository, QrTokenRepository qrTokenRepository) {
+        this.hotelRepository = hotelRepository;
+        this.qrTokenRepository = qrTokenRepository;
+    }
 
     public QrToken generateToken(Integer hotelId) {
         log.info("Generating QR token hotelId={}", hotelId);
@@ -28,7 +35,9 @@ public class QrTokenService {
         qrToken.setHotelId(hotelId);
         qrToken.setToken(UUID.randomUUID().toString());
         qrToken.setCreatedAt(now);
-        qrToken.setExpiresAt(now.plusMinutes(2));
+        // QR codes rotate every 2 minutes, but tokens should remain valid a bit longer to
+        // accommodate mobile camera -> browser handoff and slow networks.
+        qrToken.setExpiresAt(now.plusMinutes(Math.max(1, tokenValidityMinutes)));
         QrToken savedToken = qrTokenRepository.save(qrToken);
         log.info("Generated QR token id={} hotelId={} expiresAt={}", savedToken.getId(), hotelId, savedToken.getExpiresAt());
         return savedToken;

@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
 import { createHotel, generateQrToken, getHotel, getReadableError } from '../services/api';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from './ui/card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Badge } from './ui/badge';
+import { useTheme } from './theme-provider';
 
 function formatExpiry(value) {
   if (!value) {
@@ -30,6 +36,7 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
   const [qrImage, setQrImage] = useState('');
   const [busy, setBusy] = useState(false);
   const [tokenError, setTokenError] = useState('');
+  const { theme } = useTheme();
 
   const scanLink = useMemo(() => {
     if (!tokenPayload?.token) {
@@ -52,17 +59,19 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
       return;
     }
 
+    const isLightMode = document.documentElement.classList.contains("light");
+
     QRCode.toDataURL(scanLink, {
       margin: 1,
       width: 280,
       color: {
-        dark: '#1f3427',
-        light: '#fff9ef',
+        dark: isLightMode ? '#000000' : '#F8FF00',
+        light: isLightMode ? '#ffffff' : '#000000',
       },
     })
       .then(setQrImage)
       .catch(() => setQrImage(''));
-  }, [scanLink]);
+  }, [scanLink, theme]);
 
   useEffect(() => {
     if (!hotelId) {
@@ -149,128 +158,138 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
   };
 
   return (
-    <section className="panel panel--wide">
-      <div className="panel__header">
-        <div>
-          <p className="eyebrow">Hotel QR display</p>
-          <h2>Show a fresh QR code for guests</h2>
-          <p className="section-copy">
-            Use this screen on a front desk tablet, a reception monitor, or a hotel phone. The code refreshes automatically every 2 minutes.
-          </p>
-          <p className="hint">
-            Public scan URL: {import.meta.env.VITE_PUBLIC_APP_URL || 'Using current browser URL'}
-          </p>
-        </div>
-      </div>
+    <Card className="col-span-full xl:col-span-1 shadow-sm border-border bg-background rounded-none">
+      <CardHeader className="bg-card border-b border-border mb-4 rounded-none">
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Hotel QR display</p>
+        <CardTitle className="uppercase font-display">Show a fresh QR code</CardTitle>
+        <CardDescription className="leading-relaxed mt-2 text-muted-foreground">
+          Use this screen on a front desk tablet, a reception monitor, or a hotel phone. The code refreshes automatically every 2 minutes.
+        </CardDescription>
+        <p className="text-xs font-mono text-muted-foreground mt-2 bg-muted px-2 py-1 inline-block border border-border">
+          Public: {import.meta.env.VITE_PUBLIC_APP_URL || 'Using current browser URL'}
+        </p>
+      </CardHeader>
 
-      <div className="two-column">
-        <div className="card-stack">
-          <article className="card">
-            <label className="field">
-              <span>Hotel ID</span>
-              <div className="field__row">
-                <input
+      <CardContent className="grid md:grid-cols-2 gap-8">
+        <div className="grid gap-6">
+          <Card className="border border-border bg-card shadow-none rounded-none">
+            <CardContent className="p-5">
+              <Label className="block mb-2 text-foreground">Hotel ID</Label>
+              <div className="flex gap-2">
+                <Input
+                  className="bg-background flex-1 rounded-none border-border"
                   value={hotelId}
                   onChange={(event) => onHotelChange(event.target.value)}
                   placeholder="Example: 1"
                   inputMode="numeric"
                 />
-                <button className="button button--secondary" onClick={() => handleGenerateToken()}>
+                <Button variant="secondary" onClick={() => handleGenerateToken()} disabled={busy} className="rounded-none">
                   {busy ? 'Generating...' : 'Generate QR'}
-                </button>
+                </Button>
               </div>
-            </label>
 
-            {loadingHotel && <p className="hint">Checking hotel details...</p>}
-            {lookupHotel && (
-              <div className="info-box">
-                <strong>{lookupHotel.name}</strong>
-                <span>{lookupHotel.location || 'Location not provided'}</span>
+              <div className="mt-4">
+                {loadingHotel && <p className="text-sm tracking-wide text-muted-foreground italic">Checking hotel details...</p>}
+                {lookupHotel && (
+                  <div className="bg-background p-4 border border-border flex justify-between items-center rounded-none">
+                    <div>
+                      <strong className="block text-foreground font-display uppercase">{lookupHotel.name}</strong>
+                      <span className="text-sm text-muted-foreground">{lookupHotel.location || 'Location not provided'}</span>
+                    </div>
+                  </div>
+                )}
+                {hotelError && <p className="text-sm text-foreground bg-destructive/10 p-2 mt-2 border border-destructive/20">{hotelError}</p>}
+                {tokenError && <p className="text-sm text-foreground bg-destructive/10 p-2 mt-2 border border-destructive/20">{tokenError}</p>}
               </div>
-            )}
-            {hotelError && <p className="message message--warning">{hotelError}</p>}
-            {tokenError && <p className="message message--error">{tokenError}</p>}
-          </article>
+            </CardContent>
+          </Card>
 
           {allowHotelCreation && (
-            <article className="card">
-              <h3>Create a hotel</h3>
-              <p className="hint">If this is your first setup, create the hotel here and start using QR codes right away.</p>
-
-              <form className="form-stack" onSubmit={handleCreateHotel}>
-                <label className="field">
-                  <span>Hotel name</span>
-                  <input
-                    value={hotelForm.name}
-                    onChange={(event) => setHotelForm((current) => ({ ...current, name: event.target.value }))}
-                    placeholder="Ocean View Hotel"
-                    required
-                  />
-                </label>
-
-                <label className="field">
-                  <span>Location</span>
-                  <input
-                    value={hotelForm.location}
-                    onChange={(event) => setHotelForm((current) => ({ ...current, location: event.target.value }))}
-                    placeholder="Mogadishu"
-                  />
-                </label>
-
-                <label className="field">
-                  <span>Hotel password</span>
-                  <input
-                    type="password"
-                    value={hotelForm.password}
-                    onChange={(event) => setHotelForm((current) => ({ ...current, password: event.target.value }))}
-                    placeholder="Create a hotel password"
-                    required
-                  />
-                </label>
-
-                <button className="button button--primary" type="submit">
-                  {creatingHotel ? 'Creating hotel...' : 'Create hotel'}
-                </button>
-              </form>
-            </article>
+            <Card className="border border-border bg-card shadow-none rounded-none">
+              <CardHeader className="p-5 pb-3">
+                <CardTitle className="text-lg uppercase">Create a hotel</CardTitle>
+                <CardDescription>If this is your first setup, create the hotel here and start using QR codes right away.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-5 pt-0">
+                <form className="grid gap-4" onSubmit={handleCreateHotel}>
+                  <div className="grid gap-2">
+                    <Label htmlFor="createHotelName">Hotel name</Label>
+                    <Input
+                      id="createHotelName"
+                      value={hotelForm.name}
+                      onChange={(event) => setHotelForm((current) => ({ ...current, name: event.target.value }))}
+                      placeholder="Ocean View Hotel"
+                      required
+                      className="rounded-none bg-background"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="createHotelLocation">Location</Label>
+                    <Input
+                      id="createHotelLocation"
+                      value={hotelForm.location}
+                      onChange={(event) => setHotelForm((current) => ({ ...current, location: event.target.value }))}
+                      placeholder="Mogadishu"
+                      className="rounded-none bg-background"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="createHotelPassword">Hotel password</Label>
+                    <Input
+                      id="createHotelPassword"
+                      type="password"
+                      value={hotelForm.password}
+                      onChange={(event) => setHotelForm((current) => ({ ...current, password: event.target.value }))}
+                      placeholder="Create a hotel password"
+                      required
+                      className="rounded-none bg-background"
+                    />
+                  </div>
+                  <Button type="submit" disabled={creatingHotel} className="mt-2 w-full rounded-none">
+                    {creatingHotel ? 'Creating hotel...' : 'Create hotel'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           )}
         </div>
 
-        <article className="card qr-card">
-          <div className="qr-card__badge">Guest-facing</div>
-          <h3>Active QR code</h3>
-          <p className="hint">Guests scan this code on their phone and the loyalty scan is submitted automatically in their mobile browser.</p>
+        <Card className="flex flex-col items-center text-center p-6 bg-card border-dashed border-2 border-border rounded-none">
+          <Badge className="mb-4 bg-primary/20 text-foreground border-primary rounded-none uppercase">Guest-facing</Badge>
+          <h3 className="text-xl font-bold text-foreground mb-2 uppercase font-display">Active QR code</h3>
+          <p className="text-sm text-muted-foreground mb-6 max-w-[280px]">Guests scan this code on their phone and the loyalty scan is submitted automatically in their mobile browser.</p>
 
           {qrImage ? (
-            <>
-              <img className="qr-image" src={qrImage} alt="Hotel loyalty QR code" />
-              <div className="info-list">
-                <div>
-                  <span>Expires at</span>
-                  <strong>{formatExpiry(tokenPayload?.expiresAt)}</strong>
+            <div className="flex flex-col items-center w-full">
+              <div className="bg-background p-4 shadow-sm border border-border mb-6 rounded-none">
+                <img className="w-full max-w-[240px] mx-auto rounded-none" src={qrImage} alt="Hotel loyalty QR code" />
+              </div>
+              <div className="grid grid-cols-2 gap-4 w-full text-left mb-6">
+                <div className="bg-card p-3 border border-border rounded-none">
+                  <span className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">Expires at</span>
+                  <strong className="block text-foreground">{formatExpiry(tokenPayload?.expiresAt)}</strong>
                 </div>
-                <div>
-                  <span>Token</span>
-                  <strong className="token-preview">{tokenPayload?.token}</strong>
+                <div className="bg-card p-3 border border-border overflow-hidden rounded-none">
+                  <span className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">Token</span>
+                  <strong className="block font-mono text-foreground truncate" title={tokenPayload?.token}>{tokenPayload?.token}</strong>
                 </div>
               </div>
-              <div className="button-group">
-                <button
-                  className="button button--primary"
-                  onClick={() => window.navigator.clipboard?.writeText(scanLink)}
-                >
-                  Copy scan link
-                </button>
-              </div>
-            </>
+              <Button
+                variant="default"
+                className="w-full max-w-[280px] h-12 shadow rounded-none"
+                onClick={() => window.navigator.clipboard?.writeText(scanLink)}
+              >
+                Copy scan link
+              </Button>
+            </div>
           ) : (
-            <div className="qr-placeholder">
-              <p>Generate a token to display the guest QR code here.</p>
+            <div className="flex-1 min-h-[300px] flex items-center justify-center bg-background w-full border border-border rounded-none">
+              <p className="text-muted-foreground max-w-[200px] uppercase tracking-wider text-sm font-bold">Generate a token to display the guest QR code here.</p>
             </div>
           )}
-        </article>
-      </div>
-    </section>
+        </Card>
+      </CardContent>
+    </Card>
   );
 }
 

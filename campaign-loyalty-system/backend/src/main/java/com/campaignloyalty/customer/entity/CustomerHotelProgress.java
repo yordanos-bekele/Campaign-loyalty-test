@@ -32,6 +32,9 @@ public class CustomerHotelProgress {
     @Column(name = "last_scan_at")
     private LocalDateTime lastScanAt;
 
+    @Column(name = "pending_reward_id")
+    private Integer pendingRewardId;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 

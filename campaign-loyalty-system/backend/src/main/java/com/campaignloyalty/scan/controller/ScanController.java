@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/api/scan")
@@ -51,6 +52,28 @@ public class ScanController {
         String ip = httpRequest.getRemoteAddr();
         String userAgent = httpRequest.getHeader("User-Agent");
         ScanResponse response = scanService.scan(deviceId, request.getToken(), ip, userAgent);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/confirm/{rewardId}")
+    @Operation(
+            summary = "Confirm a pending reward",
+            description = "Finalizes a pending reward after the 10th valid scan. Requires the same device_id cookie or X-Device-Id header.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Reward confirmed successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid request or missing device identifier", content = @Content(schema = @Schema(implementation = String.class)))
+            }
+    )
+    public ResponseEntity<ScanResponse> confirmReward(
+            @Parameter(description = "Unique device identifier stored as a cookie", example = "device-1")
+            @CookieValue(value = "device_id", required = false) String cookieDeviceId,
+            @RequestHeader(value = "X-Device-Id", required = false) String headerDeviceId,
+            @PathVariable Integer rewardId,
+            HttpServletRequest httpRequest) {
+        String deviceId = resolveDeviceId(cookieDeviceId, headerDeviceId);
+        String ip = httpRequest.getRemoteAddr();
+        String userAgent = httpRequest.getHeader("User-Agent");
+        ScanResponse response = scanService.confirmReward(deviceId, rewardId, ip, userAgent);
         return ResponseEntity.ok(response);
     }
 

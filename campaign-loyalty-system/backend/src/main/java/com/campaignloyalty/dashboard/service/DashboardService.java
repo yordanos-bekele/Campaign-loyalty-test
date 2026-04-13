@@ -48,7 +48,7 @@ public class DashboardService {
         LocalDateTime start = DateUtil.getStartOfDay();
         LocalDateTime end = DateUtil.getEndOfDay();
         long scansToday = scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndValid(hotelId, start, end, true);
-        long rewardsGiven = rewardRepository.countByHotelIdAndEarnedAtBetween(hotelId, start, end);
+        long rewardsGiven = rewardRepository.countConfirmedByHotelIdAndEarnedAtBetween(hotelId, start, end);
         long suspiciousScans = scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndSuspiciousTrue(hotelId, start, end);
         log.info("Hotel dashboard stats loaded hotelId={} scansToday={} rewardsGiven={} suspiciousScans={}",
                 hotelId, scansToday, rewardsGiven, suspiciousScans);
@@ -60,7 +60,7 @@ public class DashboardService {
         LocalDateTime start = DateUtil.getStartOfDay();
         LocalDateTime end = DateUtil.getEndOfDay();
         long totalScansToday = scanHistoryRepository.countByScannedAtBetweenAndValid(start, end, true);
-        long totalRewardsGiven = rewardRepository.countByEarnedAtBetween(start, end);
+        long totalRewardsGiven = rewardRepository.countConfirmedByEarnedAtBetween(start, end);
         long totalSuspiciousScans = scanHistoryRepository.countByScannedAtBetweenAndSuspiciousTrue(start, end);
         log.info("Overall dashboard stats loaded totalScansToday={} totalRewardsGiven={} totalSuspiciousScans={}",
                 totalScansToday, totalRewardsGiven, totalSuspiciousScans);

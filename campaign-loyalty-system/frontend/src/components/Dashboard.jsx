@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
 import QrDisplay from './QrDisplay';
+import { Button } from './ui/button';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Badge } from './ui/badge';
+import { Alert, AlertDescription } from './ui/alert';
 import {
   adminLogin,
   createHotel,
@@ -15,9 +21,18 @@ import {
 } from '../services/api';
 
 function StatCard({ label, value, accent, onClick, active = false }) {
+  const accentColors = {
+    warm: 'bg-primary/10 text-foreground border-primary/20',
+    green: 'bg-primary/5 text-foreground border-border',
+    red: 'bg-destructive/10 text-foreground border-destructive/20',
+    dark: 'bg-card text-foreground border-border',
+  };
+  
+  const baseClasses = `p-6 rounded-none border transition-all ${accentColors[accent] || 'bg-background'} ${onClick ? 'cursor-pointer hover:shadow hover:-translate-y-0.5 hover:border-primary' : ''} ${active ? 'ring-1 ring-primary ring-offset-2 ring-offset-background' : ''}`;
+
   return (
     <article
-      className={`stat-card stat-card--${accent}${onClick ? ' stat-card--interactive' : ''}${active ? ' stat-card--active' : ''}`}
+      className={baseClasses}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -28,8 +43,8 @@ function StatCard({ label, value, accent, onClick, active = false }) {
         }
       } : undefined}
     >
-      <span>{label}</span>
-      <strong>{value}</strong>
+      <span className="block text-sm font-bold font-display uppercase tracking-wider opacity-80 mb-2">{label}</span>
+      <strong className="block text-4xl font-extrabold font-display">{value}</strong>
     </article>
   );
 }
@@ -78,9 +93,7 @@ function Dashboard({ mode = 'hotel' }) {
   };
 
   const loadDashboardData = async (knownSession = sessionUser) => {
-    if (!knownSession) {
-      return;
-    }
+    if (!knownSession) return;
 
     setBusy(true);
     setError('');
@@ -98,9 +111,7 @@ function Dashboard({ mode = 'hotel' }) {
           getAdminCustomers(),
         ]);
 
-        if (dashboardResult.status !== 'fulfilled') {
-          throw dashboardResult.reason;
-        }
+        if (dashboardResult.status !== 'fulfilled') throw dashboardResult.reason;
 
         setAdminDashboard(dashboardResult.value);
         setAdminCustomers(customersResult.status === 'fulfilled' ? customersResult.value : []);
@@ -126,7 +137,6 @@ function Dashboard({ mode = 'hotel' }) {
         setSessionUser(null);
       }
     };
-
     boot();
   }, [mode]);
 
@@ -207,9 +217,7 @@ function Dashboard({ mode = 'hotel' }) {
 
   const handleImport = async (type, event) => {
     const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     setBusy(true);
     setError('');
@@ -238,285 +246,349 @@ function Dashboard({ mode = 'hotel' }) {
   const adminView = mode === 'admin' && sessionUser?.role === 'admin';
 
   return (
-    <section className="panel panel--wide role-panel">
-      <div className="panel__header">
-        <div>
-          <p className="eyebrow">{mode === 'admin' ? 'Admin Access' : 'Hotel Access'}</p>
-          <h2>{mode === 'admin' ? 'Marathon Klassics admin control room' : 'Hotel loyalty dashboard'}</h2>
-          <p className="section-copy">
-            {mode === 'admin'
-              ? 'Admin access is kept separate from the hotel experience. Use this space to manage hotels, loyal customers, and imports.'
-              : 'Hotel teams only see their own campaign information, including scans, rewards, and suspicious activity.'}
-          </p>
-        </div>
-        {sessionUser && (
-          <div className="button-group">
-            <button className="button button--secondary" onClick={() => loadDashboardData()}>
-              {busy ? 'Refreshing...' : 'Refresh'}
-            </button>
-            <button className="button button--ghost" onClick={handleLogout}>
-              Logout
-            </button>
+    <div className="grid gap-6 w-full max-w-5xl mx-auto">
+      <Card className="border-border shadow-none rounded-none bg-background">
+        <CardHeader className="flex flex-row items-start justify-between gap-4 border-b border-border">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.1em] text-muted-foreground mb-1">
+              {mode === 'admin' ? 'Admin Access' : 'Hotel Access'}
+            </p>
+            <CardTitle className="text-2xl mb-2 font-display uppercase tracking-tight">
+              {mode === 'admin' ? 'Marathon Spirits admin control room' : 'Hotel loyalty dashboard'}
+            </CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
+              {mode === 'admin'
+                ? 'Admin access is kept separate from the hotel experience. Use this space to manage hotels, loyal customers, and imports.'
+                : 'Hotel teams only see their own campaign information, including scans, rewards, and suspicious activity.'}
+            </CardDescription>
           </div>
-        )}
-      </div>
+          {sessionUser && (
+            <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+              <Button variant="outline" className="rounded-none px-6" onClick={() => loadDashboardData()} disabled={busy}>
+                {busy ? 'Refreshing...' : 'Refresh'}
+              </Button>
+              <Button variant="ghost" className="border border-border rounded-none px-6" onClick={handleLogout} disabled={busy}>
+                Logout
+              </Button>
+            </div>
+          )}
+        </CardHeader>
+      </Card>
 
       {!sessionUser && mode === 'hotel' && (
-        <div className="dashboard-grid">
-          <article className="card">
-            <h3>Hotel login</h3>
-            <p className="hint">Sign in using your hotel name and password to see only your hotel campaign dashboard.</p>
-            <form className="form-stack" onSubmit={handleHotelLogin}>
-              <label className="field">
-                <span>Hotel name</span>
-                <input
-                  value={hotelLoginForm.hotelName}
-                  onChange={(event) => setHotelLoginForm((current) => ({ ...current, hotelName: event.target.value }))}
-                  placeholder="Ocean View Hotel"
-                  required
-                />
-              </label>
-              <label className="field">
-                <span>Password</span>
-                <input
-                  type="password"
-                  value={hotelLoginForm.password}
-                  onChange={(event) => setHotelLoginForm((current) => ({ ...current, password: event.target.value }))}
-                  placeholder="Enter hotel password"
-                  required
-                />
-              </label>
-              <button className="button button--primary" type="submit">
-                {busy ? 'Signing in...' : 'Open hotel dashboard'}
-              </button>
-            </form>
-          </article>
-
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="rounded-none shadow-none border-border">
+            <CardHeader>
+              <CardTitle>Hotel login</CardTitle>
+              <CardDescription>Sign in using your hotel name and password to see only your hotel campaign dashboard.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form className="grid gap-5 bg-background border border-border p-6 shadow-sm rounded-none" onSubmit={handleHotelLogin}>
+                <div className="grid gap-2">
+                  <Label htmlFor="hotelName">Hotel name</Label>
+                  <Input
+                    id="hotelName"
+                    value={hotelLoginForm.hotelName}
+                    onChange={(event) => setHotelLoginForm((current) => ({ ...current, hotelName: event.target.value }))}
+                    placeholder="Ocean View Hotel"
+                    required
+                    className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="hotelPassword">Password</Label>
+                  <Input
+                    id="hotelPassword"
+                    type="password"
+                    value={hotelLoginForm.password}
+                    onChange={(event) => setHotelLoginForm((current) => ({ ...current, password: event.target.value }))}
+                    placeholder="Enter hotel password"
+                    required
+                    className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
+                  />
+                </div>
+                <Button type="submit" disabled={busy} className="mt-2 text-md h-12 w-full rounded-none">
+                  {busy ? 'Signing in...' : 'Open hotel dashboard'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {!sessionUser && mode === 'admin' && (
-        <div className="dashboard-grid">
-          <article className="card">
-            <h3>Admin login</h3>
-            <p className="hint">Use the Marathon Klassics admin credentials to open company-wide controls.</p>
-            <form className="form-stack" onSubmit={handleAdminLogin}>
-              <label className="field">
-                <span>Username</span>
-                <input
-                  value={adminLoginForm.username}
-                  onChange={(event) => setAdminLoginForm((current) => ({ ...current, username: event.target.value }))}
-                  placeholder="admin"
-                  required
-                />
-              </label>
-              <label className="field">
-                <span>Password</span>
-                <input
-                  type="password"
-                  value={adminLoginForm.password}
-                  onChange={(event) => setAdminLoginForm((current) => ({ ...current, password: event.target.value }))}
-                  placeholder="Enter admin password"
-                  required
-                />
-              </label>
-              <button className="button button--primary" type="submit">
-                {busy ? 'Signing in...' : 'Open admin dashboard'}
-              </button>
-            </form>
-          </article>
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="rounded-none shadow-none border-border">
+            <CardHeader>
+              <CardTitle>Admin login</CardTitle>
+              <CardDescription>Use the Marathon Spirits admin credentials to open company-wide controls.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form className="grid gap-5 bg-background border border-border p-6 shadow-sm rounded-none" onSubmit={handleAdminLogin}>
+                <div className="grid gap-2">
+                  <Label htmlFor="adminUsername">Username</Label>
+                  <Input
+                    id="adminUsername"
+                    value={adminLoginForm.username}
+                    onChange={(event) => setAdminLoginForm((current) => ({ ...current, username: event.target.value }))}
+                    placeholder="admin"
+                    required
+                    className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="adminPassword">Password</Label>
+                  <Input
+                    id="adminPassword"
+                    type="password"
+                    value={adminLoginForm.password}
+                    onChange={(event) => setAdminLoginForm((current) => ({ ...current, password: event.target.value }))}
+                    placeholder="Enter admin password"
+                    required
+                    className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
+                  />
+                </div>
+                <Button type="submit" disabled={busy} className="mt-2 text-md h-12 w-full rounded-none">
+                  {busy ? 'Signing in...' : 'Open admin dashboard'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       )}
 
-      {error && <p className="message message--error">{error}</p>}
-      {successMessage && <p className="message message--success">{successMessage}</p>}
+      {error && (
+        <Alert variant="destructive" className="rounded-none">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      {successMessage && (
+        <Alert className="bg-[#A0C878]/10 text-[#A0C878] border-[#A0C878]/30 rounded-none">
+          <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+      )}
 
       {hotelView && (
-        <div className="dashboard-grid">
-          <section className="card">
-            <div className="info-box">
-              <strong>{sessionUser.displayName}</strong>
-              <span>Hotel account</span>
-            </div>
-            <div className="stats-grid">
-              <StatCard label="Scans today" value={hotelStats?.scansToday ?? '--'} accent="warm" />
-              <StatCard label="Rewards given" value={hotelStats?.rewardsGiven ?? '--'} accent="green" />
-              <StatCard label="Suspicious scans" value={hotelStats?.suspiciousScans ?? '--'} accent="red" />
-            </div>
-          </section>
+        <div className="grid gap-6">
+          <Card className="rounded-none shadow-none border-border">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between bg-card border border-border p-4 rounded-none mb-6">
+                <div>
+                  <strong className="block text-lg text-foreground font-display uppercase">{sessionUser.displayName}</strong>
+                  <span className="text-sm text-muted-foreground">Hotel account</span>
+                </div>
+                <Badge variant="outline" className="bg-background rounded-none border-border uppercase px-4 py-1.5">Active session</Badge>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-6">
+                <StatCard label="Scans today" value={hotelStats?.scansToday ?? '--'} accent="warm" />
+                <StatCard label="Rewards given" value={hotelStats?.rewardsGiven ?? '--'} accent="green" />
+                <StatCard label="Suspicious scans" value={hotelStats?.suspiciousScans ?? '--'} accent="red" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {adminView && (
-        <div className="dashboard-grid">
-          <section className="card">
-            <div className="info-box">
-              <strong>{sessionUser.displayName}</strong>
-              <span>Admin account</span>
-            </div>
-            <div className="stats-grid">
-              <StatCard label="Total scans today" value={adminDashboard?.overallStats?.totalScansToday ?? '--'} accent="warm" />
-              <StatCard label="Total rewards" value={adminDashboard?.overallStats?.totalRewardsGiven ?? '--'} accent="green" />
-              <StatCard label="Total suspicious" value={adminDashboard?.overallStats?.totalSuspiciousScans ?? '--'} accent="red" />
-              <StatCard
-                label="Registered customers"
-                value={adminDashboard?.registeredCustomerCount ?? '--'}
-                accent="dark"
-                onClick={() => setShowCustomerList((current) => !current)}
-                active={showCustomerList}
-              />
-            </div>
-            <p className="hint">Click the registered customers card to {showCustomerList ? 'hide' : 'view'} the full customer list with scan and reward totals.</p>
-          </section>
-
-          <section className="card">
-            <h3>Register a hotel</h3>
-            <p className="hint">Create one hotel manually, or use the import tools below for bulk onboarding.</p>
-            <form className="form-stack" onSubmit={handleHotelCreate}>
-              <label className="field">
-                <span>Hotel name</span>
-                <input
-                  value={createHotelForm.name}
-                  onChange={(event) => setCreateHotelForm((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="Ocean View Hotel"
-                  required
-                />
-              </label>
-              <label className="field">
-                <span>Location</span>
-                <input
-                  value={createHotelForm.location}
-                  onChange={(event) => setCreateHotelForm((current) => ({ ...current, location: event.target.value }))}
-                  placeholder="Mogadishu"
-                />
-              </label>
-              <label className="field">
-                <span>Password</span>
-                <input
-                  type="password"
-                  value={createHotelForm.password}
-                  onChange={(event) => setCreateHotelForm((current) => ({ ...current, password: event.target.value }))}
-                  placeholder="Hotel dashboard password"
-                  required
-                />
-              </label>
-              <button className="button button--primary" type="submit">
-                {busy ? 'Saving...' : 'Register hotel'}
-              </button>
-            </form>
-          </section>
-
-          <QrDisplay
-            hotelId={adminQrHotelId}
-            onHotelChange={setAdminQrHotelId}
-            allowHotelCreation={false}
-          />
-
-          <section className="card">
-            <h3>Bulk import from Excel</h3>
-            <p className="hint">
-              Customer sheet headers: <code>full name</code>, <code>phone number</code>, optional <code>email</code>, <code>device id</code>.
-              Hotel sheet headers: <code>name</code>, <code>password</code>, optional <code>location</code>.
-            </p>
-            <div className="dashboard-grid">
-              <label className="field">
-                <span>Import loyal customers (.xlsx)</span>
-                <input type="file" accept=".xlsx" onChange={(event) => handleImport('customers', event)} />
-              </label>
-              <label className="field">
-                <span>Import hotels (.xlsx)</span>
-                <input type="file" accept=".xlsx" onChange={(event) => handleImport('hotels', event)} />
-              </label>
-            </div>
-            {customerImportResult && (
-              <div className="info-box import-summary">
-                <strong>Customer import</strong>
-                <span>
-                  Processed {customerImportResult.processedCount}, created {customerImportResult.createdCount},
-                  updated {customerImportResult.updatedCount}, skipped {customerImportResult.skippedCount}
-                </span>
-                {customerImportResult.errors?.slice(0, 5).map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
-              </div>
-            )}
-            {hotelImportResult && (
-              <div className="info-box import-summary">
-                <strong>Hotel import</strong>
-                <span>
-                  Processed {hotelImportResult.processedCount}, created {hotelImportResult.createdCount},
-                  updated {hotelImportResult.updatedCount}, skipped {hotelImportResult.skippedCount}
-                </span>
-                {hotelImportResult.errors?.slice(0, 5).map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className="card">
-            <h3>Registered hotels</h3>
-            <div className="hotel-list">
-              {adminDashboard?.hotels?.length ? adminDashboard.hotels.map((hotel) => (
-                <article className="hotel-list__item" key={hotel.id}>
-                  <div>
-                    <strong>{hotel.name}</strong>
-                    <span>{hotel.location || 'Location not provided'}</span>
-                  </div>
-                  <code>#{hotel.id}</code>
-                </article>
-              )) : (
-                <p className="hint">No hotels have been registered yet.</p>
-              )}
-            </div>
-          </section>
-
-          <section className="card">
-            <div className="section-title-row">
-              <div>
-                <h3>Registered loyal customers</h3>
-                <p className="hint">Admin-only view of each customer’s reward count and valid scan history.</p>
-              </div>
-              <button className="button button--secondary" type="button" onClick={() => setShowCustomerList((current) => !current)}>
-                {showCustomerList ? 'Hide list' : 'Show list'}
-              </button>
-            </div>
-            {showCustomerList ? (
-              adminCustomers.length ? (
-                <div className="customer-summary-list">
-                  {adminCustomers.map((customer) => (
-                    <article className="customer-summary-card" key={customer.id}>
-                      <div className="customer-summary-card__identity">
-                        <div>
-                          <strong>{customer.fullName}</strong>
-                          <span>{customer.phoneNumber}</span>
-                          <span>{customer.email || 'No email provided'}</span>
-                        </div>
-                        <code>#{customer.id}</code>
-                      </div>
-                      <div className="customer-summary-card__metrics">
-                        <div>
-                          <span>Rewards earned</span>
-                          <strong>{customer.rewardCount}</strong>
-                        </div>
-                        <div>
-                          <span>Valid scans</span>
-                          <strong>{customer.validScanCount}</strong>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
+        <div className="grid gap-6">
+          <Card className="rounded-none shadow-none border-border">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between bg-card border border-border p-4 rounded-none mb-6">
+                <div>
+                  <strong className="block text-lg text-foreground font-display uppercase tracking-wider">{sessionUser.displayName}</strong>
+                  <span className="text-sm text-muted-foreground">Admin account</span>
                 </div>
+                <Badge variant="outline" className="bg-foreground text-background border-transparent rounded-none uppercase px-4 py-1.5">Admin privileged</Badge>
+              </div>
+              <div className="grid sm:grid-cols-4 gap-6 mb-4">
+                <StatCard label="Total scans today" value={adminDashboard?.overallStats?.totalScansToday ?? '--'} accent="warm" />
+                <StatCard label="Total rewards" value={adminDashboard?.overallStats?.totalRewardsGiven ?? '--'} accent="green" />
+                <StatCard label="Total suspicious" value={adminDashboard?.overallStats?.totalSuspiciousScans ?? '--'} accent="red" />
+                <StatCard
+                  label="Registered customers"
+                  value={adminDashboard?.registeredCustomerCount ?? '--'}
+                  accent="dark"
+                  onClick={() => setShowCustomerList((current) => !current)}
+                  active={showCustomerList}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">Click the registered customers card to {showCustomerList ? 'hide' : 'view'} the full customer list.</p>
+            </CardContent>
+          </Card>
+
+          <div className="grid md:grid-cols-[1fr_1.5fr] gap-6 items-start">
+            <Card className="rounded-none border-border shadow-none">
+              <CardHeader>
+                <CardTitle>Register a hotel</CardTitle>
+                <CardDescription>Create one hotel manually, or use the import tools below for bulk onboarding.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form className="grid gap-5 bg-background border border-border p-6 shadow-sm rounded-none" onSubmit={handleHotelCreate}>
+                  <div className="grid gap-2">
+                    <Label htmlFor="newHotelName">Hotel name</Label>
+                    <Input
+                      id="newHotelName"
+                      value={createHotelForm.name}
+                      onChange={(event) => setCreateHotelForm((current) => ({ ...current, name: event.target.value }))}
+                      placeholder="Ocean View Hotel"
+                      required
+                      className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="newHotelLocation">Location</Label>
+                    <Input
+                      id="newHotelLocation"
+                      value={createHotelForm.location}
+                      onChange={(event) => setCreateHotelForm((current) => ({ ...current, location: event.target.value }))}
+                      placeholder="Mogadishu"
+                      className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="newHotelPassword">Password</Label>
+                    <Input
+                      id="newHotelPassword"
+                      type="password"
+                      value={createHotelForm.password}
+                      onChange={(event) => setCreateHotelForm((current) => ({ ...current, password: event.target.value }))}
+                      placeholder="Hotel dashboard password"
+                      required
+                      className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
+                    />
+                  </div>
+                  <Button type="submit" disabled={busy} className="mt-2 w-full rounded-none py-[13px]">
+                    {busy ? 'Saving...' : 'Register hotel'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6">
+              <QrDisplay
+                hotelId={adminQrHotelId}
+                onHotelChange={setAdminQrHotelId}
+                allowHotelCreation={false}
+              />
+              
+              <Card className="rounded-none border-border shadow-none">
+                <CardHeader>
+                  <CardTitle>Bulk import from Excel</CardTitle>
+                  <CardDescription>
+                    Customer sheet headers: <code className="bg-muted px-1 rounded-none text-foreground border border-border">full name</code>, <code className="bg-muted px-1 rounded-none text-foreground border border-border">phone number</code>, optional <code className="bg-muted px-1 rounded-none text-foreground border border-border">email</code>, <code className="bg-muted px-1 rounded-none text-foreground border border-border">device id</code>.
+                    Hotel sheet headers: <code className="bg-muted px-1 rounded-none text-foreground border border-border">name</code>, <code className="bg-muted px-1 rounded-none text-foreground border border-border">password</code>, optional <code className="bg-muted px-1 rounded-none text-foreground border border-border">location</code>.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="customerImport">Import loyal customers (.xlsx)</Label>
+                    <Input id="customerImport" type="file" accept=".xlsx" onChange={(event) => handleImport('customers', event)} className="file:bg-card file:text-foreground file:-mx-3 file:-my-1.5 file:px-3 file:py-1.5 file:rounded-none file:border-r file:border-border file:mr-3 cursor-pointer rounded-none bg-background cursor-pointer" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="hotelImport">Import hotels (.xlsx)</Label>
+                    <Input id="hotelImport" type="file" accept=".xlsx" onChange={(event) => handleImport('hotels', event)} className="file:bg-card file:text-foreground file:-mx-3 file:-my-1.5 file:px-3 file:py-1.5 file:rounded-none file:border-r file:border-border file:mr-3 cursor-pointer rounded-none bg-background cursor-pointer" />
+                  </div>
+                  
+                  {customerImportResult && (
+                    <div className="bg-card border border-border p-4 rounded-none mt-2 text-sm text-muted-foreground">
+                      <strong className="block mb-1 text-foreground">Customer import summary</strong>
+                      <span className="block mb-2">
+                        Processed {customerImportResult.processedCount}, created {customerImportResult.createdCount},
+                        updated {customerImportResult.updatedCount}, skipped {customerImportResult.skippedCount}
+                      </span>
+                      {customerImportResult.errors?.slice(0, 5).map((item, idx) => (
+                        <div key={idx} className="text-destructive text-xs mt-1">• {item}</div>
+                      ))}
+                    </div>
+                  )}
+                  {hotelImportResult && (
+                    <div className="bg-card border border-border p-4 rounded-none mt-2 text-sm text-muted-foreground">
+                      <strong className="block mb-1 text-foreground">Hotel import summary</strong>
+                      <span className="block mb-2">
+                        Processed {hotelImportResult.processedCount}, created {hotelImportResult.createdCount},
+                        updated {hotelImportResult.updatedCount}, skipped {hotelImportResult.skippedCount}
+                      </span>
+                      {hotelImportResult.errors?.slice(0, 5).map((item, idx) => (
+                        <div key={idx} className="text-destructive text-xs mt-1">• {item}</div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          <Card className="rounded-none border-border shadow-none">
+            <CardHeader>
+              <CardTitle>Registered hotels</CardTitle>
+              <CardDescription>All hotels currently onboarded into the campaign.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3">
+                {adminDashboard?.hotels?.length ? adminDashboard.hotels.map((hotel) => (
+                  <div className="flex items-center justify-between p-4 bg-background border border-border rounded-none" key={hotel.id}>
+                    <div>
+                      <strong className="block text-foreground uppercase font-display tracking-wider">{hotel.name}</strong>
+                      <span className="text-sm text-muted-foreground">{hotel.location || 'Location not provided'}</span>
+                    </div>
+                    <Badge variant="outline" className="font-mono text-muted-foreground bg-card rounded-none uppercase">#{hotel.id}</Badge>
+                  </div>
+                )) : (
+                  <p className="text-muted-foreground py-4 text-center border border-dashed rounded-none border-border">No hotels have been registered yet.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-none border-border shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Registered loyal customers</CardTitle>
+                <CardDescription>Admin-only view of each customer’s reward count and valid scan history.</CardDescription>
+              </div>
+              <Button variant="outline" className="rounded-none px-6" onClick={() => setShowCustomerList((current) => !current)}>
+                {showCustomerList ? 'Hide list' : 'Show list'}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {showCustomerList ? (
+                adminCustomers.length ? (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {adminCustomers.map((customer) => (
+                      <div className="bg-card border border-border rounded-none p-5" key={customer.id}>
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <strong className="block text-lg text-foreground font-display uppercase tracking-widest">{customer.fullName}</strong>
+                            <span className="block text-sm text-foreground">{customer.phoneNumber}</span>
+                            <span className="block text-sm text-muted-foreground">{customer.email || 'No email provided'}</span>
+                          </div>
+                          <Badge variant="secondary" className="font-mono text-xs rounded-none border border-border">#{customer.id}</Badge>
+                        </div>
+                        <div className="flex gap-6 mt-4 pt-4 border-t border-border">
+                          <div>
+                            <span className="block text-xs uppercase tracking-[0.1em] text-muted-foreground mb-1">Rewards</span>
+                            <strong className="block text-2xl text-foreground font-display">{customer.rewardCount}</strong>
+                          </div>
+                          <div>
+                            <span className="block text-xs uppercase tracking-[0.1em] text-muted-foreground mb-1">Valid scans</span>
+                            <strong className="block text-2xl text-foreground font-display">{customer.validScanCount}</strong>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground py-6 text-center border border-dashed rounded-none border-border">No loyal customers have registered yet.</p>
+                )
               ) : (
-                <p className="hint">No loyal customers have registered yet.</p>
-              )
-            ) : (
-              <p className="hint">Customer analytics are hidden until you open the registered customers card above.</p>
-            )}
-          </section>
+                <p className="text-sm text-muted-foreground text-center py-6 bg-card border border-border rounded-none">Customer analytics are hidden until you open the registered customers list.</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
-    </section>
+    </div>
   );
 }
 
