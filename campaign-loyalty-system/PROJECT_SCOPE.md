@@ -23,6 +23,9 @@ Brand context:
 
 - Users are identified by a `device_id` cookie.
 - For cross-origin deployed environments, the same device identity may also be sent through the `X-Device-Id` header.
+- Scans are accepted only for devices registered with:
+  - username
+  - phone number
 - A valid scan must be at least 60 minutes after the previous valid scan for the same user at the same hotel.
 - A user can have at most 3 valid scans per hotel per day.
 - QR tokens rotate every 2 minutes and must expire.
@@ -99,7 +102,8 @@ When `POST /api/scan` is called:
    - exists
    - matches the hotel
    - is not expired
-2. Identify or create the customer using the device identity.
+2. Identify the customer using the device identity.
+   - If the device is not registered with username + phone number, reject the scan.
 3. Check `last_scan_at` for that customer and hotel:
    - if less than 60 minutes ago, reject with `MIN_TIME_NOT_REACHED`
 4. Check `daily_scan_count`:
@@ -124,8 +128,11 @@ When `POST /api/scan` is called:
    - whether the scan was valid
    - reject reason if invalid
 9. If `scan_count` reaches 10:
+   - create a pending reward record
+   - return a `confirmation_required` response with reward id
+10. When `POST /api/scan/confirm/{rewardId}` is called:
+   - confirm the pending reward
    - reset `scan_count` to 0
-   - insert a reward record
    - return a `reward_earned` response with reward id and congratulation message
 
 Standard scan response shape:

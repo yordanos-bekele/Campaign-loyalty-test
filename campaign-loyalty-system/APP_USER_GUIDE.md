@@ -244,6 +244,8 @@ At the hotel:
 3. The scan page opens automatically.
 4. The app submits the scan automatically.
 
+If you have not registered your username and phone number yet, the scan will be rejected.
+
 No extra form is required on the scan page.
 
 ### Step 5: Read the scan result
@@ -251,6 +253,7 @@ No extra form is required on the scan page.
 The result page may show one of these outcomes:
 
 - your scan counted successfully
+- confirmation required to claim your reward after the 10th scan
 - your scan was too soon after the last valid scan
 - you reached the daily limit for that hotel
 - the QR code was invalid or expired
@@ -272,6 +275,7 @@ The campaign rule is:
 If the scan is rejected:
 
 - read the message shown on screen
+- if it says your device is not registered, complete registration first and scan again
 - if it says you scanned too soon, wait until the next allowed time
 - if it says daily limit reached, try again the next day
 - if it says QR invalid or expired, ask hotel staff to refresh the QR code
@@ -280,7 +284,8 @@ If the scan is rejected:
 
 When your 10th valid scan is accepted:
 
-- the app shows a reward-earned message
+- the app asks you to confirm the reward
+- after confirmation, the app shows a reward-earned message
 - the reward is recorded in the system
 - your progress resets for the next reward cycle
 
@@ -302,9 +307,8 @@ If you want the shortest possible operational flow, use this:
 
 - A customer must use the same device/browser for consistent tracking.
 - A valid scan must be at least 60 minutes after the previous valid scan at the same hotel.
-- A customer can only get 3 valid scans per hotel per day.
 - QR codes expire and refresh every 2 minutes.
-- Rewards are earned after 10 valid scans at the same hotel.
+- Rewards are earned after 10 valid scans.
 
 ## 7. Troubleshooting Tips
 
