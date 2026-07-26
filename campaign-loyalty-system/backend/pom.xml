@@ -30,6 +30,12 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- Flyway Core — PostgreSQL support is bundled inside flyway-core for Flyway 9.x
+             (managed by Spring Boot 3.1.0). flyway-database-postgresql is only needed for Flyway 10+. -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
