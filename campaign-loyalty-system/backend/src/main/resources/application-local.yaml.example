@@ -1,0 +1,17 @@
+# ─────────────────────────────────────────────────────────────
+# application-local.yaml — LOCAL OVERRIDES (never committed)
+# Copy this file and remove the .example suffix to use it.
+# Activate with: export SPRING_PROFILES_ACTIVE=local
+# ─────────────────────────────────────────────────────────────
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/campaign_loyalty
+    username: your_local_db_user
+    password: your_local_db_password
+
+  jpa:
+    show-sql: true
+
+server:
+  port: 8080
