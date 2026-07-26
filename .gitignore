@@ -1,1 +1,97 @@
-/campaign-loyalty-system/backend/target/
+# ============================================================
+# ROOT .gitignore — Campaign Loyalty System
+# Covers: frontend (Vite/React/Node), backend (Spring Boot/Maven/Java),
+#         Docker, IDE files, and OS noise.
+# ============================================================
+
+# ─── OS / System ────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.Spotlight-V100
+.Trashes
+
+# ─── IDE & Editor ───────────────────────────────────────────
+# IntelliJ IDEA / WebStorm / GoLand
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Eclipse
+.classpath
+.project
+.settings/
+.factorypath
+
+# NetBeans
+nbproject/
+nbbuild/
+nbdist/
+nb-configuration.xml
+
+# ─── Java / Maven (Backend) ─────────────────────────────────
+campaign-loyalty-system/backend/target/
+campaign-loyalty-system/backend/.mvn/wrapper/maven-wrapper.jar
+campaign-loyalty-system/backend/*.class
+campaign-loyalty-system/backend/*.jar
+campaign-loyalty-system/backend/*.war
+campaign-loyalty-system/backend/*.ear
+campaign-loyalty-system/backend/*.nar
+campaign-loyalty-system/backend/hs_err_pid*
+campaign-loyalty-system/backend/replay_pid*
+
+# Spring Boot application secrets / local overrides
+campaign-loyalty-system/backend/src/main/resources/application-local.yml
+campaign-loyalty-system/backend/src/main/resources/application-local.properties
+campaign-loyalty-system/backend/src/main/resources/application-secret*.yml
+campaign-loyalty-system/backend/src/main/resources/application-secret*.properties
+
+# Lombok
+campaign-loyalty-system/backend/.lombok/
+
+# ─── Node / Vite / React (Frontend) ─────────────────────────
+campaign-loyalty-system/frontend/node_modules/
+campaign-loyalty-system/frontend/dist/
+campaign-loyalty-system/frontend/.vite/
+campaign-loyalty-system/frontend/.cache/
+campaign-loyalty-system/frontend/coverage/
+campaign-loyalty-system/frontend/*.local
+campaign-loyalty-system/frontend/.env
+campaign-loyalty-system/frontend/.env.local
+campaign-loyalty-system/frontend/.env.development.local
+campaign-loyalty-system/frontend/.env.test.local
+campaign-loyalty-system/frontend/.env.production.local
+campaign-loyalty-system/frontend/npm-debug.log*
+campaign-loyalty-system/frontend/yarn-debug.log*
+campaign-loyalty-system/frontend/yarn-error.log*
+campaign-loyalty-system/frontend/pnpm-debug.log*
+campaign-loyalty-system/frontend/.pnpm-store/
+
+# ─── Docker ─────────────────────────────────────────────────
+# Never commit .env files used by Docker Compose for secrets
+campaign-loyalty-system/.env
+campaign-loyalty-system/.env.*
+!campaign-loyalty-system/.env.example
+
+# ─── Logs ───────────────────────────────────────────────────
+*.log
+logs/
+*.log.*
+
+# ─── Secrets / Credentials ──────────────────────────────────
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+.secret
+secrets/

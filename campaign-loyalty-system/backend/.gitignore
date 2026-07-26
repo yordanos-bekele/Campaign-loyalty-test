@@ -1,0 +1,60 @@
+# ============================================================
+# Backend .gitignore — Spring Boot / Maven / Java 17
+# ============================================================
+
+# Maven build output
+target/
+!.mvn/wrapper/maven-wrapper.properties
+
+# Compiled class files
+*.class
+
+# Packaged artifacts
+*.jar
+*.war
+*.ear
+*.nar
+
+# Maven wrapper binary (check in the properties file, not the jar)
+.mvn/wrapper/maven-wrapper.jar
+
+# Spring Boot application secrets / local overrides
+src/main/resources/application-local.yml
+src/main/resources/application-local.properties
+src/main/resources/application-secret*.yml
+src/main/resources/application-secret*.properties
+
+# Lombok
+.lombok/
+
+# JVM crash dumps
+hs_err_pid*
+replay_pid*
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Security / credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.classpath
+.project
+.settings/
+.factorypath
