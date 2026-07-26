@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/campaign_loyalty
+    username: postgres
+    password: password          # override via application-local.yaml or env vars
+    driver-class-name: org.postgresql.Driver
+
+  # ── JPA / Hibernate ─────────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: validate        # safe default: never auto-drop/create in prod
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true        # pretty-print SQL logs
+  # ── Flyway configuration ─────────────────────────────────────────
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+
+# ── Server ────────────────────────────────────────────────────
+server:
+  port: 8080
