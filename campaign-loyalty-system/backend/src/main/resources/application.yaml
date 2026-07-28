@@ -7,8 +7,8 @@ spring:
   # ── Data source ─────────────────────────────────────────────
   datasource:
     url: jdbc:postgresql://localhost:5432/campaign_loyalty
-    username: postgres
-    password: password          # override via application-local.yaml or env vars
+    username: marathon
+    password: kingdom         # override via application-local.yaml or env vars
     driver-class-name: org.postgresql.Driver
 
   # ── JPA / Hibernate ─────────────────────────────────────────
