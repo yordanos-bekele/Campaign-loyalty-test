@@ -85,6 +85,29 @@ public class CustomerService {
         return customer;
     }
 
+    public Customer linkDeviceByPhone(String newDeviceId, String phoneNumber) {
+        if (newDeviceId == null || newDeviceId.isBlank()) {
+            throw new IllegalArgumentException("device_id cookie or X-Device-Id header is required");
+        }
+        String normalizedPhone = requireValue(phoneNumber, "phone number is required");
+
+        Customer customer = customerRepository.findByPhoneNumber(normalizedPhone);
+        if (customer == null || customer.getRegisteredAt() == null) {
+            throw new IllegalArgumentException("No registered customer found with that phone number. Please register first.");
+        }
+
+        // Check if another customer already owns this new device ID (edge case: race condition).
+        Customer existingOwner = customerRepository.findByDeviceId(newDeviceId);
+        if (existingOwner != null && !existingOwner.getId().equals(customer.getId())) {
+            throw new IllegalArgumentException("This device is already linked to a different account.");
+        }
+
+        customer.setDeviceId(newDeviceId);
+        Customer savedCustomer = customerRepository.save(customer);
+        log.info("Device re-linked via phone number customerId={} newDeviceId={}", savedCustomer.getId(), newDeviceId);
+        return savedCustomer;
+    }
+
     public List<Customer> findRegisteredCustomers() {
         log.info("Loading registered loyal customers");
         return customerRepository.findAllByRegisteredAtIsNotNullOrderByRegisteredAtDesc();

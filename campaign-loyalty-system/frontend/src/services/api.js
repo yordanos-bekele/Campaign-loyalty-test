@@ -122,6 +122,11 @@ export async function getCurrentCustomer() {
   return response.status === 204 ? null : response.data;
 }
 
+export async function linkDeviceByPhone(phoneNumber) {
+  const response = await apiClient.post('/customers/link-device', { phoneNumber });
+  return response.data;
+}
+
 export async function getRegisteredCustomers() {
   const response = await apiClient.get('/customers');
   return response.data;

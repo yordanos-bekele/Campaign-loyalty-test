@@ -1,89 +1,129 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
+/* 1. Map custom HSL CSS variables so Tailwind v4 utilities like `border-border` work */
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+/* 2. Your HSL Variables Configuration */
 @layer base {
   :root {
-    --background: 0 0% 100%;       /* Pure White */
-    --foreground: 0 0% 0%;         /* Pure Black */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
-    --primary: 38 95% 58%;         /* #FAB12F */
-    --primary-foreground: 0 0% 0%; /* Black text on neon button */
-    --secondary: 0 0% 96%;         /* Light Gray */
+    --primary: 38 95% 58%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 96%;
     --secondary-foreground: 0 0% 0%;
     --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 63%;  /* #A0A0A0 */
+    --muted-foreground: 0 0% 63%;
     --accent: 38 95% 58%;
     --accent-foreground: 0 0% 0%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 88%;            /* Subtle gray borders */
+    --border: 0 0% 88%;
     --input: 0 0% 88%;
-    --ring: 0 0% 0%;               /* Black focus rings */
-    --radius: 0rem;                /* Sharp corners */
+    --ring: 0 0% 0%;
+    --radius: 0rem;
   }
 
   .dark {
-    --background: 0 0% 0%;         /* Pure Black */
-    --foreground: 0 0% 100%;       /* Pure White */
-    --card: 0 0% 8%;               /* Dark but visible above background */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 8%;
     --card-foreground: 0 0% 100%;
     --popover: 0 0% 6%;
     --popover-foreground: 0 0% 100%;
-    --primary: 38 95% 58%;         /* #FAB12F */
-    --primary-foreground: 0 0% 0%; /* Black text on neon button */
-    --secondary: 0 0% 16%;         /* Dark button/secondary surface */
+    --primary: 38 95% 58%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 16%;
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 63%;  /* #A0A0A0 */
+    --muted-foreground: 0 0% 63%;
     --accent: 38 95% 58%;
     --accent-foreground: 0 0% 0%;
     --destructive: 0 63% 40%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 22%;            /* Slightly more visible borders */
+    --border: 0 0% 22%;
     --input: 0 0% 16%;
-    --ring: 38 95% 58%;           /* Neon focus rings */
-    --radius: 0rem;                /* Sharp corners */
+    --ring: 38 95% 58%;
+    --radius: 0rem;
   }
 }
 
+/* 3. Base Styles */
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground;
   }
+
   .dark body {
     background: radial-gradient(circle at 50% 30%, #2d2d2d 0%, #111111 70%);
     background-attachment: fixed;
     min-height: 100vh;
   }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-display uppercase tracking-[0.02em];
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply uppercase tracking-[0.02em];
   }
 }
 
+/* 4. Component Styles */
 @layer components {
-  /* Enforce Marathon Spirits Button rules */
   button.bg-primary {
-    @apply font-display uppercase font-bold tracking-tight rounded-none;
+    @apply uppercase font-bold tracking-tight rounded-none;
   }
 
-  /* ── Premium Glass Card ──────────────────────────────────────────── */
   .glass-card-premium {
     position: relative;
     overflow: hidden;
-    border-radius: 0px !important;     /* Sharp — Marathon brand */
+    border-radius: 0px !important;
     border-top: 2px solid hsl(var(--primary)) !important;
     backdrop-filter: blur(18px) !important;
     -webkit-backdrop-filter: blur(18px) !important;
   }
 
-  /* Top shimmer edge */
   .glass-card-premium::before {
     content: '';
     position: absolute;
@@ -91,17 +131,14 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.7),
-      transparent
-    );
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.7),
+        transparent);
     z-index: 1;
     pointer-events: none;
   }
 
-  /* Left shimmer edge */
   .glass-card-premium::after {
     content: '';
     position: absolute;
@@ -109,17 +146,14 @@
     left: 0;
     width: 1px;
     height: 100%;
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.7),
-      transparent,
-      rgba(255, 255, 255, 0.25)
-    );
+    background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.7),
+        transparent,
+        rgba(255, 255, 255, 0.25));
     z-index: 1;
     pointer-events: none;
   }
 
-  /* Dark mode glass — more visible, elevated */
   .dark .glass-card-premium {
     background: rgba(255, 255, 255, 0.08) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
@@ -134,7 +168,6 @@
       inset 0 0 24px 8px rgba(255, 255, 255, 0.03) !important;
   }
 
-  /* Light mode glass */
   html:not(.dark) .glass-card-premium {
     background: rgba(255, 255, 255, 0.35) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.3) !important;

@@ -2,6 +2,7 @@ package com.campaignloyalty.customer.controller;
 
 import com.campaignloyalty.auth.service.AuthService;
 import com.campaignloyalty.common.dto.ImportResultDto;
+import com.campaignloyalty.customer.dto.LinkDeviceRequest;
 import com.campaignloyalty.customer.dto.LoyalCustomerDto;
 import com.campaignloyalty.customer.dto.RegisterCustomerRequest;
 import com.campaignloyalty.customer.entity.Customer;
@@ -76,6 +77,24 @@ public class CustomerController {
         if (customer == null) {
             return ResponseEntity.noContent().build();
         }
+        return ResponseEntity.ok(toDto(customer));
+    }
+
+    @PostMapping("/link-device")
+    @Operation(
+            summary = "Link this device to an existing customer account via phone number",
+            description = "Finds a registered customer by phone number and updates their device ID to the caller's current device ID. Use this when a user registered on one browser (e.g. Telegram WebView) and is now scanning from a different browser (e.g. Safari).",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Device linked successfully"),
+                    @ApiResponse(responseCode = "400", description = "Phone number not found or device already linked", content = @Content(schema = @Schema(implementation = String.class)))
+            }
+    )
+    public ResponseEntity<LoyalCustomerDto> linkDevice(
+            @CookieValue(value = "device_id", required = false) String cookieDeviceId,
+            @RequestHeader(value = "X-Device-Id", required = false) String headerDeviceId,
+            @Valid @RequestBody LinkDeviceRequest request) {
+        String deviceId = resolveDeviceId(cookieDeviceId, headerDeviceId);
+        Customer customer = customerService.linkDeviceByPhone(deviceId, request.getPhoneNumber());
         return ResponseEntity.ok(toDto(customer));
     }
 

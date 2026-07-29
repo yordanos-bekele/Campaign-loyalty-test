@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { confirmReward, getReadableError, scanQr } from '../services/api';
+import { confirmReward, getReadableError, linkDeviceByPhone, scanQr } from '../services/api';
 import logoFallback from '../assets/logo-placeholder.svg';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 
 function ProgressDots({ currentCount }) {
   return (
@@ -39,6 +41,12 @@ function ScanPage({ hotelId, initialToken }) {
   const [brandLogo, setBrandLogo] = useState('/src/assets/logo.png');
   const hasAutoSubmitted = useRef(false);
 
+  // Phone-linking state (for UNREGISTERED_DEVICE recovery flow)
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [linkError, setLinkError] = useState('');
+  const [linkSuccess, setLinkSuccess] = useState(false);
+
   useEffect(() => {
     setResult(null);
     setError('');
@@ -53,6 +61,8 @@ function ScanPage({ hotelId, initialToken }) {
 
     setBusy(true);
     setError('');
+    setLinkError('');
+    setLinkSuccess(false);
 
     try {
       const response = await scanQr({ token: providedToken });
@@ -62,6 +72,23 @@ function ScanPage({ hotelId, initialToken }) {
       setError(getReadableError(requestError, 'We could not complete the scan. Please try again.'));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleLinkDevice = async (event) => {
+    event.preventDefault();
+    setLinkBusy(true);
+    setLinkError('');
+    try {
+      await linkDeviceByPhone(phoneNumber);
+      setLinkSuccess(true);
+      setResult(null);
+      // Retry the scan immediately with the same token now that the device is linked.
+      await submitScan(initialToken);
+    } catch (requestError) {
+      setLinkError(getReadableError(requestError, 'Could not link your account. Please check your phone number and try again.'));
+    } finally {
+      setLinkBusy(false);
     }
   };
 
@@ -169,6 +196,64 @@ function ScanPage({ hotelId, initialToken }) {
 
             <ProgressDots currentCount={currentCount} />
 
+            {/* ── Phone-link recovery form (UNREGISTERED_DEVICE) ── */}
+            {isRejected && result?.reason === 'UNREGISTERED_DEVICE' && (
+              <div className="mt-8 grid gap-4">
+                <div className="bg-background/60 border border-border p-5 rounded-none grid gap-4">
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground mb-1">
+                      Already registered on another device?
+                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Enter the phone number you used when you signed up and we will link your account to this browser automatically.
+                    </p>
+                  </div>
+                  <form className="grid gap-3" onSubmit={handleLinkDevice}>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="link-phone" className="text-foreground text-sm">
+                        Registered phone number
+                      </Label>
+                      <Input
+                        id="link-phone"
+                        type="tel"
+                        className="h-11 bg-background focus:bg-background transition-all rounded-none focus:-translate-y-0.5"
+                        placeholder="+251 9xx xxx xxx"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        required
+                        disabled={linkBusy}
+                      />
+                    </div>
+                    {linkError && (
+                      <Alert variant="destructive" className="rounded-none py-2">
+                        <AlertDescription className="text-sm">{linkError}</AlertDescription>
+                      </Alert>
+                    )}
+                    {linkSuccess && !linkBusy && (
+                      <Alert className="rounded-none py-2 bg-[#A0C878]/10 border-[#A0C878]/30 text-[#A0C878]">
+                        <AlertDescription className="text-sm">Account linked! Retrying your scan…</AlertDescription>
+                      </Alert>
+                    )}
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="w-full h-11 text-sm shadow-md rounded-none"
+                      disabled={linkBusy || !phoneNumber.trim()}
+                    >
+                      {linkBusy ? 'Linking account…' : 'Link my account and scan'}
+                    </Button>
+                  </form>
+                  <p className="text-xs text-muted-foreground text-center">
+                    First time here?{' '}
+                    <a href="/register" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                      Register your phone number
+                    </a>{' '}
+                    then come back to scan.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {isConfirmationRequired && result?.rewardId && (
               <div className="mt-8 grid gap-3">
                 <Button
@@ -204,6 +289,7 @@ function ScanPage({ hotelId, initialToken }) {
               </div>
             )}
           </div>
+
 
           <div className="flex flex-col sm:flex-row justify-between items-center mt-8 pt-6 border-t border-border gap-4 text-sm text-muted-foreground text-center sm:text-left">
             <span>{busy ? 'Checking your visit...' : result ? 'Result ready' : 'Waiting for QR scan result...'}</span>
