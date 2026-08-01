@@ -1,5 +1,6 @@
 package com.campaignloyalty.hotel.service;
 
+import com.campaignloyalty.common.dto.ImportResultDto;
 import com.campaignloyalty.hotel.entity.Hotel;
 import com.campaignloyalty.hotel.repository.HotelRepository;
 import lombok.AllArgsConstructor;
@@ -64,7 +65,7 @@ public class HotelService {
         return hotelRepository.findAll();
     }
 
-    public com.campaignloyalty.common.dto.ImportResultDto importHotelsFromExcel(MultipartFile file) {
+    public ImportResultDto importHotelsFromExcel(MultipartFile file) {
         validateImportFile(file);
         log.info("Starting hotel Excel import filename={}", file.getOriginalFilename());
 
@@ -122,7 +123,7 @@ public class HotelService {
 
         log.info("Completed hotel import processed={} created={} updated={} skipped={}",
                 processedCount, createdCount, updatedCount, skippedCount);
-        return new com.campaignloyalty.common.dto.ImportResultDto(
+        return new ImportResultDto(
                 processedCount,
                 createdCount,
                 updatedCount,
