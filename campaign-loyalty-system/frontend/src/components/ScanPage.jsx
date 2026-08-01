@@ -1,31 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { confirmReward, getReadableError, linkDeviceByPhone, scanQr } from '../services/api';
-import logoFallback from '../assets/logo-placeholder.svg';
-import { Card, CardContent } from './ui/card';
-import { Badge } from './ui/badge';
-import { Alert, AlertDescription } from './ui/alert';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
+import { confirmReward, linkDeviceByPhone, scanQr } from '../services/api';
 
-function ProgressDots({ currentCount }) {
-  return (
-    <div className="grid grid-cols-10 gap-1 sm:gap-2 mt-6" aria-label={`Current progress is ${currentCount} out of 10`}>
-      {Array.from({ length: 10 }).map((_, index) => (
-        <span
-          key={index}
-          className={`h-4 sm:h-5 transition-all duration-0 ${index < currentCount ? 'bg-primary' : 'bg-muted border border-border'}`}
-        />
-      ))}
-    </div>
-  );
-}
+/* ─── helpers ─────────────────────────────────────────────────── */
 
-function formatNextAllowedScan(value) {
-  if (!value) {
-    return '';
-  }
-
+function friendlyTime(value) {
+  if (!value) return '';
   return new Intl.DateTimeFormat(undefined, {
     hour: 'numeric',
     minute: '2-digit',
@@ -34,277 +13,644 @@ function formatNextAllowedScan(value) {
   }).format(new Date(value));
 }
 
+/* ─── SVG progress ring ───────────────────────────────────────── */
+
+function ProgressRing({ count, total = 10, color = 'var(--color-primary, #f59e0b)' }) {
+  const radius = 80;
+  const stroke = 10;
+  const normalizedRadius = radius - stroke;
+  const circumference = 2 * Math.PI * normalizedRadius;
+  const progress = Math.min(count / total, 1);
+  const strokeDashoffset = circumference - progress * circumference;
+
+  return (
+    <div className="relative inline-flex items-center justify-center" style={{ width: radius * 2, height: radius * 2 }}>
+      <svg
+        height={radius * 2}
+        width={radius * 2}
+        style={{ transform: 'rotate(-90deg)' }}
+        aria-hidden="true"
+      >
+        {/* track */}
+        <circle
+          stroke="hsl(var(--muted))"
+          fill="transparent"
+          strokeWidth={stroke}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+        {/* fill */}
+        <circle
+          stroke={color}
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeLinecap="butt"
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+          style={{ transition: 'stroke-dashoffset 0.7s cubic-bezier(0.4,0,0.2,1)' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-4xl font-extrabold font-display leading-none text-foreground">
+          {count}
+        </span>
+        <span className="text-sm font-medium text-muted-foreground leading-none mt-1">
+          of {total}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── spinning loader ─────────────────────────────────────────── */
+
+function Spinner() {
+  return (
+    <svg
+      className="animate-spin"
+      style={{ width: 48, height: 48, color: 'hsl(var(--primary))' }}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-label="Loading"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+    </svg>
+  );
+}
+
+/* ─── phone bottom-sheet modal ───────────────────────────────── */
+
+function PhoneSheet({ open, busy, error, onSubmit, onNewUser }) {
+  const [phone, setPhone] = useState('');
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (open && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 300);
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <>
+      {/* backdrop */}
+      <div
+        className="fixed inset-0 z-40"
+        style={{ background: 'rgba(0,0,0,0.5)' }}
+        aria-hidden="true"
+      />
+
+      {/* sheet */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sheet-title"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border"
+        style={{
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          padding: '28px 24px 40px',
+          animation: 'slideUp 0.3s cubic-bezier(0.4,0,0.2,1)',
+        }}
+      >
+        {/* drag handle */}
+        <div
+          className="mx-auto bg-border"
+          style={{ width: 40, height: 4, borderRadius: 99, marginBottom: 24 }}
+          aria-hidden="true"
+        />
+
+        <p className="text-2xl mb-2" aria-hidden="true">📱</p>
+        <h2
+          id="sheet-title"
+          className="text-xl font-extrabold font-display uppercase tracking-tight text-foreground mb-2"
+        >
+          Enter your phone number
+        </h2>
+        <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+          We need this to find your account and count this visit towards your free beer.
+        </p>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSubmit(phone);
+          }}
+          className="grid gap-4"
+        >
+          <input
+            ref={inputRef}
+            id="sheet-phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="+251 9xx xxx xxx"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            required
+            disabled={busy}
+            style={{
+              height: 56,
+              fontSize: 18,
+              padding: '0 16px',
+              border: '1.5px solid hsl(var(--border))',
+              borderRadius: 0,
+              background: 'hsl(var(--background))',
+              color: 'hsl(var(--foreground))',
+              width: '100%',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+
+          {error && (
+            <p
+              role="alert"
+              className="text-sm text-center"
+              style={{ color: 'hsl(var(--destructive))' }}
+            >
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={busy || !phone.trim()}
+            style={{
+              height: 56,
+              fontSize: 16,
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              background: busy || !phone.trim()
+                ? 'hsl(var(--muted))'
+                : 'hsl(var(--primary))',
+              color: busy || !phone.trim()
+                ? 'hsl(var(--muted-foreground))'
+                : 'hsl(var(--primary-foreground))',
+              border: 'none',
+              borderRadius: 0,
+              cursor: busy || !phone.trim() ? 'not-allowed' : 'pointer',
+              transition: 'background 0.2s',
+            }}
+          >
+            {busy ? 'Checking…' : 'Continue'}
+          </button>
+        </form>
+
+        <button
+          type="button"
+          onClick={onNewUser}
+          style={{
+            marginTop: 20,
+            display: 'block',
+            width: '100%',
+            textAlign: 'center',
+            fontSize: 14,
+            color: 'hsl(var(--muted-foreground))',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            textUnderlineOffset: 3,
+          }}
+        >
+          First time here? Sign up →
+        </button>
+      </div>
+    </>
+  );
+}
+
+/* ─── main component ─────────────────────────────────────────── */
+
 function ScanPage({ hotelId, initialToken }) {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [brandLogo, setBrandLogo] = useState('/src/assets/logo.png');
+  const [fatalError, setFatalError] = useState('');
   const hasAutoSubmitted = useRef(false);
 
-  // Phone-linking state (for UNREGISTERED_DEVICE recovery flow)
-  const [phoneNumber, setPhoneNumber] = useState('');
+  // Phone-sheet state
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [linkBusy, setLinkBusy] = useState(false);
   const [linkError, setLinkError] = useState('');
-  const [linkSuccess, setLinkSuccess] = useState(false);
 
+  /* ── reset whenever token changes ── */
   useEffect(() => {
     setResult(null);
-    setError('');
+    setFatalError('');
+    setSheetOpen(false);
     hasAutoSubmitted.current = false;
   }, [initialToken]);
 
-  const submitScan = async (providedToken = initialToken) => {
-    if (!providedToken) {
-      setError('We could not find a valid QR token. Please scan again or ask the hotel to refresh the code.');
+  /* ── scan ── */
+  const submitScan = async (token = initialToken) => {
+    if (!token) {
+      setFatalError('noToken');
       return;
     }
-
     setBusy(true);
-    setError('');
-    setLinkError('');
-    setLinkSuccess(false);
-
+    setFatalError('');
     try {
-      const response = await scanQr({ token: providedToken });
+      const response = await scanQr({ token });
       setResult(response);
-    } catch (requestError) {
-      setResult(null);
-      setError(getReadableError(requestError, 'We could not complete the scan. Please try again.'));
+      // auto-open sheet on unregistered device
+      if (response?.status === 'rejected' && response?.reason === 'UNREGISTERED_DEVICE') {
+        setSheetOpen(true);
+      }
+    } catch {
+      setFatalError('network');
     } finally {
       setBusy(false);
     }
   };
 
-  const handleLinkDevice = async (event) => {
-    event.preventDefault();
+  /* ── auto-submit on mount ── */
+  useEffect(() => {
+    if (!initialToken || hasAutoSubmitted.current) return;
+    hasAutoSubmitted.current = true;
+    submitScan(initialToken);
+  }, [initialToken]);
+
+  /* ── phone-link handler ── */
+  const handleLinkPhone = async (phone) => {
     setLinkBusy(true);
     setLinkError('');
     try {
-      await linkDeviceByPhone(phoneNumber);
-      setLinkSuccess(true);
+      await linkDeviceByPhone(phone);
+      setSheetOpen(false);
       setResult(null);
-      // Retry the scan immediately with the same token now that the device is linked.
       await submitScan(initialToken);
-    } catch (requestError) {
-      setLinkError(getReadableError(requestError, 'Could not link your account. Please check your phone number and try again.'));
+    } catch (err) {
+      const msg = err?.response?.data;
+      if (typeof msg === 'string' && msg.includes('No registered customer')) {
+        setLinkError('We could not find an account with that number. Please double-check and try again.');
+      } else {
+        setLinkError('Something went wrong. Please try again.');
+      }
     } finally {
       setLinkBusy(false);
     }
   };
 
-  useEffect(() => {
-    if (!initialToken || hasAutoSubmitted.current) {
-      return;
+  /* ── reward confirm ── */
+  const handleConfirm = async () => {
+    if (!result?.rewardId) return;
+    setBusy(true);
+    try {
+      const response = await confirmReward(result.rewardId);
+      setResult(response);
+    } catch {
+      // silently show a retry-friendly state — don't show technical errors
+    } finally {
+      setBusy(false);
     }
+  };
 
-    hasAutoSubmitted.current = true;
-    submitScan(initialToken);
-  }, [initialToken]);
-
-  const currentCount = result?.currentCount ?? 0;
+  /* ─── derived state ─────────────────────────────────────────── */
+  const currentCount   = result?.currentCount   ?? 0;
   const scansRemaining = result?.remainingToReward ?? 10;
-  const isRewardEarned = result?.status === 'reward_earned';
-  const isConfirmationRequired = result?.status === 'confirmation_required';
-  const isSuccess = result?.status === 'success';
-  const isRejected = result?.status === 'rejected';
+  const isSuccess       = result?.status === 'success';
+  const isConfirm       = result?.status === 'confirmation_required';
+  const isReward        = result?.status === 'reward_earned';
+  const isRejected      = result?.status === 'rejected';
+  const rejReason       = result?.reason;
 
-  const statusCardColors = isRewardEarned
-    ? 'bg-primary/10 border-primary shadow-none'
-    : isConfirmationRequired
-      ? 'bg-primary/5 border-primary shadow-none'
-    : isSuccess
-      ? 'bg-primary/5 border-primary shadow-none'
-      : isRejected
-        ? 'bg-destructive/10 border-destructive shadow-none'
-    : 'bg-card border-border';
+  const isUnregistered  = isRejected && rejReason === 'UNREGISTERED_DEVICE';
+  const isTooSoon       = isRejected && rejReason === 'MIN_TIME_NOT_REACHED';
+  const isDailyLimit    = isRejected && rejReason === 'DAILY_LIMIT_REACHED';
+  const isExpiredToken  = isRejected && !isUnregistered && !isTooSoon && !isDailyLimit;
 
-  const statusTitle = isRewardEarned
-    ? 'Congratulations! You earned a free beer.'
-    : isConfirmationRequired
-      ? 'Confirm your reward to finish.'
-    : isSuccess
-      ? 'Your scan counted successfully.'
-      : isRejected
-        ? result?.reason === 'UNREGISTERED_DEVICE'
-          ? 'This device is not registered yet.'
-          : result?.reason === 'MIN_TIME_NOT_REACHED'
-          ? 'This scan is too soon after your previous valid visit.'
-          : result?.reason === 'DAILY_LIMIT_REACHED'
-            ? 'You have already reached today’s valid scan limit for this hotel.'
-            : 'This QR code is invalid or expired.'
-        : 'Ready to scan your code';
+  /* ─── page states ───────────────────────────────────────────── */
 
-  const statusHint = isRewardEarned
-    ? 'Show this result to the hotel team if they need to confirm your free beer reward.'
-    : isConfirmationRequired
-      ? 'Tap confirm to claim your reward for completing 10 valid scans at this hotel.'
-    : isSuccess
-      ? `${scansRemaining} more valid ${scansRemaining === 1 ? 'scan' : 'scans'} until your next free beer.`
-      : isRejected && result?.reason === 'UNREGISTERED_DEVICE'
-        ? 'Register your username and phone number first, then scan the QR code again.'
-      : isRejected && result?.reason === 'MIN_TIME_NOT_REACHED' && result?.nextAllowedScanAt
-        ? `You can scan again after ${formatNextAllowedScan(result.nextAllowedScanAt)}.`
-        : isRejected && result?.reason === 'DAILY_LIMIT_REACHED'
-          ? 'Try again tomorrow after the daily count resets.'
-          : isRejected
-            ? 'Ask the hotel to refresh the QR code and scan again.'
-            : 'Your scan result will appear here automatically after the QR code opens.';
+  // Loading / processing
+  if (busy && !result) {
+    return (
+      <MobilePage>
+        <div className="flex flex-col items-center gap-6 text-center">
+          <Spinner />
+          <p className="text-lg font-semibold text-muted-foreground">Checking your visit…</p>
+        </div>
+      </MobilePage>
+    );
+  }
+
+  // Fatal: no token
+  if (fatalError === 'noToken') {
+    return (
+      <MobilePage>
+        <StatusScreen
+          emoji="📷"
+          title="No QR code found"
+          subtitle="Please scan the QR code at the hotel again."
+        />
+      </MobilePage>
+    );
+  }
+
+  // Fatal: network error
+  if (fatalError === 'network') {
+    return (
+      <MobilePage>
+        <StatusScreen
+          emoji="🔌"
+          title="Something went wrong"
+          subtitle="Please check your connection and try scanning again."
+          action={{ label: 'Try again', onClick: () => submitScan() }}
+        />
+      </MobilePage>
+    );
+  }
+
+  // Waiting (no token yet)
+  if (!result && !busy) {
+    return (
+      <MobilePage>
+        <StatusScreen
+          emoji="🔍"
+          title="Waiting…"
+          subtitle="Scan the QR code at the hotel to get started."
+        />
+      </MobilePage>
+    );
+  }
+
+  // ── REWARD EARNED ──
+  if (isReward) {
+    return (
+      <MobilePage bg="reward">
+        <div className="flex flex-col items-center text-center gap-6">
+          <span style={{ fontSize: 72 }} aria-label="Party">🎉</span>
+          <h1 className="text-3xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+            You earned a free beer!
+          </h1>
+          <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
+            Show this screen to the hotel team to claim your reward.
+          </p>
+          <div
+            className="w-full max-w-xs border border-border p-5 text-center"
+            style={{ background: 'hsl(var(--card))' }}
+          >
+            <span className="block text-xs uppercase tracking-widest text-muted-foreground mb-1">Hotel</span>
+            <span className="block text-xl font-bold text-foreground">#{hotelId || '--'}</span>
+          </div>
+        </div>
+      </MobilePage>
+    );
+  }
+
+  // ── CONFIRMATION NEEDED (10th scan) ──
+  if (isConfirm) {
+    return (
+      <MobilePage bg="reward">
+        <div className="flex flex-col items-center text-center gap-6">
+          <span style={{ fontSize: 64 }} aria-label="Star">⭐</span>
+          <h1 className="text-3xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+            You made it!
+          </h1>
+          <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
+            Tap the button below to claim your free beer reward.
+          </p>
+          <ProgressRing count={currentCount} total={10} color="hsl(var(--primary))" />
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={busy}
+            style={primaryButtonStyle(busy)}
+          >
+            {busy ? 'Confirming…' : '🍺  Claim my free beer'}
+          </button>
+        </div>
+      </MobilePage>
+    );
+  }
+
+  // ── SUCCESS ──
+  if (isSuccess) {
+    return (
+      <MobilePage bg="success">
+        <div className="flex flex-col items-center text-center gap-6">
+          <ProgressRing count={currentCount} total={10} color="hsl(var(--primary))" />
+          <h1 className="text-3xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+            Visit counted! ✓
+          </h1>
+          <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
+            {scansRemaining === 1
+              ? 'Just 1 more visit and you get a free beer!'
+              : `${scansRemaining} more visits and you get a free beer.`}
+          </p>
+          <ProgressBar count={currentCount} />
+        </div>
+      </MobilePage>
+    );
+  }
+
+  // ── UNREGISTERED (phone sheet handles recovery) ──
+  if (isUnregistered) {
+    return (
+      <MobilePage>
+        <div className="flex flex-col items-center text-center gap-6">
+          <span style={{ fontSize: 56 }} aria-label="Phone">📋</span>
+          <h1 className="text-2xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+            We need your phone number
+          </h1>
+          <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
+            Enter the number you used when you first signed up so we can count this visit.
+          </p>
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            style={primaryButtonStyle(false)}
+          >
+            Enter my number
+          </button>
+          <a
+            href="/register"
+            style={{
+              fontSize: 14,
+              color: 'hsl(var(--muted-foreground))',
+              textDecoration: 'underline',
+              textUnderlineOffset: 3,
+            }}
+          >
+            First time here? Sign up
+          </a>
+        </div>
+
+        <PhoneSheet
+          open={sheetOpen}
+          busy={linkBusy}
+          error={linkError}
+          onSubmit={handleLinkPhone}
+          onNewUser={() => { window.location.href = '/register'; }}
+        />
+      </MobilePage>
+    );
+  }
+
+  // ── TOO SOON ──
+  if (isTooSoon) {
+    return (
+      <MobilePage>
+        <div className="flex flex-col items-center text-center gap-6">
+          <ProgressRing count={currentCount} total={10} color="hsl(var(--muted-foreground))" />
+          <span style={{ fontSize: 48 }} aria-label="Clock">⏰</span>
+          <h1 className="text-2xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+            Come back a bit later
+          </h1>
+          <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
+            {result?.nextAllowedScanAt
+              ? `You can scan again after ${friendlyTime(result.nextAllowedScanAt)}.`
+              : 'Please wait a little while before your next scan.'}
+          </p>
+          <ProgressBar count={currentCount} />
+        </div>
+      </MobilePage>
+    );
+  }
+
+  // ── DAILY LIMIT ──
+  if (isDailyLimit) {
+    return (
+      <MobilePage>
+        <div className="flex flex-col items-center text-center gap-6">
+          <ProgressRing count={currentCount} total={10} color="hsl(var(--muted-foreground))" />
+          <span style={{ fontSize: 48 }} aria-label="Moon">🌙</span>
+          <h1 className="text-2xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+            See you tomorrow!
+          </h1>
+          <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
+            You have already done your visits for today. Come back tomorrow to keep earning.
+          </p>
+          <ProgressBar count={currentCount} />
+        </div>
+      </MobilePage>
+    );
+  }
+
+  // ── EXPIRED / INVALID TOKEN ──
+  if (isExpiredToken) {
+    return (
+      <MobilePage>
+        <StatusScreen
+          emoji="🔄"
+          title="QR code expired"
+          subtitle="Please ask the hotel to refresh the QR code and scan again."
+        />
+      </MobilePage>
+    );
+  }
+
+  // Fallback loading
+  return (
+    <MobilePage>
+      <div className="flex flex-col items-center gap-6 text-center">
+        <Spinner />
+        <p className="text-muted-foreground text-base">One moment…</p>
+      </div>
+    </MobilePage>
+  );
+}
+
+/* ─── layout helpers ─────────────────────────────────────────── */
+
+function MobilePage({ children, bg }) {
+  const bgMap = {
+    reward: 'radial-gradient(circle at 50% 0%, hsl(38 95% 58% / 0.12) 0%, transparent 70%)',
+    success: 'radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.08) 0%, transparent 70%)',
+  };
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl bg-background shadow-2xl border-border rounded-none overflow-hidden">
-        <div className="p-6 md:p-10">
-          <div className="flex flex-wrap justify-between items-center gap-4 mb-6 border-b border-border pb-4">
-            <span className="text-sm font-bold font-display uppercase tracking-[0.1em] text-muted-foreground">Marathon Spirits Loyalty</span>
-            <Badge variant="secondary" className="bg-transparent text-foreground border border-border pointer-events-none px-3 py-1 text-sm font-bold rounded-none uppercase">
-              Hotel #{hotelId || '--'}
-            </Badge>
-          </div>
+    <>
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to   { transform: translateY(0); }
+        }
+      `}</style>
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
+        style={{
+          background: bgMap[bg] || undefined,
+          maxWidth: 480,
+          margin: '0 auto',
+        }}
+      >
+        {children}
+      </div>
+    </>
+  );
+}
 
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left mb-8">
-            <div className="w-24 h-24 bg-card p-2 border border-border shadow-inner shrink-0 rounded-none">
-              <img
-                className="w-full h-full object-contain rounded-none"
-                src={brandLogo}
-                alt="Marathon Spirits logo"
-                onError={() => setBrandLogo(logoFallback)}
-              />
-            </div>
-            <div className="mt-2 md:mt-0">
-              <h1 className="text-3xl font-extrabold font-display uppercase text-foreground mb-3 leading-tight tracking-tight">{result?.message || statusTitle}</h1>
-              <p className="text-muted-foreground text-lg">{statusHint}</p>
-            </div>
-          </div>
-
-          <div className={`p-6 sm:p-8 transition-colors border shadow-sm rounded-none ${statusCardColors}`}>
-            <div className="flex justify-between items-center mb-6 border-b border-border/20 pb-4">
-              <Badge variant="outline" className="bg-background/80 pointer-events-none uppercase tracking-wide text-xs rounded-none border-border">
-                {isRewardEarned ? 'Reward earned' : isConfirmationRequired ? 'Confirmation needed' : isSuccess ? 'Scan counted' : isRejected ? 'Scan rejected' : 'Waiting for scan'}
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="bg-background/80 p-4 border border-border shadow-sm rounded-none">
-                <span className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">Valid scans collected</span>
-                <strong className="block text-3xl font-bold font-display text-foreground">{currentCount}<span className="text-muted-foreground text-2xl font-medium">/10</span></strong>
-              </div>
-              <div className="bg-background/80 p-4 border border-border shadow-sm rounded-none">
-                <span className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">Scans remaining</span>
-                <strong className="block text-3xl font-bold font-display text-foreground">{scansRemaining}</strong>
-              </div>
-            </div>
-
-            <ProgressDots currentCount={currentCount} />
-
-            {/* ── Phone-link recovery form (UNREGISTERED_DEVICE) ── */}
-            {isRejected && result?.reason === 'UNREGISTERED_DEVICE' && (
-              <div className="mt-8 grid gap-4">
-                <div className="bg-background/60 border border-border p-5 rounded-none grid gap-4">
-                  <div>
-                    <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground mb-1">
-                      Already registered on another device?
-                    </p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Enter the phone number you used when you signed up and we will link your account to this browser automatically.
-                    </p>
-                  </div>
-                  <form className="grid gap-3" onSubmit={handleLinkDevice}>
-                    <div className="grid gap-1.5">
-                      <Label htmlFor="link-phone" className="text-foreground text-sm">
-                        Registered phone number
-                      </Label>
-                      <Input
-                        id="link-phone"
-                        type="tel"
-                        className="h-11 bg-background focus:bg-background transition-all rounded-none focus:-translate-y-0.5"
-                        placeholder="+251 9xx xxx xxx"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        required
-                        disabled={linkBusy}
-                      />
-                    </div>
-                    {linkError && (
-                      <Alert variant="destructive" className="rounded-none py-2">
-                        <AlertDescription className="text-sm">{linkError}</AlertDescription>
-                      </Alert>
-                    )}
-                    {linkSuccess && !linkBusy && (
-                      <Alert className="rounded-none py-2 bg-[#A0C878]/10 border-[#A0C878]/30 text-[#A0C878]">
-                        <AlertDescription className="text-sm">Account linked! Retrying your scan…</AlertDescription>
-                      </Alert>
-                    )}
-                    <Button
-                      type="submit"
-                      size="lg"
-                      className="w-full h-11 text-sm shadow-md rounded-none"
-                      disabled={linkBusy || !phoneNumber.trim()}
-                    >
-                      {linkBusy ? 'Linking account…' : 'Link my account and scan'}
-                    </Button>
-                  </form>
-                  <p className="text-xs text-muted-foreground text-center">
-                    First time here?{' '}
-                    <a href="/register" className="underline underline-offset-2 hover:text-foreground transition-colors">
-                      Register your phone number
-                    </a>{' '}
-                    then come back to scan.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {isConfirmationRequired && result?.rewardId && (
-              <div className="mt-8 grid gap-3">
-                <Button
-                  type="button"
-                  size="lg"
-                  className="w-full h-12 text-md shadow-md rounded-none"
-                  disabled={busy}
-                  onClick={async () => {
-                    setBusy(true);
-                    setError('');
-                    try {
-                      const response = await confirmReward(result.rewardId);
-                      setResult(response);
-                    } catch (requestError) {
-                      setError(getReadableError(requestError, 'Could not confirm your reward right now.'));
-                    } finally {
-                      setBusy(false);
-                    }
-                  }}
-                >
-                  {busy ? 'Confirming...' : 'Confirm reward'}
-                </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  This confirmation is required to count the reward.
-                </p>
-              </div>
-            )}
-
-            {result?.nextAllowedScanAt && (
-              <div className="mt-8 bg-background/60 p-4 border border-border flex justify-between items-center rounded-none">
-                <span className="text-sm font-medium text-muted-foreground font-display uppercase">Next valid scan</span>
-                <strong className="text-foreground font-semibold">{formatNextAllowedScan(result.nextAllowedScanAt)}</strong>
-              </div>
-            )}
-          </div>
-
-
-          <div className="flex flex-col sm:flex-row justify-between items-center mt-8 pt-6 border-t border-border gap-4 text-sm text-muted-foreground text-center sm:text-left">
-            <span>{busy ? 'Checking your visit...' : result ? 'Result ready' : 'Waiting for QR scan result...'}</span>
-            <span>{error ? 'There was a scan issue.' : 'No extra action needed from the guest.'}</span>
-          </div>
-
-          {error && (
-            <Alert variant="destructive" className="mt-6 rounded-none">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-        </div>
-      </Card>
+function StatusScreen({ emoji, title, subtitle, action }) {
+  return (
+    <div className="flex flex-col items-center text-center gap-5">
+      <span style={{ fontSize: 56 }} aria-hidden="true">{emoji}</span>
+      <h1 className="text-2xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+        {title}
+      </h1>
+      <p className="text-muted-foreground text-base max-w-xs leading-relaxed">{subtitle}</p>
+      {action && (
+        <button type="button" onClick={action.onClick} style={primaryButtonStyle(false)}>
+          {action.label}
+        </button>
+      )}
     </div>
   );
+}
+
+function ProgressBar({ count, total = 10 }) {
+  return (
+    <div
+      className="w-full max-w-xs grid gap-1"
+      aria-label={`Progress: ${count} of ${total}`}
+    >
+      <div className="flex gap-1">
+        {Array.from({ length: total }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              flex: 1,
+              height: 8,
+              borderRadius: 99,
+              background: i < count
+                ? 'hsl(var(--primary))'
+                : 'hsl(var(--muted))',
+              transition: 'background 0.4s',
+            }}
+          />
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground text-right mt-1">
+        {count} / {total} visits
+      </p>
+    </div>
+  );
+}
+
+function primaryButtonStyle(disabled) {
+  return {
+    width: '100%',
+    maxWidth: 320,
+    height: 56,
+    fontSize: 16,
+    fontWeight: 700,
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+    background: disabled ? 'hsl(var(--muted))' : 'hsl(var(--primary))',
+    color: disabled ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary-foreground))',
+    border: 'none',
+    borderRadius: 0,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    transition: 'background 0.2s, transform 0.1s',
+  };
 }
 
 export default ScanPage;

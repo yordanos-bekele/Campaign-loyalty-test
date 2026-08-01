@@ -114,6 +114,15 @@ function App() {
     );
   }
 
+  if (view === 'scan') {
+    return (
+      <ScanPage
+        hotelId={hotelId}
+        initialToken={scanToken}
+      />
+    );
+  }
+
   return (
     <div className="w-full max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
       <header className="grid gap-6 lg:grid-cols-[2.2fr_1fr] items-stretch mb-8">
@@ -197,13 +206,6 @@ function App() {
         )}
 
         {view === 'hotel' && <Dashboard mode="hotel" />}
-
-        {view === 'scan' && (
-          <ScanPage
-            hotelId={hotelId}
-            initialToken={scanToken}
-          />
-        )}
       </main>
     </div>
   );
