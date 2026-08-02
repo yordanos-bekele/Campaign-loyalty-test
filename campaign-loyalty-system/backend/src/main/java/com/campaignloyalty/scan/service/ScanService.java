@@ -77,7 +77,8 @@ public class ScanService {
 
         LocalDateTime now = LocalDateTime.now();
         QrToken qrToken = qrTokenRepository.findByToken(token);
-        // Treat tokens as valid when expiresAt is equal to "now" to avoid edge-case rejections
+        // Treat tokens as valid when expiresAt is equal to "now" to avoid edge-case
+        // rejections
         // during the exact expiry boundary (common on slow mobile handoffs).
         if (qrToken == null || qrToken.getExpiresAt() == null || qrToken.getExpiresAt().isBefore(now)) {
             return rejectForInvalidToken(token, ip, userAgent, effectiveRewardThreshold);
@@ -99,7 +100,8 @@ public class ScanService {
         }
         log.debug("Resolved scan customerId={} hotelId={}", customer.getId(), hotelId);
 
-        CustomerHotelProgress progress = customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(), hotelId);
+        CustomerHotelProgress progress = customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(),
+                hotelId);
         if (progress == null) {
             progress = createProgress(customer.getId(), hotelId);
         }
@@ -110,7 +112,8 @@ public class ScanService {
         }
 
         if (progress.getPendingRewardId() != null) {
-            return requireRewardConfirmation(customer.getId(), hotelId, progress.getPendingRewardId(), token, ip, userAgent, progress, effectiveRewardThreshold);
+            return requireRewardConfirmation(customer.getId(), hotelId, progress.getPendingRewardId(), token, ip,
+                    userAgent, progress, effectiveRewardThreshold);
         }
 
         if (progress.getLastScanAt() != null) {
@@ -157,7 +160,8 @@ public class ScanService {
             progress.setPendingRewardId(reward.getId());
             customerHotelProgressRepository.save(progress);
             logScanHistory(customer.getId(), hotelId, token, ip, userAgent, true, null, false);
-            log.info("Reward pending confirmation customerId={} hotelId={} rewardId={}", customer.getId(), hotelId, reward.getId());
+            log.info("Reward pending confirmation customerId={} hotelId={} rewardId={}", customer.getId(), hotelId,
+                    reward.getId());
             return new ScanResponse(
                     "confirmation_required",
                     currentCount,
@@ -184,6 +188,7 @@ public class ScanService {
     public ScanResponse confirmReward(String deviceId, Integer rewardId, String ip, String userAgent) {
         int effectiveRewardThreshold = rewardThreshold < 1 ? 10 : rewardThreshold;
         if (isBlank(deviceId)) {
+            log.warn("device_id cookie or X-Device-Id header is required");
             throw new IllegalArgumentException("device_id cookie or X-Device-Id header is required");
         }
         if (rewardId == null) {
@@ -204,12 +209,15 @@ public class ScanService {
 
         Reward reward = rewardService.findReward(rewardId);
         if (reward == null) {
+            log.warn("reward not found for rewardId={}", rewardId);
             throw new IllegalArgumentException("reward not found");
         }
 
         Integer hotelId = reward.getHotelId();
-        CustomerHotelProgress progress = customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(), hotelId);
-        if (progress == null || progress.getPendingRewardId() == null || !progress.getPendingRewardId().equals(rewardId)) {
+        CustomerHotelProgress progress = customerHotelProgressRepository.findByCustomerIdAndHotelId(customer.getId(),
+                hotelId);
+        if (progress == null || progress.getPendingRewardId() == null
+                || !progress.getPendingRewardId().equals(rewardId)) {
             throw new IllegalArgumentException("no pending reward confirmation found for this device");
         }
 
@@ -218,7 +226,8 @@ public class ScanService {
         progress.setScanCount(0);
         progress.setPendingRewardId(null);
         customerHotelProgressRepository.save(progress);
-        log.info("Reward confirmed via user action customerId={} hotelId={} rewardId={}", customer.getId(), hotelId, rewardId);
+        log.info("Reward confirmed via user action customerId={} hotelId={} rewardId={}", customer.getId(), hotelId,
+                rewardId);
 
         return new ScanResponse(
                 "reward_earned",
@@ -237,7 +246,8 @@ public class ScanService {
         return progress;
     }
 
-    private ScanResponse rejectForInvalidToken(String token, String ip, String userAgent, int effectiveRewardThreshold) {
+    private ScanResponse rejectForInvalidToken(String token, String ip, String userAgent,
+            int effectiveRewardThreshold) {
         log.warn("Scan rejected due to invalid or expired token token={} ip={}", token, ip);
         logScanHistory(null, null, token, ip, userAgent, false, RejectionReason.INVALID_OR_EXPIRED_TOKEN, false);
         return new ScanResponse(
@@ -277,8 +287,10 @@ public class ScanService {
             String userAgent,
             CustomerHotelProgress progress,
             int effectiveRewardThreshold) {
-        log.warn("Scan requires reward confirmation customerId={} hotelId={} rewardId={}", customerId, hotelId, rewardId);
-        logScanHistory(customerId, hotelId, token, ip, userAgent, false, RejectionReason.REWARD_CONFIRMATION_REQUIRED, false);
+        log.warn("Scan requires reward confirmation customerId={} hotelId={} rewardId={}", customerId, hotelId,
+                rewardId);
+        logScanHistory(customerId, hotelId, token, ip, userAgent, false, RejectionReason.REWARD_CONFIRMATION_REQUIRED,
+                false);
         return new ScanResponse(
                 "confirmation_required",
                 progress.getScanCount(),
@@ -316,26 +328,32 @@ public class ScanService {
     private boolean isSuspiciousViolation(Integer customerId, Integer hotelId, RejectionReason rejectionReason) {
         LocalDateTime now = LocalDateTime.now();
 
-        // We flag as suspicious when this rejection becomes the 3rd failed attempt inside 10 minutes.
+        // We flag as suspicious when this rejection becomes the 3rd failed attempt
+        // inside 10 minutes.
         long rejectedInTenMinutes = scanHistoryRepository.countByCustomerIdAndHotelIdAndValidFalseAndScannedAtAfter(
                 customerId,
                 hotelId,
                 now.minusMinutes(10));
         if (rejectedInTenMinutes >= 2) {
-            log.warn("Suspicious scan pattern detected by 10-minute rejection threshold customerId={} hotelId={} rejectedCount={}",
+            log.warn(
+                    "Suspicious scan pattern detected by 10-minute rejection threshold customerId={} hotelId={} rejectedCount={}",
                     customerId, hotelId, rejectedInTenMinutes + 1);
             return true;
         }
 
-        // "Repeated violations within the same hour" is interpreted as at least one prior
-        // rejection with the same reason for the same customer and hotel in the last hour.
-        long sameReasonInHour = scanHistoryRepository.countByCustomerIdAndHotelIdAndValidFalseAndRejectionReasonAndScannedAtAfter(
-                customerId,
-                hotelId,
-                rejectionReason,
-                now.minusHours(1));
+        // "Repeated violations within the same hour" is interpreted as at least one
+        // prior
+        // rejection with the same reason for the same customer and hotel in the last
+        // hour.
+        long sameReasonInHour = scanHistoryRepository
+                .countByCustomerIdAndHotelIdAndValidFalseAndRejectionReasonAndScannedAtAfter(
+                        customerId,
+                        hotelId,
+                        rejectionReason,
+                        now.minusHours(1));
         if (sameReasonInHour >= 1) {
-            log.warn("Suspicious scan pattern detected by repeated hourly violations customerId={} hotelId={} reason={} priorCount={}",
+            log.warn(
+                    "Suspicious scan pattern detected by repeated hourly violations customerId={} hotelId={} reason={} priorCount={}",
                     customerId, hotelId, rejectionReason, sameReasonInHour);
         }
         return sameReasonInHour >= 1;
