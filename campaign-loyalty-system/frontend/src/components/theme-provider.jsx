@@ -24,8 +24,8 @@ export function ThemeProvider({
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
         .matches
         ? "dark"
-        : "dark" // Marathon Spirits brand favors dark predominantly, but let's support true system toggle.
-      root.classList.add(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+        : "light"
+      root.classList.add(systemTheme)
       return
     }
 

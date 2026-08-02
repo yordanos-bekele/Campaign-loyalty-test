@@ -22,10 +22,10 @@ import {
 
 function StatCard({ label, value, accent, onClick, active = false }) {
   const accentColors = {
-    warm: 'bg-primary/10 text-foreground border-primary/20',
-    green: 'bg-primary/5 text-foreground border-border',
-    red: 'bg-destructive/10 text-foreground border-destructive/20',
-    dark: 'bg-card text-foreground border-border',
+    warm: 'metric-gold text-foreground',
+    green: 'bg-emerald-950/30 text-foreground border-emerald-500/60',
+    red: 'metric-danger text-foreground',
+    dark: 'bg-zinc-950 text-foreground border-zinc-600',
   };
   
   const baseClasses = `p-6 rounded-none border transition-all ${accentColors[accent] || 'bg-background'} ${onClick ? 'cursor-pointer hover:shadow hover:-translate-y-0.5 hover:border-primary' : ''} ${active ? 'ring-1 ring-primary ring-offset-2 ring-offset-background' : ''}`;
@@ -247,11 +247,11 @@ function Dashboard({ mode = 'hotel' }) {
 
   return (
     <div className="grid gap-6 w-full max-w-5xl mx-auto">
-      <Card className="border-border shadow-none rounded-none bg-background">
+      <Card className="border-zinc-700 shadow-none rounded-none bg-zinc-950">
         <CardHeader className="flex flex-row items-start justify-between gap-4 border-b border-border">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.1em] text-muted-foreground mb-1">
-              {mode === 'admin' ? 'Admin Access' : 'Hotel Access'}
+              {mode === 'admin' ? 'Admin control room' : 'Hotel partner portal'}
             </p>
             <CardTitle className="text-2xl mb-2 font-display uppercase tracking-tight">
               {mode === 'admin' ? 'Marathon Spirits admin control room' : 'Hotel loyalty dashboard'}
@@ -277,13 +277,13 @@ function Dashboard({ mode = 'hotel' }) {
 
       {!sessionUser && mode === 'hotel' && (
         <div className="grid md:grid-cols-2 gap-6">
-          <Card className="rounded-none shadow-none border-border">
+          <Card className="rounded-none shadow-none border-zinc-700 bg-zinc-950">
             <CardHeader>
               <CardTitle>Hotel login</CardTitle>
               <CardDescription>Sign in using your hotel name and password to see only your hotel campaign dashboard.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="grid gap-5 bg-background border border-border p-6 shadow-sm rounded-none" onSubmit={handleHotelLogin}>
+              <form className="grid gap-5 bg-zinc-900 border border-zinc-700 p-6 shadow-sm rounded-none" onSubmit={handleHotelLogin}>
                 <div className="grid gap-2">
                   <Label htmlFor="hotelName">Hotel name</Label>
                   <Input
@@ -318,13 +318,13 @@ function Dashboard({ mode = 'hotel' }) {
 
       {!sessionUser && mode === 'admin' && (
         <div className="grid md:grid-cols-2 gap-6">
-          <Card className="rounded-none shadow-none border-border">
+          <Card className="rounded-none shadow-none border-zinc-700 bg-zinc-950">
             <CardHeader>
               <CardTitle>Admin login</CardTitle>
               <CardDescription>Use the Marathon Spirits admin credentials to open company-wide controls.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="grid gap-5 bg-background border border-border p-6 shadow-sm rounded-none" onSubmit={handleAdminLogin}>
+              <form className="grid gap-5 bg-zinc-900 border border-zinc-700 p-6 shadow-sm rounded-none" onSubmit={handleAdminLogin}>
                 <div className="grid gap-2">
                   <Label htmlFor="adminUsername">Username</Label>
                   <Input
@@ -371,9 +371,9 @@ function Dashboard({ mode = 'hotel' }) {
 
       {hotelView && (
         <div className="grid gap-6">
-          <Card className="rounded-none shadow-none border-border">
+          <Card className="rounded-none shadow-none border-zinc-700 bg-zinc-950">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between bg-card border border-border p-4 rounded-none mb-6">
+              <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-4 rounded-none mb-6">
                 <div>
                   <strong className="block text-lg text-foreground font-display uppercase">{sessionUser.displayName}</strong>
                   <span className="text-sm text-muted-foreground">Hotel account</span>
@@ -392,9 +392,9 @@ function Dashboard({ mode = 'hotel' }) {
 
       {adminView && (
         <div className="grid gap-6">
-          <Card className="rounded-none shadow-none border-border">
+          <Card className="rounded-none shadow-none border-zinc-700 bg-zinc-950">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between bg-card border border-border p-4 rounded-none mb-6">
+              <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-4 rounded-none mb-6">
                 <div>
                   <strong className="block text-lg text-foreground font-display uppercase tracking-wider">{sessionUser.displayName}</strong>
                   <span className="text-sm text-muted-foreground">Admin account</span>

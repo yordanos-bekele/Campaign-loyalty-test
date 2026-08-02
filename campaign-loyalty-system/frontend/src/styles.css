@@ -37,25 +37,25 @@
 /* 2. Your HSL Variables Configuration */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    --background: 240 9% 96%;
+    --foreground: 240 6% 7%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 240 6% 7%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
-    --primary: 38 95% 58%;
+    --popover-foreground: 240 6% 7%;
+    --primary: 43 74% 53%;
     --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 0%;
-    --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 63%;
-    --accent: 38 95% 58%;
+    --secondary: 240 5% 92%;
+    --secondary-foreground: 240 6% 7%;
+    --muted: 240 5% 92%;
+    --muted-foreground: 240 4% 42%;
+    --accent: 43 74% 53%;
     --accent-foreground: 0 0% 0%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 0 0% 0%;
+    --border: 240 6% 82%;
+    --input: 240 6% 82%;
+    --ring: 43 74% 53%;
     --radius: 0rem;
   }
 
@@ -91,6 +91,9 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: Acumin, "Acumin Pro", "Arial Narrow", Arial, sans-serif;
+    min-height: 100vh;
+    background-image: radial-gradient(circle at 85% -10%, rgba(212, 175, 55, .18), transparent 33%), linear-gradient(135deg, #ffffff 0%, #f4f4f5 100%);
   }
 
   .dark body {
@@ -106,6 +109,8 @@
   h5,
   h6 {
     @apply uppercase tracking-[0.02em];
+    font-family: Acumin, "Acumin Pro", "Arial Narrow", Arial, sans-serif;
+    font-weight: 800;
   }
 }
 
@@ -113,6 +118,11 @@
 @layer components {
   button.bg-primary {
     @apply uppercase font-bold tracking-tight rounded-none;
+  }
+
+  input:focus-visible {
+    outline: 2px solid #d4af37;
+    outline-offset: 2px;
   }
 
   .glass-card-premium {
@@ -179,4 +189,59 @@
       inset 0 -1px 0 rgba(255, 255, 255, 0.3),
       inset 0 0 24px 12px rgba(255, 255, 255, 0.4) !important;
   }
+}
+
+@layer components {
+  .font-display { font-family: Acumin, "Acumin Pro", "Arial Narrow", Arial, sans-serif; font-weight: 800; }
+  .text-brand-gold { color: #d4af37; }
+  .brand-eyebrow { color: #d4af37; font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+  .brand-hero { background: linear-gradient(120deg, #000 0%, #09090b 60%, #181811 100%); }
+  .brand-cta-light { background: #fff !important; color: #09090b !important; }
+  .brand-cta-light:hover { background: #e4e4e7 !important; }
+  .bottle-showcase { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; min-height: 340px; align-items: end; position: relative; isolation: isolate; }
+  .bottle-panel { height: 100%; min-height: 340px; overflow: hidden; position: relative; z-index: 1; display: flex; justify-content: center; align-items: end; }
+  .bottle-panel span { position: absolute; top: 1rem; left: 1rem; z-index: 1; text-transform: uppercase; font-weight: 800; letter-spacing: .16em; font-size: .72rem; }
+  .bottle-panel img { height: 310px; width: 100%; object-fit: contain; object-position: bottom; filter: drop-shadow(0 18px 16px rgba(0,0,0,.5)); transition: transform .3s ease; }
+  .bottle-panel:hover img { transform: translateY(-6px) scale(1.03); }
+  .bottle-panel-vodka { background: linear-gradient(180deg, rgba(220,38,38,.35), rgba(0,0,0,.15)); border-color: #dc2626; }
+  .bottle-panel-vodka span { color: #fca5a5; }
+  .bottle-panel-gin { background: linear-gradient(180deg, rgba(6,78,59,.7), rgba(234,179,8,.16)); border-color: #10b981; }
+  .bottle-panel-gin span { color: #fde047; }
+  .promo-bottle { position: absolute; z-index: 0; height: 190px; width: 90px; object-fit: contain; object-position: bottom; opacity: .2; pointer-events: none; filter: drop-shadow(0 12px 10px rgba(0,0,0,.3)); }
+  .promo-bottle-left { left: -48px; bottom: -8px; transform: rotate(-12deg); }
+  .promo-bottle-right { right: -45px; top: -38px; transform: rotate(12deg); }
+  .promo-bottle-center { right: 39%; bottom: -54px; transform: rotate(8deg); opacity: .14; }
+  .campaign-step h3 span { color: #d4af37; margin-right: .5rem; }
+  .campaign-step { border-color: #3f3f46; }
+  .product-vodka { --product-accent: #dc2626; --product-soft: rgba(220,38,38,.16); }
+  .product-gin { --product-accent: #10b981; --product-soft: rgba(16,185,129,.14); }
+  .scan-product-card { border: 1px solid var(--product-accent); background: linear-gradient(135deg, var(--product-soft), rgba(9,9,11,.9)); position: relative; overflow: hidden; }
+  .scan-product-card img { height: 210px; width: 100%; object-fit: contain; object-position: bottom; filter: drop-shadow(0 12px 12px rgba(0,0,0,.45)); }
+  .reward-glow { border-color: #d4af37 !important; box-shadow: 0 0 0 1px rgba(212,175,55,.25), 0 0 34px rgba(212,175,55,.22); }
+  .metric-gold { border-color: #d4af37 !important; background: linear-gradient(135deg, rgba(212,175,55,.2), rgba(9,9,11,.9)) !important; }
+  .metric-danger { border-color: #dc2626 !important; background: rgba(220,38,38,.13) !important; }
+  .drop-zone { border: 2px dashed #71717a; background: rgba(244,244,245,.04); }
+}
+
+/* Light mode keeps the campaign crisp: white surfaces, pale-grey structure, black type and gold accents. */
+html.light .brand-hero { background: linear-gradient(125deg, #fff 0%, #f4f4f5 72%, #f4ead0 100%); border-color: #d4af37 !important; }
+html.light .brand-hero h1 { color: #09090b; }
+html.light .brand-hero .text-zinc-300 { color: #3f3f46; }
+html.light .brand-hero .border-zinc-500 { border-color: #18181b; color: #18181b; }
+html.light .glass-card-premium { background: rgba(255,255,255,.94) !important; border-color: #d4d4d8 !important; box-shadow: 0 10px 28px rgba(9,9,11,.08) !important; }
+html.light .bg-zinc-950, html.light .bg-zinc-900 { background-color: #fff !important; }
+html.light .border-zinc-700, html.light .border-zinc-800 { border-color: #d4d4d8 !important; }
+html.light .campaign-step { background: #f4f4f5; border-color: #d4d4d8; }
+html.light .scan-product-card { background: linear-gradient(135deg, var(--product-soft), #fff); }
+html.light .metric-gold { background: linear-gradient(135deg, rgba(212,175,55,.22), #fff) !important; }
+html.light .metric-danger { background: rgba(220,38,38,.08) !important; }
+html.light .reward-glow { background: #fff !important; }
+html.light .bottle-panel-vodka { background: linear-gradient(180deg, #fff1f2, #fff); }
+html.light .bottle-panel-gin { background: linear-gradient(180deg, #ecfdf5, #fffbeb); }
+html.light .promo-bottle { opacity: .12; }
+
+@media (max-width: 640px) {
+  .bottle-showcase { min-height: 245px; }
+  .bottle-panel { min-height: 245px; }
+  .bottle-panel img { height: 225px; }
 }

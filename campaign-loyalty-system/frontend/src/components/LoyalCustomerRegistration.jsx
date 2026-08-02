@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getCurrentCustomer, getReadableError, registerLoyalCustomer } from '../services/api';
 import logoFallback from '../assets/logo-placeholder.svg';
+import vodkaBottle from '../assets/Vodka_bottel.png';
+import ginBottle from '../assets/Gin_bottel.png';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -20,7 +22,6 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [brandLogo, setBrandLogo] = useState('/src/assets/logo.png');
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -71,18 +72,20 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
 
   return (
     <div className={`w-full ${standalone ? 'min-h-[calc(100vh-3rem)] flex items-center justify-center py-8' : ''}`}>
-      <Card className={`w-full bg-background shadow-2xl border-border overflow-hidden rounded-none ${standalone ? 'max-w-5xl' : ''}`}>
-        <CardContent className="p-6 md:p-10 border-b border-border bg-card">
+      <Card className={`w-full bg-background shadow-2xl border-zinc-700 overflow-hidden rounded-none ${standalone ? 'max-w-5xl' : ''}`}>
+        <CardContent className="p-6 md:p-10 border-b border-zinc-700 bg-zinc-950 relative overflow-hidden">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
-            <img
-              className="w-24 h-24 object-cover bg-card p-2 shadow-inner border border-border shrink-0 rounded-none"
-              src={brandLogo}
-              alt="Marathon Spirits logo"
-              onError={() => setBrandLogo(logoFallback)}
-            />
+            <div className="shrink-0 flex flex-col items-center gap-2">
+              <img
+                className="w-24 h-24 object-cover bg-white p-2 shadow-inner border border-[#d4af37] rounded-none"
+                src={logoFallback}
+                alt="Marathon Klassics logo"
+              />
+              <span className="text-[10px] uppercase tracking-[.14em] font-bold text-brand-gold">Marathon Klassics</span>
+            </div>
             <div>
-              <p className="text-sm font-display font-bold uppercase tracking-[0.1em] text-muted-foreground mb-2">Marathon Spirits</p>
-              <h1 className="text-3xl md:text-4xl font-extrabold font-display uppercase tracking-[0.02em] text-foreground mb-3 leading-tight">Rare loyal customer registration</h1>
+              <p className="brand-eyebrow mb-2">Marathon Klassics loyalty</p>
+              <h1 className="text-3xl md:text-4xl font-extrabold font-display uppercase tracking-[0.02em] text-foreground mb-3 leading-tight">Register your device</h1>
               <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
                 Join the Marathon Spirits loyalty customer giveaway and keep your reward progress tied to this mobile browser.
               </p>
@@ -102,7 +105,7 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
                 <Label htmlFor="fullName" className="text-foreground">Username</Label>
                 <Input
                   id="fullName"
-                  className="h-12 bg-background focus:bg-background transition-all rounded-none focus:-translate-y-1"
+                  className="h-12 bg-zinc-100 text-zinc-950 placeholder:text-zinc-500 focus:bg-white transition-all rounded-none"
                   value={form.fullName}
                   onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))}
                   placeholder="Your preferred name"
@@ -113,10 +116,10 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
                 <Label htmlFor="phoneNumber" className="text-foreground">Phone number</Label>
                 <Input
                   id="phoneNumber"
-                  className="h-12 bg-background focus:bg-background transition-all rounded-none focus:-translate-y-1"
+                  className="h-12 bg-zinc-100 text-zinc-950 placeholder:text-zinc-500 focus:bg-white transition-all rounded-none"
                   value={form.phoneNumber}
                   onChange={(event) => setForm((current) => ({ ...current, phoneNumber: event.target.value }))}
-                  placeholder="+251 9xx xxx xxx"
+                  placeholder="09xx xxx xxx"
                   required
                 />
               </div>
@@ -152,10 +155,15 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
             </div>
 
             {customer && (
-              <div className="bg-[#A0C878]/10 border border-[#A0C878]/30 p-5 rounded-none">
-                <strong className="block text-[#A0C878] text-lg mb-1 uppercase font-display">{customer.fullName}</strong>
+              <div className="reward-glow bg-zinc-950 p-5 rounded-none overflow-hidden relative">
+                <div className="absolute right-0 bottom-0 flex opacity-75 pointer-events-none">
+                  <img className="h-28 w-12 object-contain object-bottom" src={vodkaBottle} alt="" />
+                  <img className="h-28 w-12 object-contain object-bottom" src={ginBottle} alt="" />
+                </div>
+                <span className="brand-eyebrow block mb-2">Welcome to the club</span>
+                <strong className="block text-brand-gold text-lg mb-1 uppercase font-display">{customer.fullName}</strong>
                 <span className="block text-foreground mb-3">{customer.phoneNumber}</span>
-                <span className="block text-[#A0C878] text-sm font-medium">Congratulations! You are one of our rare loyal customers.</span>
+                <span className="block text-zinc-200 text-sm font-medium max-w-[75%]">Your device is ready. Start scanning to unlock your free drink.</span>
               </div>
             )}
           </div>

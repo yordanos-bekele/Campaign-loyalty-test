@@ -7,6 +7,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { useTheme } from './theme-provider';
+import vodkaBottle from '../assets/Vodka_bottel.png';
+import ginBottle from '../assets/Gin_bottel.png';
 
 function formatExpiry(value) {
   if (!value) {
@@ -36,6 +38,7 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
   const [qrImage, setQrImage] = useState('');
   const [busy, setBusy] = useState(false);
   const [tokenError, setTokenError] = useState('');
+  const [secondsRemaining, setSecondsRemaining] = useState(120);
   const { theme } = useTheme();
 
   const scanLink = useMemo(() => {
@@ -119,6 +122,14 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
 
     return () => window.clearInterval(interval);
   }, [tokenPayload?.hotelId]);
+
+  useEffect(() => {
+    if (!tokenPayload?.expiresAt) return undefined;
+    const updateCountdown = () => setSecondsRemaining(Math.max(0, Math.ceil((new Date(tokenPayload.expiresAt).getTime() - Date.now()) / 1000)));
+    updateCountdown();
+    const interval = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(interval);
+  }, [tokenPayload?.expiresAt]);
 
   const handleGenerateToken = async (requestedHotelId = hotelId) => {
     if (!requestedHotelId) {
@@ -254,10 +265,12 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
           )}
         </div>
 
-        <Card className="flex flex-col items-center text-center p-6 bg-card border-dashed border-2 border-border rounded-none">
+        <Card className="flex flex-col items-center text-center p-6 bg-zinc-950 border-dashed border-2 border-[#d4af37]/60 rounded-none relative overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-1 bg-[#d4af37]" style={{ transformOrigin: 'left', transform: `scaleX(${Math.min(secondsRemaining / 120, 1)})`, transition: 'transform 1s linear' }} />
           <Badge className="mb-4 bg-primary/20 text-foreground border-primary rounded-none uppercase">Guest-facing</Badge>
           <h3 className="text-xl font-bold text-foreground mb-2 uppercase font-display">Active QR code</h3>
-          <p className="text-sm text-muted-foreground mb-6 max-w-[280px]">Guests scan this code on their phone and the loyalty scan is submitted automatically in their mobile browser.</p>
+          <p className="text-sm text-muted-foreground mb-3 max-w-[280px]">Guests scan this code on their phone and the loyalty scan is submitted automatically in their mobile browser.</p>
+          {qrImage && <p className="font-mono font-bold text-brand-gold text-sm mb-5">Refreshes in {Math.floor(secondsRemaining / 60)}:{String(secondsRemaining % 60).padStart(2, '0')}</p>}
 
           {qrImage ? (
             <div className="flex flex-col items-center w-full">
@@ -281,6 +294,10 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
               >
                 Copy scan link
               </Button>
+              <div className="flex justify-center gap-5 mt-4 opacity-80" aria-hidden="true">
+                <img className="h-20 w-10 object-contain object-bottom" src={vodkaBottle} alt="" />
+                <img className="h-20 w-10 object-contain object-bottom" src={ginBottle} alt="" />
+              </div>
             </div>
           ) : (
             <div className="flex-1 min-h-[300px] flex items-center justify-center bg-background w-full border border-border rounded-none">

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { confirmReward, linkDeviceByPhone, scanQr } from '../services/api';
+import vodkaBottle from '../assets/Vodka_bottel.png';
+import ginBottle from '../assets/Gin_bottel.png';
 
 /* ─── helpers ─────────────────────────────────────────────────── */
 
@@ -327,6 +329,7 @@ function ScanPage({ hotelId, initialToken }) {
   const isTooSoon       = isRejected && rejReason === 'MIN_TIME_NOT_REACHED';
   const isDailyLimit    = isRejected && rejReason === 'DAILY_LIMIT_REACHED';
   const isExpiredToken  = isRejected && !isUnregistered && !isTooSoon && !isDailyLimit;
+  const productName = String(result?.productLine || result?.product || '').toLowerCase().includes('gin') ? 'Gin' : 'Vodka';
 
   /* ─── page states ───────────────────────────────────────────── */
 
@@ -386,10 +389,11 @@ function ScanPage({ hotelId, initialToken }) {
   if (isReward) {
     return (
       <MobilePage bg="reward">
-        <div className="flex flex-col items-center text-center gap-6">
-          <span style={{ fontSize: 72 }} aria-label="Party">🎉</span>
+        <div className="reward-glow w-full max-w-sm p-6 flex flex-col items-center text-center gap-5 bg-card">
+          <ProductBottle product={productName} />
+          <span className="brand-eyebrow">Reward unlocked</span>
           <h1 className="text-3xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
-            You earned a free beer!
+            Your free drink is ready!
           </h1>
           <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
             Show this screen to the hotel team to claim your reward.
@@ -410,8 +414,9 @@ function ScanPage({ hotelId, initialToken }) {
   if (isConfirm) {
     return (
       <MobilePage bg="reward">
-        <div className="flex flex-col items-center text-center gap-6">
-          <span style={{ fontSize: 64 }} aria-label="Star">⭐</span>
+        <div className="reward-glow w-full max-w-sm p-6 flex flex-col items-center text-center gap-5 bg-card">
+          <ProductBottle product={productName} />
+          <span className="brand-eyebrow">10 scans complete</span>
           <h1 className="text-3xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
             You made it!
           </h1>
@@ -425,7 +430,7 @@ function ScanPage({ hotelId, initialToken }) {
             disabled={busy}
             style={primaryButtonStyle(busy)}
           >
-            {busy ? 'Confirming…' : '🍺  Claim my free beer'}
+            {busy ? 'Confirming…' : 'Confirm & claim free drink'}
           </button>
         </div>
       </MobilePage>
@@ -436,7 +441,9 @@ function ScanPage({ hotelId, initialToken }) {
   if (isSuccess) {
     return (
       <MobilePage bg="success">
-        <div className="flex flex-col items-center text-center gap-6">
+        <div className="flex flex-col items-center text-center gap-5 w-full">
+          <ProductBottle product={productName} compact />
+          <span className="brand-eyebrow">{productName} loyalty progress</span>
           <ProgressRing count={currentCount} total={10} color="hsl(var(--primary))" />
           <h1 className="text-3xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
             Visit counted! ✓
@@ -499,7 +506,7 @@ function ScanPage({ hotelId, initialToken }) {
   if (isTooSoon) {
     return (
       <MobilePage>
-        <div className="flex flex-col items-center text-center gap-6">
+        <div className="w-full max-w-sm border border-yellow-500/50 bg-zinc-900 p-6 flex flex-col items-center text-center gap-6">
           <ProgressRing count={currentCount} total={10} color="hsl(var(--muted-foreground))" />
           <span style={{ fontSize: 48 }} aria-label="Clock">⏰</span>
           <h1 className="text-2xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
@@ -520,7 +527,7 @@ function ScanPage({ hotelId, initialToken }) {
   if (isDailyLimit) {
     return (
       <MobilePage>
-        <div className="flex flex-col items-center text-center gap-6">
+        <div className="w-full max-w-sm border border-red-600/70 bg-red-950/20 p-6 flex flex-col items-center text-center gap-6">
           <ProgressRing count={currentCount} total={10} color="hsl(var(--muted-foreground))" />
           <span style={{ fontSize: 48 }} aria-label="Moon">🌙</span>
           <h1 className="text-2xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
@@ -579,7 +586,7 @@ function MobilePage({ children, bg }) {
         className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
         style={{
           background: bgMap[bg] || undefined,
-          maxWidth: 480,
+          maxWidth: 520,
           margin: '0 auto',
         }}
       >
@@ -621,7 +628,7 @@ function ProgressBar({ count, total = 10 }) {
               height: 8,
               borderRadius: 99,
               background: i < count
-                ? 'hsl(var(--primary))'
+                ? '#d4af37'
                 : 'hsl(var(--muted))',
               transition: 'background 0.4s',
             }}
@@ -631,6 +638,20 @@ function ProgressBar({ count, total = 10 }) {
       <p className="text-xs text-muted-foreground text-right mt-1">
         {count} / {total} visits
       </p>
+    </div>
+  );
+}
+
+function ProductBottle({ product, compact = false }) {
+  const isGin = product === 'Gin';
+  return (
+    <div className={`scan-product-card ${isGin ? 'product-gin' : 'product-vodka'} w-full ${compact ? 'max-w-[210px]' : 'max-w-[260px]'}`}>
+      <span className="absolute top-3 left-3 brand-eyebrow" style={{ color: 'var(--product-accent)' }}>{product}</span>
+      <img
+        src={isGin ? ginBottle : vodkaBottle}
+        alt={`Marathon Klassics ${product} bottle`}
+        style={{ height: compact ? 155 : 210 }}
+      />
     </div>
   );
 }
