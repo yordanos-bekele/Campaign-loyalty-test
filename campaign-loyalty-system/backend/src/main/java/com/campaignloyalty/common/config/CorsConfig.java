@@ -37,7 +37,7 @@ public class CorsConfig {
                                 HttpMethod.PUT.name(),
                                 HttpMethod.DELETE.name(),
                                 HttpMethod.OPTIONS.name())
-                        .allowedHeaders("*")
+                        .allowedHeaders("Authorization", "Cache-Control", "Content-Type", "X-Device-Id")
                         .allowCredentials(true);
             }
         };

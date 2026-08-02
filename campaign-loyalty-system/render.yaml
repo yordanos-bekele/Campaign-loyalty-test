@@ -3,7 +3,7 @@ services:
     name: campaign-loyalty-backend
     runtime: docker
     rootDir: campaign-loyalty-system/backend
-    dockerCommand: java -jar target/campaign-loyalty-backend-0.0.1-SNAPSHOT.jar
+    dockerCommand: java -jar target/campaign-loyalty-backend-0.0.1-SNAPSHOT.jar --server.port=${PORT:8080}
     envVars:
       - key: SPRING_JPA_SHOW_SQL
         value: "false"
