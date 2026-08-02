@@ -46,6 +46,7 @@ public class CustomerService {
 
     public Customer registerLoyalCustomer(String deviceId, String fullName, String phoneNumber, String email) {
         if (deviceId == null || deviceId.isBlank()) {
+            log.info("No deviceId cookie or X-Device-Id header provided");
             throw new IllegalArgumentException("device_id cookie or X-Device-Id header is required");
         }
 
@@ -64,7 +65,8 @@ public class CustomerService {
         }
 
         Customer savedCustomer = customerRepository.save(customer);
-        log.info("Loyal customer registered customerId={} deviceId={}", savedCustomer.getId(), savedCustomer.getDeviceId());
+        log.info("Loyal customer registered customerId={} deviceId={}", savedCustomer.getId(),
+                savedCustomer.getDeviceId());
         return savedCustomer;
     }
 
@@ -87,18 +89,23 @@ public class CustomerService {
 
     public Customer linkDeviceByPhone(String newDeviceId, String phoneNumber) {
         if (newDeviceId == null || newDeviceId.isBlank()) {
+            log.info("No deviceId cookie or X-Device-Id header provided when trying to link device by phone");
             throw new IllegalArgumentException("device_id cookie or X-Device-Id header is required");
         }
         String normalizedPhone = requireValue(phoneNumber, "phone number is required");
 
         Customer customer = customerRepository.findByPhoneNumber(normalizedPhone);
         if (customer == null || customer.getRegisteredAt() == null) {
-            throw new IllegalArgumentException("No registered customer found with that phone number. Please register first.");
+            log.warn("No registered customer found with that phone number when trying to link device by phone");
+            throw new IllegalArgumentException(
+                    "No registered customer found with that phone number. Please register first.");
         }
 
-        // Check if another customer already owns this new device ID (edge case: race condition).
+        // Check if another customer already owns this new device ID (edge case: race
+        // condition).
         Customer existingOwner = customerRepository.findByDeviceId(newDeviceId);
         if (existingOwner != null && !existingOwner.getId().equals(customer.getId())) {
+            log.info("This device is already linked to a different account when trying to link device by phone");
             throw new IllegalArgumentException("This device is already linked to a different account.");
         }
 
@@ -141,7 +148,8 @@ public class CustomerService {
                 processedCount++;
                 try {
                     String fullName = requireValue(readCell(row, headers, "full name"), "full name is required");
-                    String phoneNumber = requireValue(readCell(row, headers, "phone number"), "phone number is required");
+                    String phoneNumber = requireValue(readCell(row, headers, "phone number"),
+                            "phone number is required");
                     String email = normalizeOptional(readCell(row, headers, "email"));
                     String deviceId = normalizeOptional(readCell(row, headers, "device id"));
 
