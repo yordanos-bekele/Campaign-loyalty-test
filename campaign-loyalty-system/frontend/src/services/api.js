@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const DEVICE_ID_STORAGE_KEY = 'marathon_klassics_device_id';
+const DEVICE_ID_STORAGE_KEY = 'marathon_spirits_device_id';
 
 function normalizeApiBaseUrl(rawBaseUrl) {
   if (!rawBaseUrl) {
