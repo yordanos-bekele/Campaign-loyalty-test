@@ -79,9 +79,9 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
               <img
                 className="w-32 h-20 object-contain bg-white p-2 shadow-inner border border-[#d4af37] rounded-none"
                 src={logoFallback}
-                alt="Marathon Klassics logo"
+                alt="Marathon Spirits logo"
               />
-              <span className="text-[10px] uppercase tracking-[.14em] font-bold text-brand-gold">Marathon Klassics</span>
+              <span className="text-[10px] uppercase tracking-[.14em] font-bold text-brand-gold">Marathon Spirits</span>
             </div>
             <div>
               <p className="brand-eyebrow mb-2">Marathon Klassics loyalty</p>
