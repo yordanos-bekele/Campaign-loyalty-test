@@ -138,7 +138,7 @@ function App() {
               Scan. Collect. <span className="text-brand-gold">Celebrate.</span>
             </h1>
             <p className="text-base sm:text-lg text-zinc-300 mb-8 max-w-xl leading-relaxed">
-              <strong className="text-xl font-bold">Ten</strong> qualifying hotel visits unlock a complimentary Marathon Klassics drink. Your reward progress stays connected to this device.
+              <strong className="text-xl font-bold">Ten</strong> qualifying hotel visits unlock a complimentary Marathon Klassics Cocktail. Your reward progress stays connected to this device.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button size="lg" className="brand-cta-light min-h-12 px-7" onClick={() => window.location.assign('/register')}>
@@ -196,7 +196,7 @@ function App() {
                   <p className="text-muted-foreground leading-relaxed">Guests earn one free Marathon Klassics Cocktail after 10 valid scans under the campaign rules configured in the backend.</p>
                 </div>
                 <div className="campaign-step border p-6 bg-card transition-all hover:border-primary/50">
-                  <h3 className="text-lg font-bold mb-2 uppercase"><span>03</span> Claim your drink</h3>
+                  <h3 className="text-lg font-bold mb-2 uppercase"><span>03</span> Claim your Marathon Klassics Cocktail</h3>
                   <p className="text-muted-foreground leading-relaxed">No OTP, no manual approval, no extra form on the scan page. Guests only scan and see the result.</p>
                 </div>
                 <div className="campaign-step border p-6 bg-card transition-all hover:border-primary/50">

@@ -393,7 +393,7 @@ function ScanPage({ hotelId, initialToken }) {
           <ProductBottle product={productName} />
           <span className="brand-eyebrow">Reward unlocked</span>
           <h1 className="text-3xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
-            Your free drink is ready!
+            Your free Marathon Klassics Cocktail is ready!
           </h1>
           <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
             Show this screen to the hotel team to claim your reward.
@@ -430,7 +430,7 @@ function ScanPage({ hotelId, initialToken }) {
             disabled={busy}
             style={primaryButtonStyle(busy)}
           >
-            {busy ? 'Confirming…' : 'Confirm & claim free drink'}
+            {busy ? 'Confirming…' : 'Confirm & claim free Marathon Klassics Cocktail'}
           </button>
         </div>
       </MobilePage>

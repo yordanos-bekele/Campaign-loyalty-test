@@ -163,7 +163,7 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
                 <span className="brand-eyebrow block mb-2">Welcome to the club</span>
                 <strong className="block text-brand-gold text-lg mb-1 uppercase font-display">{customer.fullName}</strong>
                 <span className="block text-foreground mb-3">{customer.phoneNumber}</span>
-                <span className="block text-zinc-200 text-sm font-medium max-w-[75%]">Your device is ready. Start scanning to unlock your free drink.</span>
+                <span className="block text-zinc-200 text-sm font-medium max-w-[75%]">Your device is ready. Start scanning to unlock your free Marathon Klassics Cocktail.</span>
               </div>
             )}
           </div>
