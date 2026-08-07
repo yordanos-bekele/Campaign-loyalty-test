@@ -77,7 +77,7 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
             <div className="shrink-0 flex flex-col items-center gap-2">
               <img
-                className="w-24 h-24 object-cover bg-white p-2 shadow-inner border border-[#d4af37] rounded-none"
+                className="w-32 h-20 object-contain bg-white p-2 shadow-inner border border-[#d4af37] rounded-none"
                 src={logoFallback}
                 alt="Marathon Klassics logo"
               />
