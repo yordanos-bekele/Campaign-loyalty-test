@@ -169,7 +169,7 @@ public class ScanService {
                     null,
                     reward.getId(),
                     null,
-                    "Confirm to claim your free beer reward.");
+                    "Confirm to claim your free Cocktail reward.");
         }
 
         logScanHistory(customer.getId(), hotelId, token, ip, userAgent, true, null, false);
@@ -236,7 +236,7 @@ public class ScanService {
                 null,
                 rewardId,
                 null,
-                "Congratulations! You earned a free beer.");
+                "Congratulations! You earned a free Cocktail.");
     }
 
     private CustomerHotelProgress createProgress(Integer customerId, Integer hotelId) {

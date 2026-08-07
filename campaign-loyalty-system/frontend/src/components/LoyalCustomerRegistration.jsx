@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getCurrentCustomer, getReadableError, registerLoyalCustomer } from '../services/api';
-import logoFallback from '../assets/logo-placeholder.svg';
+import logoFallback from '../assets/Marathon logo.png';
 import vodkaBottle from '../assets/Vodka_bottel.png';
 import ginBottle from '../assets/Gin_bottel.png';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
@@ -92,14 +92,14 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
             </div>
           </div>
         </CardContent>
-        
+
         <CardContent className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 p-6 md:p-10 bg-background">
           <div className="grid gap-6">
             <h3 className="text-2xl font-display font-bold uppercase tracking-tight text-foreground">{customer ? 'Update your registration' : 'Register now'}</h3>
             <p className="text-muted-foreground">
               Enter your username and phone number once. We save a secure device id in this browser so future scans stay connected to you.
             </p>
-            
+
             <form className="grid gap-5 bg-card border border-border p-6 shadow-sm rounded-none" onSubmit={handleSubmit}>
               <div className="grid gap-2">
                 <Label htmlFor="fullName" className="text-foreground">Username</Label>
@@ -131,12 +131,12 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
 
           <div className="grid gap-6 auto-rows-max h-fit">
             <h3 className="text-xl font-display font-bold uppercase tracking-tight text-foreground">Your loyalty profile</h3>
-            
+
             <div className="grid gap-3 bg-card p-6 border border-border rounded-none">
               <div className="flex justify-between items-center pb-3 border-b border-border">
                 <strong className="text-foreground">Status</strong>
-                <Badge 
-                  variant={customer ? "default" : "secondary"} 
+                <Badge
+                  variant={customer ? "default" : "secondary"}
                   className={`rounded-none px-4 py-1.5 ${customer ? 'bg-[#A0C878] hover:bg-[#A0C878]/90 text-black' : ''}`}
                 >
                   {loading ? 'Checking...' : customer ? 'Registered' : 'Ready to register'}
@@ -144,7 +144,7 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
               </div>
               <div className="flex justify-between items-center py-3 border-b border-border">
                 <strong className="text-foreground">Reward</strong>
-                <span className="text-sm text-right text-muted-foreground max-w-[140px]">Free beer after 10 valid scans at the same hotel.</span>
+                <span className="text-sm text-right text-muted-foreground max-w-[140px]">Free Cocktail after 10 valid scans at the same hotel.</span>
               </div>
               <div className="flex flex-col gap-2 pt-3">
                 <strong className="text-foreground">Browser device id</strong>

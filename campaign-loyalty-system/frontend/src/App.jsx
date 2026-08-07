@@ -48,7 +48,7 @@ function ensureDeviceCookie() {
     .find((row) => row.startsWith('device_id='));
 
   if (existingCookie) {
-    const cookieDeviceId = existingCookie.split('=')[1];
+    const cookieDeviceId = existingCookie.split('=').slice(1).join('=');
     if (storedDeviceId !== cookieDeviceId) {
       window.localStorage.setItem(DEVICE_ID_STORAGE_KEY, cookieDeviceId);
     }
@@ -193,14 +193,14 @@ function App() {
                 </div>
                 <div className="campaign-step border p-6 bg-card transition-all hover:border-primary/50">
                   <h3 className="text-lg font-bold mb-2 uppercase"><span>02</span> Collect 10 scans</h3>
-                  <p className="text-muted-foreground leading-relaxed">Guests earn one free beer after 10 valid scans under the campaign rules configured in the backend.</p>
+                  <p className="text-muted-foreground leading-relaxed">Guests earn one free Marathon Klassics Cocktail after 10 valid scans under the campaign rules configured in the backend.</p>
                 </div>
                 <div className="campaign-step border p-6 bg-card transition-all hover:border-primary/50">
                   <h3 className="text-lg font-bold mb-2 uppercase"><span>03</span> Claim your drink</h3>
                   <p className="text-muted-foreground leading-relaxed">No OTP, no manual approval, no extra form on the scan page. Guests only scan and see the result.</p>
                 </div>
                 <div className="campaign-step border p-6 bg-card transition-all hover:border-primary/50">
-                  <h3 className="text-lg font-bold mb-2 uppercase"><span>04</span> Built for hotel teams</h3>
+                  <h3 className="text-3lg font-bold mb-2 uppercase"><span>04</span> Built for hotel teams</h3>
                   <p className="text-muted-foreground leading-relaxed">Hotels only access their own dashboard, while Marathon Spirits admin uses a separate admin URL for registrations, imports, and QR management.</p>
                 </div>
               </div>

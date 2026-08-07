@@ -137,7 +137,7 @@ function PhoneSheet({ open, busy, error, onSubmit, onNewUser }) {
           Enter your phone number
         </h2>
         <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-          We need this to find your account and count this visit towards your free beer.
+          We need this to find your account and count this visit towards your free Marathon Klassics Cocktail.
         </p>
 
         <form
@@ -317,18 +317,18 @@ function ScanPage({ hotelId, initialToken }) {
   };
 
   /* ─── derived state ─────────────────────────────────────────── */
-  const currentCount   = result?.currentCount   ?? 0;
+  const currentCount = result?.currentCount ?? 0;
   const scansRemaining = result?.remainingToReward ?? 10;
-  const isSuccess       = result?.status === 'success';
-  const isConfirm       = result?.status === 'confirmation_required';
-  const isReward        = result?.status === 'reward_earned';
-  const isRejected      = result?.status === 'rejected';
-  const rejReason       = result?.reason;
+  const isSuccess = result?.status === 'success';
+  const isConfirm = result?.status === 'confirmation_required';
+  const isReward = result?.status === 'reward_earned';
+  const isRejected = result?.status === 'rejected';
+  const rejReason = result?.reason;
 
-  const isUnregistered  = isRejected && rejReason === 'UNREGISTERED_DEVICE';
-  const isTooSoon       = isRejected && rejReason === 'MIN_TIME_NOT_REACHED';
-  const isDailyLimit    = isRejected && rejReason === 'DAILY_LIMIT_REACHED';
-  const isExpiredToken  = isRejected && !isUnregistered && !isTooSoon && !isDailyLimit;
+  const isUnregistered = isRejected && rejReason === 'UNREGISTERED_DEVICE';
+  const isTooSoon = isRejected && rejReason === 'MIN_TIME_NOT_REACHED';
+  const isDailyLimit = isRejected && rejReason === 'DAILY_LIMIT_REACHED';
+  const isExpiredToken = isRejected && !isUnregistered && !isTooSoon && !isDailyLimit;
   const productName = String(result?.productLine || result?.product || '').toLowerCase().includes('gin') ? 'Gin' : 'Vodka';
 
   /* ─── page states ───────────────────────────────────────────── */
@@ -421,7 +421,7 @@ function ScanPage({ hotelId, initialToken }) {
             You made it!
           </h1>
           <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
-            Tap the button below to claim your free beer reward.
+            Tap the button below to claim your free Marathon Klassics Cocktail reward.
           </p>
           <ProgressRing count={currentCount} total={10} color="hsl(var(--primary))" />
           <button
@@ -450,8 +450,8 @@ function ScanPage({ hotelId, initialToken }) {
           </h1>
           <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
             {scansRemaining === 1
-              ? 'Just 1 more visit and you get a free beer!'
-              : `${scansRemaining} more visits and you get a free beer.`}
+              ? 'Just 1 more visit and you get a free Marathon Klassics Cocktail!'
+              : `${scansRemaining} more visits and you get a free Marathon Klassics Cocktail.`}
           </p>
           <ProgressBar count={currentCount} />
         </div>
