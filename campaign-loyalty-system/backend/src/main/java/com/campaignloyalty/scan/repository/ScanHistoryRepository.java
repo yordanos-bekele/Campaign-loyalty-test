@@ -36,6 +36,30 @@ public interface ScanHistoryRepository extends JpaRepository<ScanHistory, Intege
 
     List<ScanHistory> findTop50ByHotelIdAndSuspiciousTrueOrderByScannedAtDesc(Integer hotelId);
 
+    @Query(value = """
+            SELECT CAST(scanned_at AS DATE) as scan_date, count(*) as scan_count
+            FROM scan_history
+            WHERE hotel_id = :hotelId AND valid = true
+            GROUP BY CAST(scanned_at AS DATE)
+            ORDER BY scan_count DESC
+            LIMIT 1
+            """, nativeQuery = true)
+    List<Object[]> findMaxScansPerDayForHotel(Integer hotelId);
+
+    @Query(value = """
+            SELECT CAST(sh.scanned_at AS DATE) as reportDate, 
+                   h.id as hotelId, 
+                   h.name as hotelName,
+                   COUNT(sh.id) as totalScans,
+                   SUM(CASE WHEN sh.valid = true THEN 1 ELSE 0 END) as validScans,
+                   SUM(CASE WHEN sh.suspicious = true THEN 1 ELSE 0 END) as suspiciousScans
+            FROM scan_history sh
+            JOIN hotel h ON h.id = sh.hotel_id
+            GROUP BY CAST(sh.scanned_at AS DATE), h.id, h.name
+            ORDER BY reportDate DESC, h.name ASC
+            """, nativeQuery = true)
+    List<Object[]> getDetailedReport();
+
     @Query("""
             select new com.campaignloyalty.dashboard.dto.CustomerMetricCountDto(
                 sh.customerId,

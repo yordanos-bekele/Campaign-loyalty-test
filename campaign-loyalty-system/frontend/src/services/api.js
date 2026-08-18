@@ -153,3 +153,8 @@ export async function getAdminCustomers() {
   const response = await apiClient.get('/dashboard/admin/customers');
   return response.data;
 }
+
+export async function getDetailedReport() {
+  const response = await apiClient.get('/dashboard/admin/detailed-report');
+  return response.data;
+}

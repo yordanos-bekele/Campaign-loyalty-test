@@ -107,6 +107,19 @@ public class DashboardController {
         return ResponseEntity.ok(dashboardService.getRegisteredCustomerSummaries());
     }
 
+    @GetMapping("/admin/detailed-report")
+    @Operation(
+            summary = "Get detailed report",
+            description = "Returns a detailed report of daily scans and activities per hotel.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Detailed report returned")
+            }
+    )
+    public ResponseEntity<List<com.campaignloyalty.dashboard.dto.DetailedReportRowDto>> getDetailedReport(HttpSession session) {
+        authService.requireAdmin(session);
+        return ResponseEntity.ok(dashboardService.getDetailedReport());
+    }
+
     @GetMapping("/admin/fraud-summary")
     @Operation(
             summary = "Get admin fraud summary",

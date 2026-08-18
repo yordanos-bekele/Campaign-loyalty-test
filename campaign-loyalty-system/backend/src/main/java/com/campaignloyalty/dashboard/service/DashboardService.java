@@ -50,9 +50,22 @@ public class DashboardService {
         long scansToday = scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndValid(hotelId, start, end, true);
         long rewardsGiven = rewardRepository.countConfirmedByHotelIdAndEarnedAtBetween(hotelId, start, end);
         long suspiciousScans = scanHistoryRepository.countByHotelIdAndScannedAtBetweenAndSuspiciousTrue(hotelId, start, end);
-        log.info("Hotel dashboard stats loaded hotelId={} scansToday={} rewardsGiven={} suspiciousScans={}",
-                hotelId, scansToday, rewardsGiven, suspiciousScans);
-        return new HotelStatsDto(scansToday, rewardsGiven, suspiciousScans);
+        
+        List<Object[]> maxScansResult = scanHistoryRepository.findMaxScansPerDayForHotel(hotelId);
+        long maxScanCount = 0;
+        String maxScanDate = null;
+        if (!maxScansResult.isEmpty() && maxScansResult.get(0) != null) {
+            Object[] row = maxScansResult.get(0);
+            if (row.length >= 2 && row[0] != null && row[1] != null) {
+                // row[0] is Date, row[1] is count
+                maxScanDate = row[0].toString();
+                maxScanCount = ((Number) row[1]).longValue();
+            }
+        }
+        
+        log.info("Hotel dashboard stats loaded hotelId={} scansToday={} rewardsGiven={} suspiciousScans={} maxScanCount={} maxScanDate={}",
+                hotelId, scansToday, rewardsGiven, suspiciousScans, maxScanCount, maxScanDate);
+        return new HotelStatsDto(scansToday, rewardsGiven, suspiciousScans, maxScanCount, maxScanDate);
     }
 
     public OverallStatsDto getOverallStats() {
@@ -126,6 +139,20 @@ public class DashboardService {
                 .toList();
         log.info("Loaded {} suspicious scan logs hotelId={}", suspiciousScans.size(), hotelId);
         return suspiciousScans;
+    }
+
+    public List<com.campaignloyalty.dashboard.dto.DetailedReportRowDto> getDetailedReport() {
+        log.info("Loading detailed report for admin");
+        List<Object[]> rawData = scanHistoryRepository.getDetailedReport();
+        return rawData.stream().map(row -> {
+            String date = row[0] != null ? row[0].toString() : "";
+            Integer id = row[1] != null ? ((Number) row[1]).intValue() : 0;
+            String name = row[2] != null ? row[2].toString() : "";
+            long total = row[3] != null ? ((Number) row[3]).longValue() : 0;
+            long valid = row[4] != null ? ((Number) row[4]).longValue() : 0;
+            long suspicious = row[5] != null ? ((Number) row[5]).longValue() : 0;
+            return new com.campaignloyalty.dashboard.dto.DetailedReportRowDto(date, id, name, total, valid, suspicious);
+        }).toList();
     }
 
     public FraudSummaryDto getFraudSummary() {

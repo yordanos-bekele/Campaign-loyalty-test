@@ -6,10 +6,15 @@ public class HotelStatsDto {
     private long rewardsGiven;
     private long suspiciousScans;
 
-    public HotelStatsDto(long scansToday, long rewardsGiven, long suspiciousScans) {
+    private long maxScanCount;
+    private String maxScanDate;
+
+    public HotelStatsDto(long scansToday, long rewardsGiven, long suspiciousScans, long maxScanCount, String maxScanDate) {
         this.scansToday = scansToday;
         this.rewardsGiven = rewardsGiven;
         this.suspiciousScans = suspiciousScans;
+        this.maxScanCount = maxScanCount;
+        this.maxScanDate = maxScanDate;
     }
 
     // Getters
@@ -23,5 +28,13 @@ public class HotelStatsDto {
 
     public long getSuspiciousScans() {
         return suspiciousScans;
+    }
+
+    public long getMaxScanCount() {
+        return maxScanCount;
+    }
+
+    public String getMaxScanDate() {
+        return maxScanDate;
     }
 }
