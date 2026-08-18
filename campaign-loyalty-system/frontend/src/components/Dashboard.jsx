@@ -92,6 +92,16 @@ function Dashboard({ mode = 'hotel' }) {
   const [reportFilterHotel, setReportFilterHotel] = useState('');
   const [reportPage, setReportPage] = useState(1);
 
+  const handleAuthError = (e) => {
+    const errorMsg = getReadableError(e, '').toLowerCase();
+    if (e?.response?.status === 401 || errorMsg.includes('login required') || errorMsg.includes('unauthorized')) {
+      setSessionUser(null);
+      setError('Your session has expired. Please log in again.');
+      return true;
+    }
+    return false;
+  };
+
   const handleOpenDetailedReport = async () => {
     setShowDetailedReportModal(true);
     setLoadingDetailedReport(true);
@@ -100,6 +110,9 @@ function Dashboard({ mode = 'hotel' }) {
       setDetailedReportData(data);
     } catch (e) {
       console.error(e);
+      if (handleAuthError(e)) {
+        setShowDetailedReportModal(false);
+      }
     } finally {
       setLoadingDetailedReport(false);
     }
@@ -114,6 +127,9 @@ function Dashboard({ mode = 'hotel' }) {
       setSelectedHotelStatsData(stats);
     } catch (e) {
       console.error(e);
+      if (handleAuthError(e)) {
+        setSelectedHotelForStats(null);
+      }
     } finally {
       setLoadingHotelStats(false);
     }
@@ -160,7 +176,9 @@ function Dashboard({ mode = 'hotel' }) {
         }
       }
     } catch (requestError) {
-      setError(getReadableError(requestError, 'Could not load dashboard data right now.'));
+      if (!handleAuthError(requestError)) {
+        setError(getReadableError(requestError, 'Could not load dashboard data right now.'));
+      }
     } finally {
       setBusy(false);
     }
@@ -247,7 +265,9 @@ function Dashboard({ mode = 'hotel' }) {
       setSuccessMessage('Hotel registered successfully.');
       await loadDashboardData();
     } catch (requestError) {
-      setError(getReadableError(requestError, 'Could not create hotel.'));
+      if (!handleAuthError(requestError)) {
+        setError(getReadableError(requestError, 'Could not create hotel.'));
+      }
     } finally {
       setBusy(false);
     }
@@ -273,7 +293,9 @@ function Dashboard({ mode = 'hotel' }) {
       }
       await loadDashboardData();
     } catch (requestError) {
-      setError(getReadableError(requestError, 'Import failed.'));
+      if (!handleAuthError(requestError)) {
+        setError(getReadableError(requestError, 'Import failed.'));
+      }
     } finally {
       event.target.value = '';
       setBusy(false);
