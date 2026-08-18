@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import QrDisplay from './QrDisplay';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
@@ -90,7 +90,16 @@ function Dashboard({ mode = 'hotel' }) {
   const [loadingDetailedReport, setLoadingDetailedReport] = useState(false);
   const [reportFilterDate, setReportFilterDate] = useState('');
   const [reportFilterHotel, setReportFilterHotel] = useState('');
+  const [reportFilterHotelInput, setReportFilterHotelInput] = useState('');
   const [reportPage, setReportPage] = useState(1);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setReportFilterHotel(reportFilterHotelInput);
+      setReportPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [reportFilterHotelInput]);
 
   const handleAuthError = (e) => {
     const errorMsg = getReadableError(e, '').toLowerCase();
@@ -305,11 +314,14 @@ function Dashboard({ mode = 'hotel' }) {
   const hotelView = mode === 'hotel' && sessionUser?.role === 'hotel';
   const adminView = mode === 'admin' && sessionUser?.role === 'admin';
 
-  const filteredReportData = detailedReportData.filter(row => {
-    if (reportFilterDate && !row.date.startsWith(reportFilterDate)) return false;
-    if (reportFilterHotel && !row.hotelName.toLowerCase().includes(reportFilterHotel.toLowerCase())) return false;
-    return true;
-  });
+  const filteredReportData = useMemo(() => {
+    return detailedReportData.filter(row => {
+      if (reportFilterDate && !row.date.startsWith(reportFilterDate)) return false;
+      if (reportFilterHotel && !row.hotelName.toLowerCase().includes(reportFilterHotel.toLowerCase())) return false;
+      return true;
+    });
+  }, [detailedReportData, reportFilterDate, reportFilterHotel]);
+  
   const REPORT_PAGE_SIZE = 5;
   const totalReportPages = Math.max(1, Math.ceil(filteredReportData.length / REPORT_PAGE_SIZE));
   const paginatedReportData = filteredReportData.slice((reportPage - 1) * REPORT_PAGE_SIZE, reportPage * REPORT_PAGE_SIZE);
@@ -743,11 +755,8 @@ function Dashboard({ mode = 'hotel' }) {
                   <Label>Filter by Hotel Name</Label>
                   <Input 
                     placeholder="Search hotel..."
-                    value={reportFilterHotel}
-                    onChange={(e) => {
-                      setReportFilterHotel(e.target.value);
-                      setReportPage(1);
-                    }}
+                    value={reportFilterHotelInput}
+                    onChange={(e) => setReportFilterHotelInput(e.target.value)}
                     className="bg-card rounded-none"
                   />
                 </div>
