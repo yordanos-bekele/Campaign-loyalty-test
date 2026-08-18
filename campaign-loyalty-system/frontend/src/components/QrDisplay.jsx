@@ -151,6 +151,48 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
     }
   };
 
+  const handleDownloadQr = () => {
+    if (!qrImage) return;
+    const a = document.createElement('a');
+    a.href = qrImage;
+    a.download = `hotel-${lookupHotel?.id || hotelId || 'guest'}-qr-code.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const handlePrintQr = () => {
+    if (!qrImage) return;
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print QR Code</title>
+            <style>
+              body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; text-align: center; }
+              img { max-width: 400px; width: 100%; height: auto; border: 2px solid #000; padding: 10px; border-radius: 8px; }
+              h1 { margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 24px; }
+              p { font-size: 14px; color: #555; margin-bottom: 30px; max-width: 300px; }
+            </style>
+          </head>
+          <body>
+            <h1>${lookupHotel?.name || `Hotel #${hotelId}`}</h1>
+            <p>Scan this QR code with your smartphone camera to access the loyalty portal.</p>
+            <img src="${qrImage}" alt="Loyalty QR Code" />
+            <script>
+              window.onload = () => {
+                window.print();
+                setTimeout(() => window.close(), 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
   const handleCreateHotel = async (event) => {
     event.preventDefault();
     setCreatingHotel(true);
@@ -287,13 +329,31 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
                   <strong className="block font-mono text-foreground truncate" title={tokenPayload?.token}>{tokenPayload?.token}</strong>
                 </div>
               </div>
-              <Button
-                variant="default"
-                className="w-full max-w-[280px] h-12 shadow rounded-none"
-                onClick={() => window.navigator.clipboard?.writeText(scanLink)}
-              >
-                Copy scan link
-              </Button>
+              <div className="flex flex-col gap-2 w-full max-w-[280px]">
+                <Button
+                  variant="default"
+                  className="w-full h-12 shadow rounded-none"
+                  onClick={() => window.navigator.clipboard?.writeText(scanLink)}
+                >
+                  Copy scan link
+                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="outline"
+                    className="w-full h-10 rounded-none bg-transparent"
+                    onClick={handleDownloadQr}
+                  >
+                    Download QR
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full h-10 rounded-none bg-transparent"
+                    onClick={handlePrintQr}
+                  >
+                    Print QR
+                  </Button>
+                </div>
+              </div>
               <div className="flex justify-center gap-5 mt-4 opacity-80" aria-hidden="true">
                 <img className="h-20 w-10 object-contain object-bottom" src={vodkaBottle} alt="" />
                 <img className="h-20 w-10 object-contain object-bottom" src={ginBottle} alt="" />

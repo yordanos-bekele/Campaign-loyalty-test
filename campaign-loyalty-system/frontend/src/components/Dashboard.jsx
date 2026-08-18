@@ -688,7 +688,7 @@ function Dashboard({ mode = 'hotel' }) {
       )}
 
       {selectedHotelForStats && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <Card className="w-full max-w-lg bg-zinc-950 border-zinc-700 shadow-xl rounded-none">
             <CardHeader className="border-b border-border">
               <div className="flex items-center justify-between">
@@ -722,7 +722,7 @@ function Dashboard({ mode = 'hotel' }) {
       )}
 
       {showDetailedReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <Card className="w-full max-w-5xl bg-zinc-950 border-zinc-700 shadow-xl rounded-none max-h-[90vh] flex flex-col">
             <CardHeader className="border-b border-border shrink-0">
               <div className="flex items-center justify-between">
