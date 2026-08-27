@@ -144,6 +144,16 @@ public class DashboardService {
     public List<com.campaignloyalty.dashboard.dto.DetailedReportRowDto> getDetailedReport() {
         log.info("Loading detailed report for admin");
         List<Object[]> rawData = scanHistoryRepository.getDetailedReport();
+        return mapToDetailedReport(rawData);
+    }
+
+    public List<com.campaignloyalty.dashboard.dto.DetailedReportRowDto> getHotelDetailedReport(Integer hotelId) {
+        log.info("Loading detailed report for hotelId={}", hotelId);
+        List<Object[]> rawData = scanHistoryRepository.getHotelDetailedReport(hotelId);
+        return mapToDetailedReport(rawData);
+    }
+
+    private List<com.campaignloyalty.dashboard.dto.DetailedReportRowDto> mapToDetailedReport(List<Object[]> rawData) {
         return rawData.stream().map(row -> {
             String date = row[0] != null ? row[0].toString() : "";
             Integer id = row[1] != null ? ((Number) row[1]).intValue() : 0;

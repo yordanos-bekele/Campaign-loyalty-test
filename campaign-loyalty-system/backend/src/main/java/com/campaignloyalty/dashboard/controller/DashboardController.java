@@ -53,6 +53,19 @@ public class DashboardController {
         return ResponseEntity.ok(dashboardService.getHotelStats(hotelId));
     }
 
+    @GetMapping("/hotel/me/detailed-report")
+    @Operation(
+            summary = "Get detailed report for logged-in hotel",
+            description = "Returns a detailed report of daily scans and activities for the logged-in hotel.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Detailed report returned")
+            }
+    )
+    public ResponseEntity<List<com.campaignloyalty.dashboard.dto.DetailedReportRowDto>> getHotelDetailedReport(HttpSession session) {
+        Integer hotelId = authService.requireHotel(session).hotelId();
+        return ResponseEntity.ok(dashboardService.getHotelDetailedReport(hotelId));
+    }
+
     @GetMapping("/hotel/{hotelId}/suspicious-scans")
     @Operation(
             summary = "Get recent suspicious scan logs for a hotel",

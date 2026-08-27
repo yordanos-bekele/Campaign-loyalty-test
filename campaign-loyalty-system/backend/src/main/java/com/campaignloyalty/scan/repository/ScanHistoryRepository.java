@@ -60,6 +60,21 @@ public interface ScanHistoryRepository extends JpaRepository<ScanHistory, Intege
             """, nativeQuery = true)
     List<Object[]> getDetailedReport();
 
+    @Query(value = """
+            SELECT CAST(sh.scanned_at AS DATE) as reportDate, 
+                   h.id as hotelId, 
+                   h.name as hotelName,
+                   COUNT(sh.id) as totalScans,
+                   SUM(CASE WHEN sh.valid = true THEN 1 ELSE 0 END) as validScans,
+                   SUM(CASE WHEN sh.suspicious = true THEN 1 ELSE 0 END) as suspiciousScans
+            FROM scan_history sh
+            JOIN hotel h ON h.id = sh.hotel_id
+            WHERE sh.hotel_id = :hotelId
+            GROUP BY CAST(sh.scanned_at AS DATE), h.id, h.name
+            ORDER BY reportDate DESC
+            """, nativeQuery = true)
+    List<Object[]> getHotelDetailedReport(Integer hotelId);
+
     @Query("""
             select new com.campaignloyalty.dashboard.dto.CustomerMetricCountDto(
                 sh.customerId,

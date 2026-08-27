@@ -16,6 +16,7 @@ import {
   getReadableError,
   getHotelStats,
   getDetailedReport,
+  getHotelDetailedReport,
   hotelLogin,
   importCustomers,
   importHotels,
@@ -93,6 +94,12 @@ function Dashboard({ mode = 'hotel' }) {
   const [reportFilterHotelInput, setReportFilterHotelInput] = useState('');
   const [reportPage, setReportPage] = useState(1);
 
+  const [showHotelDetailedReportModal, setShowHotelDetailedReportModal] = useState(false);
+  const [hotelDetailedReportData, setHotelDetailedReportData] = useState([]);
+  const [loadingHotelDetailedReport, setLoadingHotelDetailedReport] = useState(false);
+  const [hotelReportFilterDate, setHotelReportFilterDate] = useState('');
+  const [hotelReportPage, setHotelReportPage] = useState(1);
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setReportFilterHotel(reportFilterHotelInput);
@@ -141,6 +148,22 @@ function Dashboard({ mode = 'hotel' }) {
       }
     } finally {
       setLoadingHotelStats(false);
+    }
+  };
+
+  const handleOpenHotelDetailedReport = async () => {
+    setShowHotelDetailedReportModal(true);
+    setLoadingHotelDetailedReport(true);
+    try {
+      const data = await getHotelDetailedReport();
+      setHotelDetailedReportData(data);
+    } catch (e) {
+      console.error(e);
+      if (handleAuthError(e)) {
+        setShowHotelDetailedReportModal(false);
+      }
+    } finally {
+      setLoadingHotelDetailedReport(false);
     }
   };
 
@@ -326,6 +349,17 @@ function Dashboard({ mode = 'hotel' }) {
   const totalReportPages = Math.max(1, Math.ceil(filteredReportData.length / REPORT_PAGE_SIZE));
   const paginatedReportData = filteredReportData.slice((reportPage - 1) * REPORT_PAGE_SIZE, reportPage * REPORT_PAGE_SIZE);
 
+  const hotelFilteredReportData = useMemo(() => {
+    return hotelDetailedReportData.filter(row => {
+      if (hotelReportFilterDate && !row.date.startsWith(hotelReportFilterDate)) return false;
+      return true;
+    });
+  }, [hotelDetailedReportData, hotelReportFilterDate]);
+  
+  const HOTEL_REPORT_PAGE_SIZE = 5;
+  const hotelTotalReportPages = Math.max(1, Math.ceil(hotelFilteredReportData.length / HOTEL_REPORT_PAGE_SIZE));
+  const hotelPaginatedReportData = hotelFilteredReportData.slice((hotelReportPage - 1) * HOTEL_REPORT_PAGE_SIZE, hotelReportPage * HOTEL_REPORT_PAGE_SIZE);
+
   return (
     <div className="grid gap-6 w-full max-w-5xl mx-auto">
       <Card className="border-zinc-700 shadow-none rounded-none bg-zinc-950">
@@ -459,7 +493,12 @@ function Dashboard({ mode = 'hotel' }) {
                   <strong className="block text-lg text-foreground font-display uppercase">{sessionUser.displayName}</strong>
                   <span className="text-sm text-muted-foreground">Hotel account</span>
                 </div>
-                <Badge variant="outline" className="bg-background rounded-none border-border uppercase px-4 py-1.5">Active session</Badge>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="rounded-none h-8 px-3" onClick={handleOpenHotelDetailedReport}>
+                    Show Detailed Report
+                  </Button>
+                  <Badge variant="outline" className="bg-background rounded-none border-border uppercase px-4 py-1.5 flex items-center">Active session</Badge>
+                </div>
               </div>
               <div className="grid sm:grid-cols-3 gap-6">
                 <StatCard label="Scans today" value={hotelStats?.scansToday ?? '--'} accent="warm" />
@@ -813,6 +852,96 @@ function Dashboard({ mode = 'hotel' }) {
                   className="rounded-none" 
                   disabled={reportPage >= totalReportPages}
                   onClick={() => setReportPage(p => Math.min(totalReportPages, p + 1))}
+                >
+                  Next
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {showHotelDetailedReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-4xl bg-zinc-950 border-zinc-700 shadow-xl rounded-none max-h-[90vh] flex flex-col">
+            <CardHeader className="border-b border-border shrink-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="font-display tracking-tight uppercase text-xl text-foreground">
+                    Hotel Detailed Report
+                  </CardTitle>
+                  <CardDescription className="text-muted-foreground">Your daily performance history.</CardDescription>
+                </div>
+                <Button variant="ghost" onClick={() => setShowHotelDetailedReportModal(false)} className="rounded-none">
+                  Close
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 overflow-hidden flex flex-col gap-4">
+              <div className="flex gap-4 shrink-0">
+                <div className="grid gap-2 w-full max-w-sm">
+                  <Label>Filter by Date</Label>
+                  <Input 
+                    type="date"
+                    value={hotelReportFilterDate}
+                    onChange={(e) => {
+                      setHotelReportFilterDate(e.target.value);
+                      setHotelReportPage(1);
+                    }}
+                    className="bg-card rounded-none"
+                  />
+                </div>
+              </div>
+              <div className="flex-1 overflow-auto border border-border bg-background">
+                {loadingHotelDetailedReport ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading report...</div>
+                ) : (
+                  <table className="w-full text-sm text-left">
+                    <thead className="text-xs uppercase bg-muted text-muted-foreground sticky top-0">
+                      <tr>
+                        <th className="px-6 py-3 font-display">Date</th>
+                        <th className="px-6 py-3 font-display">Total Scans</th>
+                        <th className="px-6 py-3 font-display">Valid Scans</th>
+                        <th className="px-6 py-3 font-display">Suspicious Scans</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {hotelPaginatedReportData.map((row, idx) => (
+                        <tr key={idx} className="border-b border-border bg-background hover:bg-muted/50 transition-colors">
+                          <td className="px-6 py-4 font-mono">{row.date}</td>
+                          <td className="px-6 py-4">{row.totalScans}</td>
+                          <td className="px-6 py-4 text-emerald-500">{row.validScans}</td>
+                          <td className="px-6 py-4 text-destructive">{row.suspiciousScans}</td>
+                        </tr>
+                      ))}
+                      {hotelPaginatedReportData.length === 0 && (
+                        <tr>
+                          <td colSpan="4" className="px-6 py-8 text-center text-muted-foreground">
+                            No data available.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <Button 
+                  variant="outline" 
+                  className="rounded-none" 
+                  disabled={hotelReportPage <= 1}
+                  onClick={() => setHotelReportPage(p => Math.max(1, p - 1))}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {hotelReportPage} of {hotelTotalReportPages}
+                </span>
+                <Button 
+                  variant="outline" 
+                  className="rounded-none" 
+                  disabled={hotelReportPage >= hotelTotalReportPages}
+                  onClick={() => setHotelReportPage(p => Math.min(hotelTotalReportPages, p + 1))}
                 >
                   Next
                 </Button>

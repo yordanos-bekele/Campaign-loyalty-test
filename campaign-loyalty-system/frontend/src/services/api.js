@@ -158,3 +158,8 @@ export async function getDetailedReport() {
   const response = await apiClient.get('/dashboard/admin/detailed-report');
   return response.data;
 }
+
+export async function getHotelDetailedReport() {
+  const response = await apiClient.get('/dashboard/hotel/me/detailed-report');
+  return response.data;
+}
