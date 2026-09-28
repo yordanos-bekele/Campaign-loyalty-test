@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react';
 import { getCurrentCustomer, getReadableError, registerLoyalCustomer } from '../services/api';
-import logoFallback from '../assets/Marathon logo.png';
-import vodkaBottle from '../assets/Vodka_bottel.png';
-import ginBottle from '../assets/Gin_bottel.png';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import marathonLogo from '../assets/Marathon logo.png';
+import editorialVodka from '../assets/img_on_regisration_page.jpg';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
 
 const emptyForm = {
@@ -61,8 +58,8 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
         phoneNumber: savedCustomer.phoneNumber || '',
       });
       setMessage(savedCustomer.registeredAt
-        ? 'Congratulations! You are one of our rare loyal customers.'
-        : 'Profile saved.');
+        ? 'Congratulations! You are registered as a loyal customer.'
+        : 'Profile updated successfully.');
     } catch (requestError) {
       setError(getReadableError(requestError, 'Could not save your loyalty profile right now.'));
     } finally {
@@ -71,119 +68,174 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
   };
 
   return (
-    <div className={`w-full ${standalone ? 'min-h-[calc(100vh-3rem)] flex items-center justify-center py-8' : ''}`}>
-      <Card className={`w-full bg-background shadow-2xl border-zinc-700 overflow-hidden rounded-none ${standalone ? 'max-w-5xl' : ''}`}>
-        <CardContent className="p-6 md:p-10 border-b border-zinc-700 bg-zinc-950 relative overflow-hidden">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
-            <div className="shrink-0 flex flex-col items-center gap-2">
-              <img
-                className="w-32 h-20 object-contain bg-white p-2 shadow-inner border border-[#d4af37] rounded-none"
-                src={logoFallback}
-                alt="Marathon Spirits logo"
-              />
-              <span className="text-[10px] uppercase tracking-[.14em] font-bold text-brand-gold">Marathon Spirits</span>
+    <div className={`w-full ${standalone ? 'min-h-[calc(100vh-3rem)] flex items-center justify-center py-4 sm:py-8' : ''}`}>
+      <div className="w-full max-w-5xl bg-white text-zinc-950 shadow-2xl border border-zinc-300 overflow-hidden flex flex-col">
+        {/* Top Header Banner: Warm Mustard Gold */}
+        <header className="bg-brand-mustard text-white px-6 sm:px-10 py-6 sm:py-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div className="max-w-xl">
+              <span className="text-xs uppercase tracking-[0.18em] font-extrabold text-white/90 block mb-1">
+                Marathon Klassics Hotel Loyalty
+              </span>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-white leading-none">
+                Register Your Device
+              </h1>
             </div>
-            <div>
-              <p className="brand-eyebrow mb-2">Marathon Klassics loyalty</p>
-              <h1 className="text-3xl md:text-4xl font-extrabold font-display uppercase tracking-[0.02em] text-foreground mb-3 leading-tight">Register your device</h1>
-              <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 lg:max-w-md">
+              <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-white/95 leading-snug">
                 Join the Marathon Spirits loyalty customer giveaway and keep your reward progress tied to this mobile browser.
               </p>
-            </div>
-          </div>
-        </CardContent>
-
-        <CardContent className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 p-6 md:p-10 bg-background">
-          <div className="grid gap-6">
-            <h3 className="text-2xl font-display font-bold uppercase tracking-tight text-foreground">{customer ? 'Update your registration' : 'Register now'}</h3>
-            <p className="text-muted-foreground">
-              Enter your username and phone number once. We save a secure device id in this browser so future scans stay connected to you.
-            </p>
-
-            <form className="grid gap-5 bg-card border border-border p-6 shadow-sm rounded-none" onSubmit={handleSubmit}>
-              <div className="grid gap-2">
-                <Label htmlFor="fullName" className="text-foreground">Username</Label>
-                <Input
-                  id="fullName"
-                  className="h-12 bg-zinc-100 text-zinc-950 placeholder:text-zinc-500 focus:bg-white transition-all rounded-none"
-                  value={form.fullName}
-                  onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))}
-                  placeholder="Your preferred name"
-                  required
+              <div className="shrink-0">
+                <img
+                  src={marathonLogo}
+                  alt="Marathon Spirits"
+                  className="h-12 w-auto object-contain logo-white"
+                  decoding="async"
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="phoneNumber" className="text-foreground">Phone number</Label>
-                <Input
-                  id="phoneNumber"
-                  className="h-12 bg-zinc-100 text-zinc-950 placeholder:text-zinc-500 focus:bg-white transition-all rounded-none"
-                  value={form.phoneNumber}
-                  onChange={(event) => setForm((current) => ({ ...current, phoneNumber: event.target.value }))}
-                  placeholder="09xx xxx xxx"
-                  required
-                />
-              </div>
-              <Button type="submit" size="lg" disabled={busy || loading} className="mt-2 w-full h-12 text-md shadow-md rounded-none">
-                {busy ? 'Saving your spot...' : customer ? 'Update my profile' : 'Become a loyal customer'}
-              </Button>
-            </form>
-          </div>
-
-          <div className="grid gap-6 auto-rows-max h-fit">
-            <h3 className="text-xl font-display font-bold uppercase tracking-tight text-foreground">Your loyalty profile</h3>
-
-            <div className="grid gap-3 bg-card p-6 border border-border rounded-none">
-              <div className="flex justify-between items-center pb-3 border-b border-border">
-                <strong className="text-foreground">Status</strong>
-                <Badge
-                  variant={customer ? "default" : "secondary"}
-                  className={`rounded-none px-4 py-1.5 ${customer ? 'bg-[#A0C878] hover:bg-[#A0C878]/90 text-black' : ''}`}
-                >
-                  {loading ? 'Checking...' : customer ? 'Registered' : 'Ready to register'}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center py-3 border-b border-border">
-                <strong className="text-foreground">Reward</strong>
-                <span className="text-sm text-right text-muted-foreground max-w-[140px]">Free Cocktail after 10 valid scans at the same hotel.</span>
-              </div>
-              <div className="flex flex-col gap-2 pt-3">
-                <strong className="text-foreground">Browser device id</strong>
-                <span className="font-mono text-xs break-all bg-muted p-2 text-muted-foreground rounded-none">
-                  {deviceId || 'Preparing secure device id...'}
-                </span>
-              </div>
             </div>
-
-            {customer && (
-              <div className="reward-glow bg-zinc-950 p-5 rounded-none overflow-hidden relative">
-                <div className="absolute right-0 bottom-0 flex opacity-75 pointer-events-none">
-                  <img className="h-28 w-12 object-contain object-bottom" src={vodkaBottle} alt="" />
-                  <img className="h-28 w-12 object-contain object-bottom" src={ginBottle} alt="" />
-                </div>
-                <span className="brand-eyebrow block mb-2">Welcome to the club</span>
-                <strong className="block text-brand-gold text-lg mb-1 uppercase font-display">{customer.fullName}</strong>
-                <span className="block text-foreground mb-3">{customer.phoneNumber}</span>
-                <span className="block text-zinc-200 text-sm font-medium max-w-[75%]">Your device is ready. Start scanning to unlock your free Marathon Klassics Cocktail.</span>
-              </div>
-            )}
           </div>
-        </CardContent>
+        </header>
 
+        {/* Alerts */}
         {(message || error) && (
-          <CardContent className="px-6 pb-6 md:px-10 md:pb-10 pt-0 bg-background">
+          <div className="px-6 pt-4 sm:px-10">
             {message && (
-              <Alert className="bg-[#A0C878]/10 text-[#A0C878] border-[#A0C878]/30 mb-4 rounded-none">
-                <AlertDescription>{message}</AlertDescription>
+              <Alert className="bg-emerald-50 text-emerald-900 border-emerald-300 rounded-none">
+                <AlertDescription className="font-semibold">{message}</AlertDescription>
               </Alert>
             )}
             {error && (
               <Alert variant="destructive" className="rounded-none">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription className="font-semibold">{error}</AlertDescription>
               </Alert>
             )}
-          </CardContent>
+          </div>
         )}
-      </Card>
+
+        {/* Main 2-Column Content Area */}
+        <main className="grid lg:grid-cols-2 gap-8 sm:gap-12 p-6 sm:p-10 items-stretch bg-white">
+          {/* Left Column: Lifestyle photo with Marathon Vodka */}
+          <div className="relative overflow-hidden bg-zinc-100 min-h-[380px] lg:min-h-[460px] flex items-center justify-center">
+            <img
+              src={editorialVodka}
+              alt="Marathon Triple Distilled Vodka customer lifestyle"
+              className="w-full h-full object-cover object-center"
+              decoding="async"
+              fetchpriority="high"
+            />
+          </div>
+
+          {/* Right Column: Registration Form */}
+          <div className="flex flex-col justify-between">
+            <div>
+              {/* Mustard Section Banner */}
+              <div className="bg-brand-mustard text-white text-center py-2.5 px-4 mb-4">
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
+                  {customer ? 'Update Registration' : 'Register Now'}
+                </h2>
+              </div>
+
+              {/* Subtitle */}
+              <p className="text-xs sm:text-sm text-zinc-700 font-bold uppercase tracking-wide leading-relaxed mb-6 text-center lg:text-left">
+                Enter your username and phone number once. We save a secure device ID in this browser so future scans stay connected to you.
+              </p>
+
+              {/* Terracotta/Coral Form Card */}
+              <form onSubmit={handleSubmit} className="bg-brand-terracotta text-white p-6 sm:p-8 space-y-4">
+                <div>
+                  <Label htmlFor="fullName" className="text-xs font-black uppercase tracking-wider text-white block mb-1.5">
+                    Username
+                  </Label>
+                  <Input
+                    id="fullName"
+                    value={form.fullName}
+                    onChange={(e) => setForm((c) => ({ ...c, fullName: e.target.value }))}
+                    placeholder="Your preferred name"
+                    required
+                    className="h-11 bg-white text-zinc-950 placeholder:text-zinc-400 font-medium rounded-none border-0 focus-visible:ring-2 focus-visible:ring-amber-300"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="phoneNumber" className="text-xs font-black uppercase tracking-wider text-white block mb-1.5">
+                    Phone Number
+                  </Label>
+                  <Input
+                    id="phoneNumber"
+                    value={form.phoneNumber}
+                    onChange={(e) => setForm((c) => ({ ...c, phoneNumber: e.target.value }))}
+                    placeholder="09xx xxx xxx"
+                    required
+                    className="h-11 bg-white text-zinc-950 placeholder:text-zinc-400 font-medium rounded-none border-0 focus-visible:ring-2 focus-visible:ring-amber-300"
+                  />
+                </div>
+              </form>
+
+              {/* CTA Button */}
+              <div className="mt-4">
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={busy || loading}
+                  className="w-full h-12 bg-brand-mustard hover:bg-brand-mustard-hover text-zinc-950 font-black uppercase tracking-wider text-sm sm:text-base rounded-none shadow-md transition-colors"
+                >
+                  {busy ? 'Saving...' : customer ? 'Update Profile' : 'Become a Loyal Customer'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Stamp Badge */}
+            <div className="flex justify-end mt-6">
+              <div className="stamp-badge text-center">
+                <span className="block text-[10px] font-black uppercase tracking-widest text-brand-terracotta leading-tight">
+                  Find Your Flavour
+                </span>
+                <span className="block bg-brand-terracotta text-white font-black text-xs uppercase px-2 py-0.5 tracking-wider mt-0.5">
+                  Go For It
+                </span>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* Bottom Status Strip: 3-column clean layout */}
+        <footer className="border-t border-zinc-200 bg-white grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-200 p-6 sm:p-8 text-center items-center">
+          {/* Status */}
+          <div className="py-2 md:py-0 md:px-4 flex flex-col items-center justify-center">
+            <span className="text-xs font-black uppercase tracking-widest text-brand-terracotta mb-2 block">
+              Status
+            </span>
+            <span className={`inline-block px-5 py-2 font-black text-xs uppercase tracking-wider ${
+              customer ? 'bg-emerald-600 text-white' : 'bg-black text-white'
+            }`}>
+              {loading ? 'Checking...' : customer ? 'Registered' : 'Ready to Register'}
+            </span>
+          </div>
+
+          {/* Reward */}
+          <div className="py-4 md:py-0 md:px-4 flex flex-col items-center justify-center">
+            <div className="flex items-center gap-1 text-xs font-black uppercase tracking-widest text-brand-mustard mb-1">
+              <span>▼</span>
+              <span>Reward</span>
+            </div>
+            <p className="text-xs font-bold uppercase tracking-wide text-zinc-800 max-w-[220px] leading-snug">
+              Free cocktail after 10 valid scans at the same hotel.
+            </p>
+          </div>
+
+          {/* Browser Device ID */}
+          <div className="py-2 md:py-0 md:px-4 flex flex-col items-center justify-center">
+            <span className="text-xs font-black uppercase tracking-widest text-zinc-950 mb-2 block">
+              Browser Device ID
+            </span>
+            <div className="border border-zinc-400 px-3 py-1.5 text-xs font-mono font-bold text-zinc-800 break-all max-w-full">
+              {deviceId || 'PREPARING DEVICE ID...'}
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

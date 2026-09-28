@@ -16,14 +16,17 @@ COPY . .
 # Build the application (the output will be in the 'dist' folder)
 RUN npm run build
 
-# Stage 2: Serve the built application with Nginx
+# Stage 2: Serve the built application with optimized Nginx
 FROM nginx:alpine
+
+# Copy custom Nginx configuration with gzip and caching
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy the built files from the previous stage to Nginx's HTML folder
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # Expose port 80 for the Nginx server
-EXPOSE 5173
+EXPOSE 80
 
 # Start Nginx in the foreground
 CMD ["nginx", "-g", "daemon off;"]

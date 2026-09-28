@@ -20,6 +20,27 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: resolve(projectRoot, 'dist'),
       emptyOutDir: true,
+      target: 'es2020',
+      cssCodeSplit: true,
+      chunkSizeWarningLimit: 600,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'vendor-react';
+              }
+              if (id.includes('axios')) {
+                return 'vendor-axios';
+              }
+              if (id.includes('qrcode')) {
+                return 'vendor-qrcode';
+              }
+              return 'vendor';
+            }
+          },
+        },
+      },
     },
     server: {
       host: env.VITE_DEV_HOST || '0.0.0.0',

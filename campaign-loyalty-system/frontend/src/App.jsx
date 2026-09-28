@@ -1,15 +1,24 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { Button } from './components/ui/button';
-import { Card, CardContent } from './components/ui/card';
-import Dashboard from './components/Dashboard';
-import LoyalCustomerRegistration from './components/LoyalCustomerRegistration';
-import ScanPage from './components/ScanPage';
-import { ThemeToggle } from './components/theme-toggle';
-import vodkaBottle from './assets/Vodka_bottel.png';
+import BrandFooter from './components/BrandFooter';
+import marathonLogo from './assets/Marathon logo.png';
+import editorialHotelTote from './assets/img_on_hotel_login_page.jpg';
 import ginBottle from './assets/Gin_bottel.png';
-import vodkaCutout from './assets/Marathon Vodka Cutout.png';
-import ginTonicBottle from './assets/mixed 1.4008.png';
-import premiumGinBottle from './assets/Marathon_GB_01_060924.png';
+
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const LoyalCustomerRegistration = lazy(() => import('./components/LoyalCustomerRegistration'));
+const ScanPage = lazy(() => import('./components/ScanPage'));
+
+function PageLoader() {
+  return (
+    <div className="w-full min-h-[50vh] flex flex-col items-center justify-center py-20 px-4">
+      <div className="w-8 h-8 border-2 border-zinc-200 border-t-[#deb355] rounded-full animate-spin mb-3" />
+      <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 font-condensed">
+        Loading...
+      </span>
+    </div>
+  );
+}
 
 const DEVICE_ID_STORAGE_KEY = 'marathon_spirits_device_id';
 
@@ -21,15 +30,17 @@ const views = [
 function getInitialState() {
   const params = new URLSearchParams(window.location.search);
   const view = params.get('view');
+  const isHotel = window.location.pathname === '/hotel' || view === 'hotel';
   const safeViews = new Set([...views.map((item) => item.id), 'scan']);
-  const safeView = safeViews.has(view) ? view : 'home';
+  const safeView = isHotel ? 'hotel' : (safeViews.has(view) ? view : 'home');
 
   return {
     view: safeView,
     token: params.get('token') || '',
     hotelId: params.get('hotelId') || '1',
-    admin: window.location.pathname === '/admin',
-    register: window.location.pathname === '/register',
+    admin: window.location.pathname === '/admin' || view === 'admin',
+    register: window.location.pathname === '/register' || view === 'register',
+    hotel: isHotel,
   };
 }
 
@@ -70,6 +81,7 @@ function App() {
   const [deviceId, setDeviceId] = useState('');
   const [adminMode] = useState(initialState.admin);
   const [registerMode] = useState(initialState.register);
+  const [hotelMode] = useState(initialState.hotel);
 
   useEffect(() => {
     setDeviceId(ensureDeviceCookie());
@@ -78,7 +90,7 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams();
 
-    if (view !== 'home' && !adminMode && !registerMode) {
+    if (view !== 'home' && !adminMode && !registerMode && !hotelMode) {
       params.set('view', view);
     }
 
@@ -91,125 +103,203 @@ function App() {
     }
 
     const query = params.toString();
-    const basePath = adminMode ? '/admin' : registerMode ? '/register' : window.location.pathname;
+    const basePath = adminMode ? '/admin' : registerMode ? '/register' : (hotelMode || view === 'hotel') ? '/hotel' : window.location.pathname;
     const nextUrl = query ? `${basePath}?${query}` : basePath;
     window.history.replaceState({}, '', nextUrl);
-  }, [view, hotelId, scanToken, adminMode, registerMode]);
+  }, [view, hotelId, scanToken, adminMode, registerMode, hotelMode]);
 
   if (adminMode) {
     return (
-      <div className="w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
-        <main className="grid gap-6">
-          <div className="flex justify-end mb-4"><ThemeToggle /></div>
+      <div className="w-full min-h-screen">
+        <Suspense fallback={<PageLoader />}>
           <Dashboard mode="admin" />
-        </main>
+        </Suspense>
       </div>
     );
   }
 
   if (registerMode) {
     return (
-      <div className="w-full max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
-        <main className="grid gap-6">
-          <div className="flex justify-end mb-4"><ThemeToggle /></div>
-          <LoyalCustomerRegistration deviceId={deviceId} standalone />
-        </main>
+      <div className="w-full min-h-screen flex flex-col justify-between bg-zinc-100">
+        <div className="py-6 px-4">
+          <Suspense fallback={<PageLoader />}>
+            <LoyalCustomerRegistration deviceId={deviceId} standalone />
+          </Suspense>
+        </div>
+        <BrandFooter />
       </div>
     );
   }
 
   if (view === 'scan') {
     return (
-      <ScanPage
-        hotelId={hotelId}
-        initialToken={scanToken}
-      />
+      <div className="w-full min-h-screen flex flex-col justify-between">
+        <Suspense fallback={<PageLoader />}>
+          <ScanPage
+            hotelId={hotelId}
+            initialToken={scanToken}
+          />
+        </Suspense>
+        <BrandFooter />
+      </div>
+    );
+  }
+
+  if (view === 'hotel' || hotelMode) {
+    return (
+      <div className="w-full min-h-screen">
+        <Suspense fallback={<PageLoader />}>
+          <Dashboard mode="hotel" />
+        </Suspense>
+      </div>
     );
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
-      <header className="brand-hero mb-8 overflow-hidden border border-white/15 relative">
-        <div className="absolute top-5 right-5 z-10"><ThemeToggle /></div>
-        <div className="grid lg:grid-cols-[1.1fr_.9fr] gap-6 items-center p-7 sm:p-10 lg:p-14">
-          <div className="relative z-1">
-            <p className="brand-eyebrow mb-3">Marathon Klassics · Hotel loyalty</p>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black uppercase leading-[.86] tracking-[-.055em] mb-6 max-w-2xl">
-              Scan. Collect. <span className="text-brand-gold">Celebrate.</span>
-            </h1>
-            <p className="text-base sm:text-lg text-zinc-300 mb-8 max-w-xl leading-relaxed">
-              <strong className="text-xl font-bold">Ten</strong> qualifying hotel visits unlock a complimentary Marathon Klassics Cocktail. Your reward progress stays connected to this device.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button size="lg" className="brand-cta-light min-h-12 px-7" onClick={() => window.location.assign('/register')}>
-                Register device
+    <div className="w-full min-h-screen flex flex-col justify-between">
+      <div className="w-full max-w-5xl mx-auto py-6 px-4 flex flex-col gap-10">
+
+        {/* Hero Section Matching hotel_login_page.jpg */}
+        <header className="bg-black text-white p-6 sm:p-10 border border-zinc-800">
+          {/* Top Bar */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-3">
+              <img src={marathonLogo} alt="Marathon Spirits" className="h-12 w-auto object-contain logo-white" decoding="async" />
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">
+                Marathon Klassics Hotel Loyalty
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                className="border-white/60 text-white hover:bg-white hover:text-black rounded-none uppercase font-bold text-xs tracking-wider px-5"
+                onClick={() => window.location.assign('/register')}
+              >
+                Register Device
               </Button>
-              <Button size="lg" variant="outline" className="min-h-12 px-7 border-zinc-500 text-white hover:bg-white hover:text-black" onClick={() => setView('hotel')}>
-                Hotel staff login
+              <Button
+                variant="outline"
+                className="border-white/60 text-white hover:bg-white hover:text-black rounded-none uppercase font-bold text-xs tracking-wider px-5"
+                onClick={() => setView('hotel')}
+              >
+                Hotel Staff Login
               </Button>
             </div>
           </div>
-          <div className="bottle-showcase" aria-label="Marathon Klassics vodka and gin collection">
-            <div className="bottle-panel bottle-panel-vodka">
-              <span>Vodka</span>
-              <img src={vodkaCutout} alt="Marathon Klassics vodka bottle" />
+
+          {/* Hero Content */}
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
+            {/* Lifestyle Tote Bag Image */}
+            <div className="relative overflow-hidden bg-zinc-900 min-h-[380px] flex flex-col justify-end">
+              <img
+                src={editorialHotelTote}
+                alt="Marathon Spirits Tote and Gin"
+                className="w-full h-full object-cover object-center absolute inset-0"
+                decoding="async"
+                fetchpriority="high"
+              />
+              <div className="relative z-10 p-6 bg-gradient-to-t from-black via-black/75 to-transparent">
+                <p className="text-xs uppercase font-extrabold tracking-wider text-white leading-relaxed max-w-xs">
+                  Ten qualifying hotel visits unlock a complimentary Marathon Klassics Cocktail. Your reward progress stays connected to this device.
+                </p>
+              </div>
             </div>
-            <div className="bottle-panel bottle-panel-gin">
-              <span>Gin</span>
-              <img src={ginBottle} alt="Marathon Klassics gin bottle" />
+
+            {/* Massive Display Title */}
+            <div className="flex flex-col justify-center py-6">
+              <h1 className="text-6xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tight text-white leading-[0.9] space-y-1">
+                <span className="block">Scan.</span>
+                <span className="block">Collect.</span>
+                <span className="block text-[#deb355]">Celebrate.</span>
+              </h1>
             </div>
-            <img className="promo-bottle promo-bottle-left" src={vodkaBottle} alt="" aria-hidden="true" />
-            <img className="promo-bottle promo-bottle-right" src={premiumGinBottle} alt="" aria-hidden="true" />
-            <img className="promo-bottle promo-bottle-center" src={ginTonicBottle} alt="" aria-hidden="true" />
           </div>
-        </div>
-      </header>
+        </header>
 
-      <nav className="flex flex-wrap gap-3 mb-8" aria-label="Main navigation">
-        {views.map((item) => (
-          <Button
-            key={item.id}
-            variant={item.id === view ? 'default' : 'outline'}
-            className="py-[14px] px-[30px] text-lg rounded-none"
-            onClick={() => setView(item.id)}
-          >
-            {item.label}
-          </Button>
-        ))}
-      </nav>
+        {/* Feature Cards Row */}
+        <section className="grid md:grid-cols-2 gap-6 items-stretch">
+          {/* Card 1: Mustard Partner Portal Card */}
+          <div className="bg-brand-mustard text-white p-8 sm:p-10 flex flex-col justify-between">
+            <div>
+              <span className="inline-block bg-brand-terracotta text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 mb-6">
+                Hotel Partner Portal
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white leading-tight mb-4">
+                Hotel Loyalty Dashboard
+              </h2>
+              <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-white/90 leading-relaxed max-w-sm">
+                Hotel teams only see their own campaign information, including scans, rewards, and suspicious activity.
+              </p>
+            </div>
+          </div>
 
-      <main className="grid gap-8">
-        {view === 'home' && (
-          <Card className="shadow-sm overflow-hidden bg-zinc-950 border-zinc-800">
-            <CardContent className="p-6 sm:p-8">
-              <div className="mb-8">
-                <p className="brand-eyebrow mb-1">How it works</p>
-                <h2 className="text-2xl font-bold uppercase">A simple loyalty journey for hotels and guests</h2>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-6">
-                <div className="campaign-step border p-6 bg-card transition-all hover:border-primary/50">
-                  <h3 className="text-lg font-bold mb-2 uppercase"><span>01</span> Display hotel QR</h3>
-                  <p className="text-muted-foreground leading-relaxed">Marathon Spirits admin controls the hotel QR experience and provides the rotating code used for guest scans.</p>
-                </div>
-                <div className="campaign-step border p-6 bg-card transition-all hover:border-primary/50">
-                  <h3 className="text-lg font-bold mb-2 uppercase"><span>02</span> Collect 10 scans</h3>
-                  <p className="text-muted-foreground leading-relaxed">Guests earn one free Marathon Klassics Cocktail after 10 valid scans under the campaign rules configured in the backend.</p>
-                </div>
-                <div className="campaign-step border p-6 bg-card transition-all hover:border-primary/50">
-                  <h3 className="text-lg font-bold mb-2 uppercase"><span>03</span> Claim your Marathon Klassics Cocktail</h3>
-                  <p className="text-muted-foreground leading-relaxed">No OTP, no manual approval, no extra form on the scan page. Guests only scan and see the result.</p>
-                </div>
-                <div className="campaign-step border p-6 bg-card transition-all hover:border-primary/50">
-                  <h3 className="text-3lg font-bold mb-2 uppercase"><span>04</span> Built for hotel teams</h3>
-                  <p className="text-muted-foreground leading-relaxed">Hotels only access their own dashboard, while Marathon Spirits admin uses a separate admin URL for registrations, imports, and QR management.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          {/* Card 2: Split Card with London Dry Gin */}
+          <div className="relative overflow-hidden min-h-[280px] bg-gradient-to-b from-brand-mustard via-[#de9b35] to-brand-bottle-green flex items-center justify-center p-6">
+            <img
+              src={ginBottle}
+              alt="Marathon London Dry Gin"
+              className="h-64 sm:h-72 w-auto object-contain drop-shadow-2xl relative z-10"
+              decoding="async"
+              loading="lazy"
+            />
+            <div className="absolute right-6 top-1/2 -translate-y-1/2 text-white/80 text-3xl font-black">
+              ›
+            </div>
+          </div>
+        </section>
 
-        {view === 'hotel' && <Dashboard mode="hotel" />}
-      </main>
+        {/* How It Works Steps */}
+        <section className="bg-white border border-zinc-200 p-6 sm:p-8">
+          <div className="mb-6">
+            <span className="text-xs font-black uppercase tracking-widest text-brand-mustard block mb-1 font-condensed">
+              How It Works
+            </span>
+            <h2 className="text-2xl font-black uppercase text-zinc-950 font-condensed">
+              A Simple Loyalty Journey for Hotels and Guests
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="border border-zinc-200 p-5 bg-zinc-50">
+              <h3 className="text-sm font-black uppercase text-zinc-950 mb-1.5 flex items-center gap-2 font-condensed">
+                <span className="text-brand-mustard font-black text-base">01</span> Display Hotel QR
+              </h3>
+              <p className="text-xs text-zinc-600 font-medium leading-relaxed">
+                Marathon Spirits admin controls the rotating QR code used for guest scans at hotel venues.
+              </p>
+            </div>
+
+            <div className="border border-zinc-200 p-5 bg-zinc-50">
+              <h3 className="text-sm font-black uppercase text-zinc-950 mb-1.5 flex items-center gap-2 font-condensed">
+                <span className="text-brand-mustard font-black text-base">02</span> Collect 10 Scans
+              </h3>
+              <p className="text-xs text-zinc-600 font-medium leading-relaxed">
+                Guests earn 1 complimentary Marathon Klassics Cocktail after 10 valid scans at the same hotel.
+              </p>
+            </div>
+
+            <div className="border border-zinc-200 p-5 bg-zinc-50">
+              <h3 className="text-sm font-black uppercase text-zinc-950 mb-1.5 flex items-center gap-2 font-condensed">
+                <span className="text-brand-mustard font-black text-base">03</span> Instant Claim
+              </h3>
+              <p className="text-xs text-zinc-600 font-medium leading-relaxed">
+                No OTPs or manual paperwork. Guests simply show their validated device screen to claim their reward.
+              </p>
+            </div>
+
+            <div className="border border-zinc-200 p-5 bg-zinc-50">
+              <h3 className="text-sm font-black uppercase text-zinc-950 mb-1.5 flex items-center gap-2 font-condensed">
+                <span className="text-brand-mustard font-black text-base">04</span> Built for Hotel Teams
+              </h3>
+              <p className="text-xs text-zinc-600 font-medium leading-relaxed">
+                Hotel staff sign in to their dedicated portal to monitor live scans, rewards, and suspicious attempts.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <BrandFooter />
     </div>
   );
 }

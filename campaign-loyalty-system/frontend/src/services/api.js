@@ -26,6 +26,7 @@ function normalizeApiBaseUrl(rawBaseUrl) {
 const apiClient = axios.create({
   baseURL: normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL || '/api'),
   withCredentials: true,
+  timeout: 15000,
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -40,8 +41,20 @@ apiClient.interceptors.request.use((config) => {
 });
 
 export function getReadableError(error, fallbackMessage) {
+  if (error?.code === 'ECONNABORTED' || error?.message?.toLowerCase().includes('timeout')) {
+    return 'Server request timed out. The server may be waking up from sleep; please try again in a moment.';
+  }
+
+  if (error?.message === 'Network Error' || error?.code === 'ERR_NETWORK') {
+    return 'Unable to reach the server. Please verify your connection or server status.';
+  }
+
   if (typeof error?.response?.data === 'string') {
     return error.response.data;
+  }
+
+  if (error?.response?.data?.message) {
+    return error.response.data.message;
   }
 
   if (error?.message) {

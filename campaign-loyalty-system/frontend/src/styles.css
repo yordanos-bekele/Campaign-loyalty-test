@@ -91,7 +91,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: Acumin, "Acumin Pro", "Arial Narrow", Arial, sans-serif;
+    font-family: Acumin, "Acumin Pro", "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
     min-height: 100vh;
     background-image: radial-gradient(circle at 85% -10%, rgba(212, 175, 55, .18), transparent 33%), linear-gradient(135deg, #ffffff 0%, #f4f4f5 100%);
   }
@@ -109,7 +109,7 @@
   h5,
   h6 {
     @apply uppercase tracking-[0.02em];
-    font-family: Acumin, "Acumin Pro", "Arial Narrow", Arial, sans-serif;
+    font-family: Acumin, "Acumin Pro", "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
     font-weight: 800;
   }
 }
@@ -193,6 +193,7 @@
 
 @layer components {
   .font-display { font-family: Acumin, "Acumin Pro", "Arial Narrow", Arial, sans-serif; font-weight: 800; }
+  .font-condensed { font-family: "Barlow Condensed", "Arial Narrow", Impact, sans-serif; }
   .text-brand-gold { color: #d4af37; }
   .brand-eyebrow { color: #d4af37; font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
   .brand-hero { background: linear-gradient(120deg, #000 0%, #09090b 60%, #181811 100%); }
@@ -221,6 +222,34 @@
   .metric-gold { border-color: #d4af37 !important; background: linear-gradient(135deg, rgba(212,175,55,.2), rgba(9,9,11,.9)) !important; }
   .metric-danger { border-color: #dc2626 !important; background: rgba(220,38,38,.13) !important; }
   .drop-zone { border: 2px dashed #71717a; background: rgba(244,244,245,.04); }
+
+  /* Designer mockup brand classes */
+  .bg-brand-mustard { background-color: #de9b35 !important; }
+  .hover\:bg-brand-mustard-hover:hover { background-color: #c98827 !important; }
+  .text-brand-mustard { color: #de9b35 !important; }
+  .border-brand-mustard { border-color: #de9b35 !important; }
+
+  .bg-brand-terracotta { background-color: #c84b43 !important; }
+  .hover\:bg-brand-terracotta-hover:hover { background-color: #b53e37 !important; }
+  .text-brand-terracotta { color: #c84b43 !important; }
+  .border-brand-terracotta { border-color: #c84b43 !important; }
+
+  .bg-brand-bottle-green { background-color: #064e3b !important; }
+  .text-brand-bottle-green { color: #064e3b !important; }
+
+  .bg-brand-dark { background-color: #000000 !important; }
+  .text-brand-dark { color: #000000 !important; }
+
+  .logo-white { filter: brightness(0) invert(1); }
+
+  .stamp-badge {
+    transform: rotate(6deg);
+    display: inline-block;
+    border: 2px solid #c84b43;
+    padding: 4px 10px;
+    background: #ffffff;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.15);
+  }
 }
 
 /* Light mode keeps the campaign crisp: white surfaces, pale-grey structure, black type and gold accents. */

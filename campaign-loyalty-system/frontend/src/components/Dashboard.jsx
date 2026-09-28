@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import QrDisplay from './QrDisplay';
 import { Button } from './ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
@@ -22,16 +21,24 @@ import {
   importHotels,
   logout,
 } from '../services/api';
+import marathonLogo from '../assets/Marathon logo.png';
+import adminHeroBanner from '../assets/admin_hero_banner.png';
+import BrandFooter from './BrandFooter';
+import HotelLoginPage from './HotelLoginPage';
 
 function StatCard({ label, value, accent, onClick, active = false }) {
-  const accentColors = {
-    warm: 'metric-gold text-foreground',
-    green: 'bg-emerald-950/30 text-foreground border-emerald-500/60',
-    red: 'metric-danger text-foreground',
-    dark: 'bg-zinc-950 text-foreground border-zinc-600',
+  const accentBorders = {
+    warm: 'border-t-4 border-t-[#deb355]',
+    green: 'border-t-4 border-t-emerald-600',
+    red: 'border-t-4 border-t-[#c73f43]',
+    dark: 'border-t-4 border-t-zinc-900',
   };
   
-  const baseClasses = `p-6 rounded-none border transition-all ${accentColors[accent] || 'bg-background'} ${onClick ? 'cursor-pointer hover:shadow hover:-translate-y-0.5 hover:border-primary' : ''} ${active ? 'ring-1 ring-primary ring-offset-2 ring-offset-background' : ''}`;
+  const baseClasses = `p-5 sm:p-6 rounded-none border border-zinc-200 bg-white shadow-xs transition-all ${
+    accentBorders[accent] || 'border-t-4 border-t-zinc-400'
+  } ${onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-zinc-300' : ''} ${
+    active ? 'ring-2 ring-zinc-900 ring-offset-2' : ''
+  }`;
 
   return (
     <article
@@ -46,8 +53,8 @@ function StatCard({ label, value, accent, onClick, active = false }) {
         }
       } : undefined}
     >
-      <span className="block text-sm font-bold font-display uppercase tracking-wider opacity-80 mb-2">{label}</span>
-      <strong className="block text-4xl font-extrabold font-display">{value}</strong>
+      <span className="block text-xs font-bold font-condensed uppercase tracking-wider text-zinc-500 mb-1.5">{label}</span>
+      <strong className="block text-3xl sm:text-4xl font-black font-condensed tracking-tight text-zinc-950">{value}</strong>
     </article>
   );
 }
@@ -360,426 +367,625 @@ function Dashboard({ mode = 'hotel' }) {
   const hotelTotalReportPages = Math.max(1, Math.ceil(hotelFilteredReportData.length / HOTEL_REPORT_PAGE_SIZE));
   const hotelPaginatedReportData = hotelFilteredReportData.slice((hotelReportPage - 1) * HOTEL_REPORT_PAGE_SIZE, hotelReportPage * HOTEL_REPORT_PAGE_SIZE);
 
-  return (
-    <div className="grid gap-6 w-full max-w-5xl mx-auto">
-      <Card className="border-zinc-700 shadow-none rounded-none bg-zinc-950">
-        <CardHeader className="flex flex-row items-start justify-between gap-4 border-b border-border">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.1em] text-muted-foreground mb-1">
-              {mode === 'admin' ? 'Admin control room' : 'Hotel partner portal'}
-            </p>
-            <CardTitle className="text-2xl mb-2 font-display uppercase tracking-tight">
-              {mode === 'admin' ? 'Marathon Spirits admin control room' : 'Hotel loyalty dashboard'}
-            </CardTitle>
-            <CardDescription className="text-base text-muted-foreground">
-              {mode === 'admin'
-                ? 'Admin access is kept separate from the hotel experience. Use this space to manage hotels, loyal customers, and imports.'
-                : 'Hotel teams only see their own campaign information, including scans, rewards, and suspicious activity.'}
-            </CardDescription>
+  if (!sessionUser && mode === 'admin') {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center py-4 sm:py-8 px-2 sm:px-4 bg-zinc-100">
+        <div className="w-full max-w-5xl bg-white text-zinc-950 shadow-2xl border border-zinc-300 overflow-hidden flex flex-col">
+          {/* Top Hero Section matching admin_login_page.jpg */}
+          <div className="w-full relative overflow-hidden bg-white select-none">
+            <img
+              src={adminHeroBanner}
+              alt="Marathon Spirits Admin Control Room - Admin access is kept separate from the hotel experience. Use this space to manage hotels, loyal customers, and imports."
+              className="w-full h-auto block"
+              decoding="async"
+              fetchpriority="high"
+            />
           </div>
-          {sessionUser && (
-            <div className="flex gap-2 shrink-0 flex-wrap justify-end">
-              <Button variant="outline" className="rounded-none px-6" onClick={() => loadDashboardData()} disabled={busy}>
-                {busy ? 'Refreshing...' : 'Refresh'}
-              </Button>
-              <Button variant="ghost" className="border border-border rounded-none px-6" onClick={handleLogout} disabled={busy}>
-                Logout
-              </Button>
+
+          {/* Admin Login Form Section */}
+          <section className="w-full bg-[#f2f2f2] px-4 sm:px-8 py-10 sm:py-14 text-center text-zinc-950">
+            <div className="max-w-[590px] mx-auto w-full">
+              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black uppercase tracking-tight text-black mb-2 font-condensed">
+                Admin Login
+              </h1>
+              <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-800 mb-8 sm:mb-9 leading-snug">
+                Use the Marathon Spirits admin credentials to open<br className="hidden sm:inline" /> company-wide controls.
+              </p>
+
+              {error && (
+                <Alert variant="destructive" className="rounded-none mb-6 text-left bg-red-50 text-red-900 border border-red-300">
+                  <AlertDescription className="font-semibold">{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <form onSubmit={handleAdminLogin} className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-left">
+                  <div>
+                    <Label htmlFor="adminUsername" className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-1.5 block">
+                      Username
+                    </Label>
+                    <Input
+                      id="adminUsername"
+                      value={adminLoginForm.username}
+                      onChange={(e) => setAdminLoginForm((c) => ({ ...c, username: e.target.value }))}
+                      required
+                      className="h-11 bg-white border border-zinc-400 text-zinc-950 rounded-none focus-visible:ring-1 focus-visible:ring-zinc-900 focus-visible:border-zinc-900 font-medium"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="adminPassword" className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-1.5 block">
+                      Password
+                    </Label>
+                    <Input
+                      id="adminPassword"
+                      type="password"
+                      value={adminLoginForm.password}
+                      onChange={(e) => setAdminLoginForm((c) => ({ ...c, password: e.target.value }))}
+                      required
+                      className="h-11 bg-white border border-zinc-400 text-zinc-950 rounded-none focus-visible:ring-1 focus-visible:ring-zinc-900 focus-visible:border-zinc-900 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-center pt-1">
+                  <Button
+                    type="submit"
+                    disabled={busy}
+                    className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-bold uppercase tracking-wider text-xs px-6 py-2 h-9 rounded-none shadow-none transition-colors"
+                  >
+                    {busy ? 'Signing in...' : 'Open Admin Dashboard'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          {/* Footer flush with bottom matching admin_login_page.jpg */}
+          <BrandFooter className="mt-0 border-t-0" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!sessionUser && mode === 'hotel') {
+    return (
+      <HotelLoginPage
+        hotelLoginForm={hotelLoginForm}
+        setHotelLoginForm={setHotelLoginForm}
+        handleHotelLogin={handleHotelLogin}
+        busy={busy}
+        error={error}
+      />
+    );
+  }
+
+  return (
+    <div className="w-full min-h-screen flex flex-col items-center justify-between py-4 sm:py-8 px-2 sm:px-4 bg-zinc-100 text-zinc-950">
+      <div className="w-full max-w-5xl bg-white text-zinc-950 shadow-2xl border border-zinc-300 overflow-hidden flex flex-col">
+        {/* Top Hero Section matching Admin Login Page */}
+        {mode === 'admin' ? (
+          <div className="w-full relative overflow-hidden bg-white select-none border-b border-zinc-300">
+            <img
+              src={adminHeroBanner}
+              alt="Marathon Spirits Admin Control Room - Admin access is kept separate from the hotel experience. Use this space to manage hotels, loyal customers, and imports."
+              className="w-full h-auto block"
+              decoding="async"
+              fetchpriority="high"
+            />
+          </div>
+        ) : (
+          <div className="w-full bg-black text-white px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800">
+            <div className="flex items-center gap-4">
+              <img src={marathonLogo} alt="Marathon Spirits" className="h-8 w-auto object-contain logo-white" decoding="async" />
+              <div className="h-6 w-px bg-zinc-700" />
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#deb355] block font-condensed">
+                  Hotel Partner Portal
+                </span>
+                <h2 className="text-base sm:text-lg font-black uppercase tracking-tight text-white font-condensed">
+                  {sessionUser ? sessionUser.displayName : 'Hotel Partner'}
+                </h2>
+              </div>
+            </div>
+            {sessionUser && (
+              <div className="flex gap-2 shrink-0 items-center">
+                <Button
+                  variant="outline"
+                  className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-2 h-9 rounded-none shadow-none"
+                  onClick={() => loadDashboardData()}
+                  disabled={busy}
+                >
+                  {busy ? 'Refreshing...' : 'Refresh'}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="bg-red-950/40 hover:bg-red-900 text-red-300 border border-red-800/60 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-2 h-9 rounded-none shadow-none"
+                  onClick={handleLogout}
+                  disabled={busy}
+                >
+                  Logout
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Admin Subheader / Control Strip */}
+        {mode === 'admin' && (
+          <div className="w-full bg-[#f2f2f2] border-b border-zinc-300 px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 font-condensed">
+                    Marathon Spirits Control Room
+                  </span>
+                  <Badge variant="outline" className="bg-zinc-900 text-white border-transparent rounded-none uppercase text-[10px] font-condensed px-2 py-0.5 tracking-wider">
+                    Admin Privileged
+                  </Badge>
+                </div>
+                <span className="text-base sm:text-lg font-black uppercase tracking-tight text-black font-condensed">
+                  {sessionUser ? sessionUser.displayName : 'Authorized Admin'}
+                </span>
+              </div>
+            </div>
+            {sessionUser && (
+              <div className="flex gap-2 shrink-0 items-center">
+                <Button
+                  variant="outline"
+                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-2 h-9 rounded-none shadow-none transition-colors"
+                  onClick={() => loadDashboardData()}
+                  disabled={busy}
+                >
+                  {busy ? 'Refreshing...' : 'Refresh Data'}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="bg-red-50 hover:bg-red-100 text-[#c73f43] border border-red-200 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-2 h-9 rounded-none shadow-none transition-colors"
+                  onClick={handleLogout}
+                  disabled={busy}
+                >
+                  Logout
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Dashboard Body Content */}
+        <div className="p-4 sm:p-8 space-y-6 bg-zinc-50/50 flex-1">
+          {error && (
+            <Alert variant="destructive" className="rounded-none bg-red-50 text-red-900 border border-red-300">
+              <AlertDescription className="font-semibold font-condensed">{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {successMessage && (
+            <Alert className="rounded-none bg-emerald-50 text-emerald-900 border border-emerald-300">
+              <AlertDescription className="font-semibold font-condensed">{successMessage}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Hotel View */}
+          {hotelView && (
+            <div className="grid gap-6">
+              <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
+                <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
+                      {sessionUser.displayName} Overview
+                    </h3>
+                    <p className="text-xs font-condensed text-zinc-600">
+                      Live campaign performance and daily scan tracking.
+                    </p>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <Button
+                      variant="outline"
+                      className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none shadow-none"
+                      onClick={handleOpenHotelDetailedReport}
+                    >
+                      Show Detailed Report
+                    </Button>
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 rounded-none uppercase font-condensed px-3 py-1 text-xs">
+                      Active session
+                    </Badge>
+                  </div>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    <StatCard label="Scans today" value={hotelStats?.scansToday ?? '--'} accent="warm" />
+                    <StatCard label="Rewards given" value={hotelStats?.rewardsGiven ?? '--'} accent="green" />
+                    <StatCard label="Suspicious scans" value={hotelStats?.suspiciousScans ?? '--'} accent="red" />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-        </CardHeader>
-      </Card>
 
-      {!sessionUser && mode === 'hotel' && (
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="rounded-none shadow-none border-zinc-700 bg-zinc-950">
-            <CardHeader>
-              <CardTitle>Hotel login</CardTitle>
-              <CardDescription>Sign in using your hotel name and password to see only your hotel campaign dashboard.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="grid gap-5 bg-zinc-900 border border-zinc-700 p-6 shadow-sm rounded-none" onSubmit={handleHotelLogin}>
-                <div className="grid gap-2">
-                  <Label htmlFor="hotelName">Hotel name</Label>
-                  <Input
-                    id="hotelName"
-                    value={hotelLoginForm.hotelName}
-                    onChange={(event) => setHotelLoginForm((current) => ({ ...current, hotelName: event.target.value }))}
-                    placeholder="Ocean View Hotel"
-                    required
-                    className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
-                  />
+          {/* Admin View */}
+          {adminView && (
+            <div className="grid gap-6">
+              {/* Overview Metric Strip */}
+              <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
+                <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-black uppercase tracking-tight text-black font-condensed">
+                      Company-wide Overview
+                    </h2>
+                    <p className="text-xs font-condensed text-zinc-600">
+                      Real-time scan verification and loyalty reward metrics across all partner venues.
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 font-condensed hidden sm:inline">
+                    Live Sync
+                  </span>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="hotelPassword">Password</Label>
-                  <Input
-                    id="hotelPassword"
-                    type="password"
-                    value={hotelLoginForm.password}
-                    onChange={(event) => setHotelLoginForm((current) => ({ ...current, password: event.target.value }))}
-                    placeholder="Enter hotel password"
-                    required
-                    className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
-                  />
+                <div className="p-5 sm:p-6">
+                  <div className="grid sm:grid-cols-4 gap-4 mb-3">
+                    <StatCard label="Total scans today" value={adminDashboard?.overallStats?.totalScansToday ?? '--'} accent="warm" />
+                    <StatCard label="Total rewards" value={adminDashboard?.overallStats?.totalRewardsGiven ?? '--'} accent="green" />
+                    <StatCard label="Total suspicious" value={adminDashboard?.overallStats?.totalSuspiciousScans ?? '--'} accent="red" />
+                    <StatCard
+                      label="Registered customers"
+                      value={adminDashboard?.registeredCustomerCount ?? '--'}
+                      accent="dark"
+                      onClick={() => setShowCustomerList((current) => !current)}
+                      active={showCustomerList}
+                    />
+                  </div>
+                  <p className="text-xs text-zinc-500 font-condensed uppercase tracking-wider">
+                    Click the registered customers card to {showCustomerList ? 'hide' : 'view'} the full customer roster.
+                  </p>
                 </div>
-                <Button type="submit" disabled={busy} className="mt-2 text-md h-12 w-full rounded-none">
-                  {busy ? 'Signing in...' : 'Open hotel dashboard'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              </div>
 
-      {!sessionUser && mode === 'admin' && (
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="rounded-none shadow-none border-zinc-700 bg-zinc-950">
-            <CardHeader>
-              <CardTitle>Admin login</CardTitle>
-              <CardDescription>Use the Marathon Spirits admin credentials to open company-wide controls.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="grid gap-5 bg-zinc-900 border border-zinc-700 p-6 shadow-sm rounded-none" onSubmit={handleAdminLogin}>
-                <div className="grid gap-2">
-                  <Label htmlFor="adminUsername">Username</Label>
-                  <Input
-                    id="adminUsername"
-                    value={adminLoginForm.username}
-                    onChange={(event) => setAdminLoginForm((current) => ({ ...current, username: event.target.value }))}
-                    placeholder="admin"
-                    required
-                    className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
-                  />
+              {/* Two Column Section: Register Hotel + QR/Import */}
+              <div className="grid md:grid-cols-[1fr_1.5fr] gap-6 items-start">
+                {/* Register a Hotel */}
+                <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
+                  <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5">
+                    <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
+                      Register a Hotel
+                    </h3>
+                    <p className="text-xs font-condensed text-zinc-600">
+                      Create one hotel manually, or use the import tools below.
+                    </p>
+                  </div>
+                  <form className="p-5 sm:p-6 space-y-4" onSubmit={handleHotelCreate}>
+                    <div>
+                      <Label htmlFor="newHotelName" className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-1.5 block font-condensed">
+                        Hotel Name
+                      </Label>
+                      <Input
+                        id="newHotelName"
+                        value={createHotelForm.name}
+                        onChange={(event) => setCreateHotelForm((current) => ({ ...current, name: event.target.value }))}
+                        placeholder="e.g. Ocean View Hotel"
+                        required
+                        className="h-10 bg-white border border-zinc-300 rounded-none text-zinc-950 focus-visible:ring-1 focus-visible:ring-zinc-900 font-medium text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="newHotelLocation" className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-1.5 block font-condensed">
+                        Location
+                      </Label>
+                      <Input
+                        id="newHotelLocation"
+                        value={createHotelForm.location}
+                        onChange={(event) => setCreateHotelForm((current) => ({ ...current, location: event.target.value }))}
+                        placeholder="e.g. Mogadishu"
+                        className="h-10 bg-white border border-zinc-300 rounded-none text-zinc-950 focus-visible:ring-1 focus-visible:ring-zinc-900 font-medium text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="newHotelPassword" className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-1.5 block font-condensed">
+                        Password
+                      </Label>
+                      <Input
+                        id="newHotelPassword"
+                        type="password"
+                        value={createHotelForm.password}
+                        onChange={(event) => setCreateHotelForm((current) => ({ ...current, password: event.target.value }))}
+                        placeholder="Dashboard access password"
+                        required
+                        className="h-10 bg-white border border-zinc-300 rounded-none text-zinc-950 focus-visible:ring-1 focus-visible:ring-zinc-900 font-medium text-sm"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={busy}
+                      className="w-full bg-[#deb355] hover:bg-[#c98827] text-white font-condensed font-bold uppercase tracking-wider text-xs py-2.5 h-10 rounded-none shadow-none transition-colors"
+                    >
+                      {busy ? 'Saving...' : 'Register Hotel'}
+                    </Button>
+                  </form>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="adminPassword">Password</Label>
-                  <Input
-                    id="adminPassword"
-                    type="password"
-                    value={adminLoginForm.password}
-                    onChange={(event) => setAdminLoginForm((current) => ({ ...current, password: event.target.value }))}
-                    placeholder="Enter admin password"
-                    required
-                    className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
-                  />
-                </div>
-                <Button type="submit" disabled={busy} className="mt-2 text-md h-12 w-full rounded-none">
-                  {busy ? 'Signing in...' : 'Open admin dashboard'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
-      {error && (
-        <Alert variant="destructive" className="rounded-none">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      {successMessage && (
-        <Alert className="bg-[#A0C878]/10 text-[#A0C878] border-[#A0C878]/30 rounded-none">
-          <AlertDescription>{successMessage}</AlertDescription>
-        </Alert>
-      )}
+                {/* Right Column: QR Code + Excel Bulk Import */}
+                <div className="space-y-6">
+                  <QrDisplay
+                    hotelId={adminQrHotelId}
+                    onHotelChange={setAdminQrHotelId}
+                    allowHotelCreation={false}
+                  />
 
-      {hotelView && (
-        <div className="grid gap-6">
-          <Card className="rounded-none shadow-none border-zinc-700 bg-zinc-950">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-4 rounded-none mb-6">
-                <div>
-                  <strong className="block text-lg text-foreground font-display uppercase">{sessionUser.displayName}</strong>
-                  <span className="text-sm text-muted-foreground">Hotel account</span>
+                  <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
+                    <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5">
+                      <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
+                        Bulk Import from Excel
+                      </h3>
+                      <p className="text-xs font-condensed text-zinc-600">
+                        Upload spreadsheets to populate customer or hotel registries at scale.
+                      </p>
+                    </div>
+                    <div className="p-5 sm:p-6 space-y-4">
+                      <div className="text-xs font-condensed text-zinc-600 space-y-1 bg-zinc-50 border border-zinc-200 p-3">
+                        <p><strong className="text-zinc-900 uppercase">Customer Headers:</strong> <code className="bg-white px-1 border border-zinc-300">full name</code>, <code className="bg-white px-1 border border-zinc-300">phone number</code>, optional <code className="bg-white px-1 border border-zinc-300">email</code>, <code className="bg-white px-1 border border-zinc-300">device id</code>.</p>
+                        <p><strong className="text-zinc-900 uppercase">Hotel Headers:</strong> <code className="bg-white px-1 border border-zinc-300">name</code>, <code className="bg-white px-1 border border-zinc-300">password</code>, optional <code className="bg-white px-1 border border-zinc-300">location</code>.</p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="customerImport" className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-1.5 block font-condensed">
+                          Import Loyal Customers (.xlsx)
+                        </Label>
+                        <Input
+                          id="customerImport"
+                          type="file"
+                          accept=".xlsx"
+                          onChange={(event) => handleImport('customers', event)}
+                          className="h-10 bg-white border border-zinc-300 text-zinc-950 rounded-none text-xs file:bg-zinc-100 file:text-zinc-900 file:border-0 file:border-r file:border-zinc-300 file:mr-3 file:px-3 file:py-2 file:font-condensed file:font-bold file:uppercase cursor-pointer"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="hotelImport" className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-1.5 block font-condensed">
+                          Import Hotels (.xlsx)
+                        </Label>
+                        <Input
+                          id="hotelImport"
+                          type="file"
+                          accept=".xlsx"
+                          onChange={(event) => handleImport('hotels', event)}
+                          className="h-10 bg-white border border-zinc-300 text-zinc-950 rounded-none text-xs file:bg-zinc-100 file:text-zinc-900 file:border-0 file:border-r file:border-zinc-300 file:mr-3 file:px-3 file:py-2 file:font-condensed file:font-bold file:uppercase cursor-pointer"
+                        />
+                      </div>
+
+                      {customerImportResult && (
+                        <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-none text-xs text-zinc-700 font-condensed">
+                          <strong className="block mb-1 text-zinc-900 font-bold uppercase">Customer Import Summary</strong>
+                          <span className="block mb-1">
+                            Processed {customerImportResult.processedCount}, created {customerImportResult.createdCount}, updated {customerImportResult.updatedCount}, skipped {customerImportResult.skippedCount}
+                          </span>
+                          {customerImportResult.errors?.slice(0, 5).map((item, idx) => (
+                            <div key={idx} className="text-[#c73f43] mt-0.5">• {item}</div>
+                          ))}
+                        </div>
+                      )}
+
+                      {hotelImportResult && (
+                        <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-none text-xs text-zinc-700 font-condensed">
+                          <strong className="block mb-1 text-zinc-900 font-bold uppercase">Hotel Import Summary</strong>
+                          <span className="block mb-1">
+                            Processed {hotelImportResult.processedCount}, created {hotelImportResult.createdCount}, updated {hotelImportResult.updatedCount}, skipped {hotelImportResult.skippedCount}
+                          </span>
+                          {hotelImportResult.errors?.slice(0, 5).map((item, idx) => (
+                            <div key={idx} className="text-[#c73f43] mt-0.5">• {item}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" className="rounded-none h-8 px-3" onClick={handleOpenHotelDetailedReport}>
+              </div>
+
+              {/* Registered Hotels List */}
+              <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
+                <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
+                      Registered Hotels
+                    </h3>
+                    <p className="text-xs font-condensed text-zinc-600">
+                      All partner venues currently onboarded in the campaign. Click any hotel to view specific statistics.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none shadow-none transition-colors"
+                    onClick={handleOpenDetailedReport}
+                  >
                     Show Detailed Report
                   </Button>
-                  <Badge variant="outline" className="bg-background rounded-none border-border uppercase px-4 py-1.5 flex items-center">Active session</Badge>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <div className="grid gap-3">
+                    {adminDashboard?.hotels?.length ? (
+                      adminDashboard.hotels.map((hotel) => (
+                        <div
+                          className="flex items-center justify-between p-4 bg-white border border-zinc-200 hover:border-zinc-400 rounded-none cursor-pointer transition-all hover:shadow-xs"
+                          key={hotel.id}
+                          onClick={() => handleHotelClick(hotel)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleHotelClick(hotel);
+                            }
+                          }}
+                        >
+                          <div>
+                            <strong className="block text-zinc-950 uppercase font-condensed font-bold text-base tracking-wide">
+                              {hotel.name}
+                            </strong>
+                            <span className="text-xs text-zinc-500 font-condensed uppercase tracking-wider">
+                              {hotel.location || 'Location not provided'}
+                            </span>
+                          </div>
+                          <Badge variant="outline" className="font-mono text-zinc-700 bg-zinc-100 border border-zinc-300 rounded-none uppercase text-xs">
+                            #{hotel.id}
+                          </Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-zinc-500 py-6 text-center border border-dashed border-zinc-300 rounded-none font-condensed text-sm uppercase tracking-wider">
+                        No hotels have been registered yet.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="grid sm:grid-cols-3 gap-6">
-                <StatCard label="Scans today" value={hotelStats?.scansToday ?? '--'} accent="warm" />
-                <StatCard label="Rewards given" value={hotelStats?.rewardsGiven ?? '--'} accent="green" />
-                <StatCard label="Suspicious scans" value={hotelStats?.suspiciousScans ?? '--'} accent="red" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
-      {adminView && (
-        <div className="grid gap-6">
-          <Card className="rounded-none shadow-none border-zinc-700 bg-zinc-950">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 p-4 rounded-none mb-6">
-                <div>
-                  <strong className="block text-lg text-foreground font-display uppercase tracking-wider">{sessionUser.displayName}</strong>
-                  <span className="text-sm text-muted-foreground">Admin account</span>
-                </div>
-                <Badge variant="outline" className="bg-foreground text-background border-transparent rounded-none uppercase px-4 py-1.5">Admin privileged</Badge>
-              </div>
-              <div className="grid sm:grid-cols-4 gap-6 mb-4">
-                <StatCard label="Total scans today" value={adminDashboard?.overallStats?.totalScansToday ?? '--'} accent="warm" />
-                <StatCard label="Total rewards" value={adminDashboard?.overallStats?.totalRewardsGiven ?? '--'} accent="green" />
-                <StatCard label="Total suspicious" value={adminDashboard?.overallStats?.totalSuspiciousScans ?? '--'} accent="red" />
-                <StatCard
-                  label="Registered customers"
-                  value={adminDashboard?.registeredCustomerCount ?? '--'}
-                  accent="dark"
-                  onClick={() => setShowCustomerList((current) => !current)}
-                  active={showCustomerList}
-                />
-              </div>
-              <p className="text-sm text-muted-foreground">Click the registered customers card to {showCustomerList ? 'hide' : 'view'} the full customer list.</p>
-            </CardContent>
-          </Card>
-
-          <div className="grid md:grid-cols-[1fr_1.5fr] gap-6 items-start">
-            <Card className="rounded-none border-border shadow-none">
-              <CardHeader>
-                <CardTitle>Register a hotel</CardTitle>
-                <CardDescription>Create one hotel manually, or use the import tools below for bulk onboarding.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form className="grid gap-5 bg-background border border-border p-6 shadow-sm rounded-none" onSubmit={handleHotelCreate}>
-                  <div className="grid gap-2">
-                    <Label htmlFor="newHotelName">Hotel name</Label>
-                    <Input
-                      id="newHotelName"
-                      value={createHotelForm.name}
-                      onChange={(event) => setCreateHotelForm((current) => ({ ...current, name: event.target.value }))}
-                      placeholder="Ocean View Hotel"
-                      required
-                      className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
-                    />
+              {/* Registered Loyal Customers */}
+              <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
+                <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
+                      Registered Loyal Customers
+                    </h3>
+                    <p className="text-xs font-condensed text-zinc-600">
+                      Admin-only directory of verified consumers, reward counts, and valid scan histories.
+                    </p>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="newHotelLocation">Location</Label>
-                    <Input
-                      id="newHotelLocation"
-                      value={createHotelForm.location}
-                      onChange={(event) => setCreateHotelForm((current) => ({ ...current, location: event.target.value }))}
-                      placeholder="Mogadishu"
-                      className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="newHotelPassword">Password</Label>
-                    <Input
-                      id="newHotelPassword"
-                      type="password"
-                      value={createHotelForm.password}
-                      onChange={(event) => setCreateHotelForm((current) => ({ ...current, password: event.target.value }))}
-                      placeholder="Hotel dashboard password"
-                      required
-                      className="h-12 bg-card focus:bg-card transition-all rounded-none focus:-translate-y-1"
-                    />
-                  </div>
-                  <Button type="submit" disabled={busy} className="mt-2 w-full rounded-none py-[13px]">
-                    {busy ? 'Saving...' : 'Register hotel'}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            <div className="grid gap-6">
-              <QrDisplay
-                hotelId={adminQrHotelId}
-                onHotelChange={setAdminQrHotelId}
-                allowHotelCreation={false}
-              />
-              
-              <Card className="rounded-none border-border shadow-none">
-                <CardHeader>
-                  <CardTitle>Bulk import from Excel</CardTitle>
-                  <CardDescription>
-                    Customer sheet headers: <code className="bg-muted px-1 rounded-none text-foreground border border-border">full name</code>, <code className="bg-muted px-1 rounded-none text-foreground border border-border">phone number</code>, optional <code className="bg-muted px-1 rounded-none text-foreground border border-border">email</code>, <code className="bg-muted px-1 rounded-none text-foreground border border-border">device id</code>.
-                    Hotel sheet headers: <code className="bg-muted px-1 rounded-none text-foreground border border-border">name</code>, <code className="bg-muted px-1 rounded-none text-foreground border border-border">password</code>, optional <code className="bg-muted px-1 rounded-none text-foreground border border-border">location</code>.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="customerImport">Import loyal customers (.xlsx)</Label>
-                    <Input id="customerImport" type="file" accept=".xlsx" onChange={(event) => handleImport('customers', event)} className="file:bg-card file:text-foreground file:-mx-3 file:-my-1.5 file:px-3 file:py-1.5 file:rounded-none file:border-r file:border-border file:mr-3 cursor-pointer rounded-none bg-background cursor-pointer" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="hotelImport">Import hotels (.xlsx)</Label>
-                    <Input id="hotelImport" type="file" accept=".xlsx" onChange={(event) => handleImport('hotels', event)} className="file:bg-card file:text-foreground file:-mx-3 file:-my-1.5 file:px-3 file:py-1.5 file:rounded-none file:border-r file:border-border file:mr-3 cursor-pointer rounded-none bg-background cursor-pointer" />
-                  </div>
-                  
-                  {customerImportResult && (
-                    <div className="bg-card border border-border p-4 rounded-none mt-2 text-sm text-muted-foreground">
-                      <strong className="block mb-1 text-foreground">Customer import summary</strong>
-                      <span className="block mb-2">
-                        Processed {customerImportResult.processedCount}, created {customerImportResult.createdCount},
-                        updated {customerImportResult.updatedCount}, skipped {customerImportResult.skippedCount}
-                      </span>
-                      {customerImportResult.errors?.slice(0, 5).map((item, idx) => (
-                        <div key={idx} className="text-destructive text-xs mt-1">• {item}</div>
-                      ))}
-                    </div>
-                  )}
-                  {hotelImportResult && (
-                    <div className="bg-card border border-border p-4 rounded-none mt-2 text-sm text-muted-foreground">
-                      <strong className="block mb-1 text-foreground">Hotel import summary</strong>
-                      <span className="block mb-2">
-                        Processed {hotelImportResult.processedCount}, created {hotelImportResult.createdCount},
-                        updated {hotelImportResult.updatedCount}, skipped {hotelImportResult.skippedCount}
-                      </span>
-                      {hotelImportResult.errors?.slice(0, 5).map((item, idx) => (
-                        <div key={idx} className="text-destructive text-xs mt-1">• {item}</div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          <Card className="rounded-none border-border shadow-none">
-            <CardHeader className="flex flex-row items-start justify-between">
-              <div>
-                <CardTitle>Registered hotels</CardTitle>
-                <CardDescription>All hotels currently onboarded into the campaign.</CardDescription>
-              </div>
-              <Button variant="outline" className="rounded-none px-4" onClick={handleOpenDetailedReport}>
-                Show Detailed Report
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3">
-                {adminDashboard?.hotels?.length ? adminDashboard.hotels.map((hotel) => (
-                  <div 
-                    className="flex items-center justify-between p-4 bg-background border border-border rounded-none cursor-pointer hover:border-primary transition-colors hover:shadow-md" 
-                    key={hotel.id}
-                    onClick={() => handleHotelClick(hotel)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        handleHotelClick(hotel);
-                      }
-                    }}
+                  <Button
+                    variant="outline"
+                    className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-5 py-1.5 h-8 rounded-none shadow-none transition-colors"
+                    onClick={() => setShowCustomerList((current) => !current)}
                   >
-                    <div>
-                      <strong className="block text-foreground uppercase font-display tracking-wider">{hotel.name}</strong>
-                      <span className="text-sm text-muted-foreground">{hotel.location || 'Location not provided'}</span>
-                    </div>
-                    <Badge variant="outline" className="font-mono text-muted-foreground bg-card rounded-none uppercase">#{hotel.id}</Badge>
-                  </div>
-                )) : (
-                  <p className="text-muted-foreground py-4 text-center border border-dashed rounded-none border-border">No hotels have been registered yet.</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-none border-border shadow-none">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Registered loyal customers</CardTitle>
-                <CardDescription>Admin-only view of each customer’s reward count and valid scan history.</CardDescription>
-              </div>
-              <Button variant="outline" className="rounded-none px-6" onClick={() => setShowCustomerList((current) => !current)}>
-                {showCustomerList ? 'Hide list' : 'Show list'}
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {showCustomerList ? (
-                adminCustomers.length ? (
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {adminCustomers.map((customer) => (
-                      <div className="bg-card border border-border rounded-none p-5" key={customer.id}>
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <strong className="block text-lg text-foreground font-display uppercase tracking-widest">{customer.fullName}</strong>
-                            <span className="block text-sm text-foreground">{customer.phoneNumber}</span>
-                            <span className="block text-sm text-muted-foreground">{customer.email || 'No email provided'}</span>
-                          </div>
-                          <Badge variant="secondary" className="font-mono text-xs rounded-none border border-border">#{customer.id}</Badge>
-                        </div>
-                        <div className="flex gap-6 mt-4 pt-4 border-t border-border">
-                          <div>
-                            <span className="block text-xs uppercase tracking-[0.1em] text-muted-foreground mb-1">Rewards</span>
-                            <strong className="block text-2xl text-foreground font-display">{customer.rewardCount}</strong>
-                          </div>
-                          <div>
-                            <span className="block text-xs uppercase tracking-[0.1em] text-muted-foreground mb-1">Valid scans</span>
-                            <strong className="block text-2xl text-foreground font-display">{customer.validScanCount}</strong>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground py-6 text-center border border-dashed rounded-none border-border">No loyal customers have registered yet.</p>
-                )
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-6 bg-card border border-border rounded-none">Customer analytics are hidden until you open the registered customers list.</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {selectedHotelForStats && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-lg bg-zinc-950 border-zinc-700 shadow-xl rounded-none">
-            <CardHeader className="border-b border-border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="font-display tracking-tight uppercase text-xl text-foreground">
-                    {selectedHotelForStats.name} Stats
-                  </CardTitle>
-                  <CardDescription className="text-muted-foreground">{selectedHotelForStats.location || 'Location not provided'}</CardDescription>
+                    {showCustomerList ? 'Hide List' : 'Show List'}
+                  </Button>
                 </div>
-                <Button variant="ghost" onClick={() => setSelectedHotelForStats(null)} className="rounded-none">
-                  Close
-                </Button>
+                <div className="p-5 sm:p-6">
+                  {showCustomerList ? (
+                    adminCustomers.length ? (
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        {adminCustomers.map((customer) => (
+                          <div className="bg-white border border-zinc-200 rounded-none p-5 shadow-xs" key={customer.id}>
+                            <div className="flex justify-between items-start mb-3">
+                              <div>
+                                <strong className="block text-base text-zinc-950 font-condensed font-black uppercase tracking-wide">
+                                  {customer.fullName}
+                                </strong>
+                                <span className="block text-xs font-mono text-zinc-700">{customer.phoneNumber}</span>
+                                <span className="block text-xs text-zinc-500 font-condensed">{customer.email || 'No email provided'}</span>
+                              </div>
+                              <Badge variant="secondary" className="font-mono text-xs rounded-none border border-zinc-300 bg-zinc-100 text-zinc-700">
+                                #{customer.id}
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 pt-3 border-t border-zinc-200">
+                              <div>
+                                <span className="block text-[10px] uppercase font-bold tracking-wider text-zinc-500 font-condensed mb-0.5">
+                                  Rewards
+                                </span>
+                                <strong className="block text-2xl text-emerald-600 font-condensed font-black">
+                                  {customer.rewardCount}
+                                </strong>
+                              </div>
+                              <div>
+                                <span className="block text-[10px] uppercase font-bold tracking-wider text-zinc-500 font-condensed mb-0.5">
+                                  Valid Scans
+                                </span>
+                                <strong className="block text-2xl text-zinc-950 font-condensed font-black">
+                                  {customer.validScanCount}
+                                </strong>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-zinc-500 py-6 text-center border border-dashed border-zinc-300 rounded-none font-condensed text-sm uppercase tracking-wider">
+                        No loyal customers have registered yet.
+                      </p>
+                    )
+                  ) : (
+                    <p className="text-xs text-zinc-500 text-center py-6 bg-zinc-50 border border-zinc-200 rounded-none font-condensed uppercase tracking-wider">
+                      Customer directory is hidden. Click "Show List" or the customer metric card to expand.
+                    </p>
+                  )}
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-6">
+            </div>
+          )}
+        </div>
+
+        {/* Footer flush with bottom matching Admin Login Page */}
+        <BrandFooter className="mt-0 border-t border-zinc-300" />
+      </div>
+
+      {/* Hotel Stats Modal */}
+      {selectedHotelForStats && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-lg bg-white border border-zinc-300 shadow-2xl rounded-none text-zinc-950 overflow-hidden">
+            <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex items-center justify-between">
+              <div>
+                <h3 className="font-condensed font-black tracking-tight uppercase text-lg text-black">
+                  {selectedHotelForStats.name} Stats
+                </h3>
+                <p className="text-xs font-condensed text-zinc-500 uppercase tracking-wider">
+                  {selectedHotelForStats.location || 'Location not provided'}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                onClick={() => setSelectedHotelForStats(null)}
+                className="text-zinc-700 hover:text-black font-condensed font-bold uppercase text-xs rounded-none h-8 px-3"
+              >
+                Close
+              </Button>
+            </div>
+            <div className="p-6">
               {loadingHotelStats ? (
-                <div className="text-center py-8 text-muted-foreground">Loading stats...</div>
+                <div className="text-center py-8 text-zinc-500 font-condensed uppercase tracking-wider text-sm">
+                  Loading stats...
+                </div>
               ) : selectedHotelStatsData ? (
                 <div className="grid grid-cols-2 gap-4">
                   <StatCard label="Scans today" value={selectedHotelStatsData.scansToday} accent="warm" />
                   <StatCard label="Rewards today" value={selectedHotelStatsData.rewardsGiven} accent="green" />
                   <StatCard label="Max Scans" value={selectedHotelStatsData.maxScanCount > 0 ? selectedHotelStatsData.maxScanCount : '--'} accent="dark" />
-                  <StatCard label="Max Scan Date" value={selectedHotelStatsData.maxScanDate ? new Date(selectedHotelStatsData.maxScanDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '--'} accent="dark" />
+                  <StatCard
+                    label="Max Scan Date"
+                    value={selectedHotelStatsData.maxScanDate ? new Date(selectedHotelStatsData.maxScanDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '--'}
+                    accent="dark"
+                  />
                 </div>
               ) : (
-                <div className="text-center py-8 text-destructive">Failed to load stats.</div>
+                <div className="text-center py-8 text-[#c73f43] font-condensed uppercase tracking-wider text-sm">
+                  Failed to load stats.
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
 
+      {/* Admin Detailed Report Modal */}
       {showDetailedReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-5xl bg-zinc-950 border-zinc-700 shadow-xl rounded-none max-h-[90vh] flex flex-col">
-            <CardHeader className="border-b border-border shrink-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="font-display tracking-tight uppercase text-xl text-foreground">
-                    Campaign Detailed Report
-                  </CardTitle>
-                  <CardDescription className="text-muted-foreground">Aggregated daily performance by hotel.</CardDescription>
-                </div>
-                <Button variant="ghost" onClick={() => setShowDetailedReportModal(false)} className="rounded-none">
-                  Close
-                </Button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-5xl bg-white border border-zinc-300 shadow-2xl rounded-none text-zinc-950 max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 shrink-0 flex items-center justify-between">
+              <div>
+                <h3 className="font-condensed font-black tracking-tight uppercase text-lg text-black">
+                  Campaign Detailed Report
+                </h3>
+                <p className="text-xs font-condensed text-zinc-600">
+                  Aggregated daily performance by hotel.
+                </p>
               </div>
-            </CardHeader>
-            <CardContent className="p-6 overflow-hidden flex flex-col gap-4">
-              <div className="flex gap-4 shrink-0">
-                <div className="grid gap-2 flex-1">
-                  <Label>Filter by Date</Label>
+              <Button
+                variant="ghost"
+                onClick={() => setShowDetailedReportModal(false)}
+                className="text-zinc-700 hover:text-black font-condensed font-bold uppercase text-xs rounded-none h-8 px-3"
+              >
+                Close
+              </Button>
+            </div>
+            <div className="p-6 overflow-hidden flex flex-col gap-4">
+              <div className="flex flex-wrap sm:flex-nowrap gap-4 shrink-0">
+                <div className="grid gap-1.5 flex-1">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 font-condensed">Filter by Date</Label>
                   <Input 
                     type="date"
                     value={reportFilterDate}
@@ -787,46 +993,48 @@ function Dashboard({ mode = 'hotel' }) {
                       setReportFilterDate(e.target.value);
                       setReportPage(1);
                     }}
-                    className="bg-card rounded-none"
+                    className="bg-white border border-zinc-300 rounded-none h-9 text-xs text-zinc-950"
                   />
                 </div>
-                <div className="grid gap-2 flex-1">
-                  <Label>Filter by Hotel Name</Label>
+                <div className="grid gap-1.5 flex-1">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 font-condensed">Filter by Hotel Name</Label>
                   <Input 
                     placeholder="Search hotel..."
                     value={reportFilterHotelInput}
                     onChange={(e) => setReportFilterHotelInput(e.target.value)}
-                    className="bg-card rounded-none"
+                    className="bg-white border border-zinc-300 rounded-none h-9 text-xs text-zinc-950"
                   />
                 </div>
               </div>
-              <div className="flex-1 overflow-auto border border-border bg-background">
+              <div className="flex-1 overflow-auto border border-zinc-300 bg-white">
                 {loadingDetailedReport ? (
-                  <div className="text-center py-8 text-muted-foreground">Loading report...</div>
+                  <div className="text-center py-8 text-zinc-500 font-condensed uppercase tracking-wider text-sm">
+                    Loading report...
+                  </div>
                 ) : (
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs uppercase bg-muted text-muted-foreground sticky top-0">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="text-[11px] uppercase bg-[#f4f4f5] text-zinc-700 border-b border-zinc-300 sticky top-0 font-condensed font-bold tracking-wider">
                       <tr>
-                        <th className="px-6 py-3 font-display">Date</th>
-                        <th className="px-6 py-3 font-display">Hotel</th>
-                        <th className="px-6 py-3 font-display">Total Scans</th>
-                        <th className="px-6 py-3 font-display">Valid Scans</th>
-                        <th className="px-6 py-3 font-display">Suspicious Scans</th>
+                        <th className="px-6 py-3">Date</th>
+                        <th className="px-6 py-3">Hotel</th>
+                        <th className="px-6 py-3">Total Scans</th>
+                        <th className="px-6 py-3">Valid Scans</th>
+                        <th className="px-6 py-3">Suspicious Scans</th>
                       </tr>
                     </thead>
                     <tbody>
                       {paginatedReportData.map((row, idx) => (
-                        <tr key={idx} className="border-b border-border bg-background hover:bg-muted/50 transition-colors">
-                          <td className="px-6 py-4 font-mono">{row.date}</td>
-                          <td className="px-6 py-4 font-bold">{row.hotelName}</td>
-                          <td className="px-6 py-4">{row.totalScans}</td>
-                          <td className="px-6 py-4 text-emerald-500">{row.validScans}</td>
-                          <td className="px-6 py-4 text-destructive">{row.suspiciousScans}</td>
+                        <tr key={idx} className="border-b border-zinc-200 bg-white hover:bg-zinc-50 transition-colors">
+                          <td className="px-6 py-3.5 font-mono text-xs text-zinc-700">{row.date}</td>
+                          <td className="px-6 py-3.5 font-bold font-condensed uppercase text-zinc-950">{row.hotelName}</td>
+                          <td className="px-6 py-3.5 font-bold font-condensed">{row.totalScans}</td>
+                          <td className="px-6 py-3.5 font-bold font-condensed text-emerald-600">{row.validScans}</td>
+                          <td className="px-6 py-3.5 font-bold font-condensed text-[#c73f43]">{row.suspiciousScans}</td>
                         </tr>
                       ))}
                       {paginatedReportData.length === 0 && (
                         <tr>
-                          <td colSpan="5" className="px-6 py-8 text-center text-muted-foreground">
+                          <td colSpan="5" className="px-6 py-8 text-center text-zinc-500 font-condensed uppercase tracking-wider">
                             No data available.
                           </td>
                         </tr>
@@ -838,49 +1046,54 @@ function Dashboard({ mode = 'hotel' }) {
               <div className="flex items-center justify-between mt-2">
                 <Button 
                   variant="outline" 
-                  className="rounded-none" 
+                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors" 
                   disabled={reportPage <= 1}
                   onClick={() => setReportPage(p => Math.max(1, p - 1))}
                 >
                   Previous
                 </Button>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs text-zinc-600 font-condensed uppercase tracking-wider">
                   Page {reportPage} of {totalReportPages}
                 </span>
                 <Button 
                   variant="outline" 
-                  className="rounded-none" 
+                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors" 
                   disabled={reportPage >= totalReportPages}
                   onClick={() => setReportPage(p => Math.min(totalReportPages, p + 1))}
                 >
                   Next
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
 
+      {/* Hotel Detailed Report Modal */}
       {showHotelDetailedReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-4xl bg-zinc-950 border-zinc-700 shadow-xl rounded-none max-h-[90vh] flex flex-col">
-            <CardHeader className="border-b border-border shrink-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="font-display tracking-tight uppercase text-xl text-foreground">
-                    Hotel Detailed Report
-                  </CardTitle>
-                  <CardDescription className="text-muted-foreground">Your daily performance history.</CardDescription>
-                </div>
-                <Button variant="ghost" onClick={() => setShowHotelDetailedReportModal(false)} className="rounded-none">
-                  Close
-                </Button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-4xl bg-white border border-zinc-300 shadow-2xl rounded-none text-zinc-950 max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 shrink-0 flex items-center justify-between">
+              <div>
+                <h3 className="font-condensed font-black tracking-tight uppercase text-lg text-black">
+                  Hotel Detailed Report
+                </h3>
+                <p className="text-xs font-condensed text-zinc-600">
+                  Your daily performance history.
+                </p>
               </div>
-            </CardHeader>
-            <CardContent className="p-6 overflow-hidden flex flex-col gap-4">
+              <Button
+                variant="ghost"
+                onClick={() => setShowHotelDetailedReportModal(false)}
+                className="text-zinc-700 hover:text-black font-condensed font-bold uppercase text-xs rounded-none h-8 px-3"
+              >
+                Close
+              </Button>
+            </div>
+            <div className="p-6 overflow-hidden flex flex-col gap-4">
               <div className="flex gap-4 shrink-0">
-                <div className="grid gap-2 w-full max-w-sm">
-                  <Label>Filter by Date</Label>
+                <div className="grid gap-1.5 w-full max-w-sm">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 font-condensed">Filter by Date</Label>
                   <Input 
                     type="date"
                     value={hotelReportFilterDate}
@@ -888,35 +1101,37 @@ function Dashboard({ mode = 'hotel' }) {
                       setHotelReportFilterDate(e.target.value);
                       setHotelReportPage(1);
                     }}
-                    className="bg-card rounded-none"
+                    className="bg-white border border-zinc-300 rounded-none h-9 text-xs text-zinc-950"
                   />
                 </div>
               </div>
-              <div className="flex-1 overflow-auto border border-border bg-background">
+              <div className="flex-1 overflow-auto border border-zinc-300 bg-white">
                 {loadingHotelDetailedReport ? (
-                  <div className="text-center py-8 text-muted-foreground">Loading report...</div>
+                  <div className="text-center py-8 text-zinc-500 font-condensed uppercase tracking-wider text-sm">
+                    Loading report...
+                  </div>
                 ) : (
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs uppercase bg-muted text-muted-foreground sticky top-0">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="text-[11px] uppercase bg-[#f4f4f5] text-zinc-700 border-b border-zinc-300 sticky top-0 font-condensed font-bold tracking-wider">
                       <tr>
-                        <th className="px-6 py-3 font-display">Date</th>
-                        <th className="px-6 py-3 font-display">Total Scans</th>
-                        <th className="px-6 py-3 font-display">Valid Scans</th>
-                        <th className="px-6 py-3 font-display">Suspicious Scans</th>
+                        <th className="px-6 py-3">Date</th>
+                        <th className="px-6 py-3">Total Scans</th>
+                        <th className="px-6 py-3">Valid Scans</th>
+                        <th className="px-6 py-3">Suspicious Scans</th>
                       </tr>
                     </thead>
                     <tbody>
                       {hotelPaginatedReportData.map((row, idx) => (
-                        <tr key={idx} className="border-b border-border bg-background hover:bg-muted/50 transition-colors">
-                          <td className="px-6 py-4 font-mono">{row.date}</td>
-                          <td className="px-6 py-4">{row.totalScans}</td>
-                          <td className="px-6 py-4 text-emerald-500">{row.validScans}</td>
-                          <td className="px-6 py-4 text-destructive">{row.suspiciousScans}</td>
+                        <tr key={idx} className="border-b border-zinc-200 bg-white hover:bg-zinc-50 transition-colors">
+                          <td className="px-6 py-3.5 font-mono text-xs text-zinc-700">{row.date}</td>
+                          <td className="px-6 py-3.5 font-bold font-condensed">{row.totalScans}</td>
+                          <td className="px-6 py-3.5 font-bold font-condensed text-emerald-600">{row.validScans}</td>
+                          <td className="px-6 py-3.5 font-bold font-condensed text-[#c73f43]">{row.suspiciousScans}</td>
                         </tr>
                       ))}
                       {hotelPaginatedReportData.length === 0 && (
                         <tr>
-                          <td colSpan="4" className="px-6 py-8 text-center text-muted-foreground">
+                          <td colSpan="4" className="px-6 py-8 text-center text-zinc-500 font-condensed uppercase tracking-wider">
                             No data available.
                           </td>
                         </tr>
@@ -928,26 +1143,26 @@ function Dashboard({ mode = 'hotel' }) {
               <div className="flex items-center justify-between mt-2">
                 <Button 
                   variant="outline" 
-                  className="rounded-none" 
+                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors" 
                   disabled={hotelReportPage <= 1}
                   onClick={() => setHotelReportPage(p => Math.max(1, p - 1))}
                 >
                   Previous
                 </Button>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs text-zinc-600 font-condensed uppercase tracking-wider">
                   Page {hotelReportPage} of {hotelTotalReportPages}
                 </span>
                 <Button 
                   variant="outline" 
-                  className="rounded-none" 
+                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors" 
                   disabled={hotelReportPage >= hotelTotalReportPages}
                   onClick={() => setHotelReportPage(p => Math.min(hotelTotalReportPages, p + 1))}
                 >
                   Next
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
     </div>

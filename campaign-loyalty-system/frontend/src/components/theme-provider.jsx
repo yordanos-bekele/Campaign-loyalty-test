@@ -1,43 +1,32 @@
 import { createContext, useContext, useEffect, useState } from "react"
 
 const ThemeProviderContext = createContext({
-  theme: "dark",
+  theme: "light",
   setTheme: () => null,
 })
 
 export function ThemeProvider({
   children,
-  defaultTheme = "dark",
+  defaultTheme = "light",
   storageKey = "vite-ui-theme",
   ...props
 }) {
-  const [theme, setTheme] = useState(
-    () => (localStorage.getItem(storageKey)) || defaultTheme
-  )
+  const [theme] = useState("light")
 
   useEffect(() => {
     const root = window.document.documentElement
-
-    root.classList.remove("light", "dark")
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-      root.classList.add(systemTheme)
-      return
+    root.classList.remove("dark")
+    root.classList.add("light")
+    try {
+      localStorage.setItem(storageKey, "light")
+    } catch {
+      // Ignore storage errors
     }
-
-    root.classList.add(theme)
-  }, [theme])
+  }, [])
 
   const value = {
-    theme,
-    setTheme: (theme) => {
-      localStorage.setItem(storageKey, theme)
-      setTheme(theme)
-    },
+    theme: "light",
+    setTheme: () => null,
   }
 
   return (
