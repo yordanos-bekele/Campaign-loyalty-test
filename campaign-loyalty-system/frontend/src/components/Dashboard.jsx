@@ -33,12 +33,10 @@ function StatCard({ label, value, accent, onClick, active = false }) {
     red: 'border-t-4 border-t-[#c73f43]',
     dark: 'border-t-4 border-t-zinc-900',
   };
-  
-  const baseClasses = `p-5 sm:p-6 rounded-none border border-zinc-200 bg-white shadow-xs transition-all ${
-    accentBorders[accent] || 'border-t-4 border-t-zinc-400'
-  } ${onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-zinc-300' : ''} ${
-    active ? 'ring-2 ring-zinc-900 ring-offset-2' : ''
-  }`;
+
+  const baseClasses = `p-5 sm:p-6 rounded-none border border-zinc-200 bg-white shadow-xs transition-all ${accentBorders[accent] || 'border-t-4 border-t-zinc-400'
+    } ${onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-zinc-300' : ''} ${active ? 'ring-2 ring-zinc-900 ring-offset-2' : ''
+    }`;
 
   return (
     <article
@@ -351,7 +349,7 @@ function Dashboard({ mode = 'hotel' }) {
       return true;
     });
   }, [detailedReportData, reportFilterDate, reportFilterHotel]);
-  
+
   const REPORT_PAGE_SIZE = 5;
   const totalReportPages = Math.max(1, Math.ceil(filteredReportData.length / REPORT_PAGE_SIZE));
   const paginatedReportData = filteredReportData.slice((reportPage - 1) * REPORT_PAGE_SIZE, reportPage * REPORT_PAGE_SIZE);
@@ -362,7 +360,7 @@ function Dashboard({ mode = 'hotel' }) {
       return true;
     });
   }, [hotelDetailedReportData, hotelReportFilterDate]);
-  
+
   const HOTEL_REPORT_PAGE_SIZE = 5;
   const hotelTotalReportPages = Math.max(1, Math.ceil(hotelFilteredReportData.length / HOTEL_REPORT_PAGE_SIZE));
   const hotelPaginatedReportData = hotelFilteredReportData.slice((hotelReportPage - 1) * HOTEL_REPORT_PAGE_SIZE, hotelReportPage * HOTEL_REPORT_PAGE_SIZE);
@@ -491,7 +489,7 @@ function Dashboard({ mode = 'hotel' }) {
               <div className="flex gap-2 shrink-0 items-center">
                 <Button
                   variant="outline"
-                  className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-2 h-9 rounded-none shadow-none"
+                  className="bg-white hover:bg-zinc-200 text-zinc-950 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-2 h-9 rounded-none shadow-none border-white transition-colors"
                   onClick={() => loadDashboardData()}
                   disabled={busy}
                 >
@@ -499,7 +497,7 @@ function Dashboard({ mode = 'hotel' }) {
                 </Button>
                 <Button
                   variant="outline"
-                  className="bg-red-950/40 hover:bg-red-900 text-red-300 border border-red-800/60 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-2 h-9 rounded-none shadow-none"
+                  className="bg-red-500/20 hover:bg-red-500/30 text-red-200 hover:text-white border border-red-500/40 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-2 h-9 rounded-none shadow-none transition-colors"
                   onClick={handleLogout}
                   disabled={busy}
                 >
@@ -986,7 +984,7 @@ function Dashboard({ mode = 'hotel' }) {
               <div className="flex flex-wrap sm:flex-nowrap gap-4 shrink-0">
                 <div className="grid gap-1.5 flex-1">
                   <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 font-condensed">Filter by Date</Label>
-                  <Input 
+                  <Input
                     type="date"
                     value={reportFilterDate}
                     onChange={(e) => {
@@ -998,7 +996,7 @@ function Dashboard({ mode = 'hotel' }) {
                 </div>
                 <div className="grid gap-1.5 flex-1">
                   <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 font-condensed">Filter by Hotel Name</Label>
-                  <Input 
+                  <Input
                     placeholder="Search hotel..."
                     value={reportFilterHotelInput}
                     onChange={(e) => setReportFilterHotelInput(e.target.value)}
@@ -1044,9 +1042,9 @@ function Dashboard({ mode = 'hotel' }) {
                 )}
               </div>
               <div className="flex items-center justify-between mt-2">
-                <Button 
-                  variant="outline" 
-                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors" 
+                <Button
+                  variant="outline"
+                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors"
                   disabled={reportPage <= 1}
                   onClick={() => setReportPage(p => Math.max(1, p - 1))}
                 >
@@ -1055,9 +1053,9 @@ function Dashboard({ mode = 'hotel' }) {
                 <span className="text-xs text-zinc-600 font-condensed uppercase tracking-wider">
                   Page {reportPage} of {totalReportPages}
                 </span>
-                <Button 
-                  variant="outline" 
-                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors" 
+                <Button
+                  variant="outline"
+                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors"
                   disabled={reportPage >= totalReportPages}
                   onClick={() => setReportPage(p => Math.min(totalReportPages, p + 1))}
                 >
@@ -1094,7 +1092,7 @@ function Dashboard({ mode = 'hotel' }) {
               <div className="flex gap-4 shrink-0">
                 <div className="grid gap-1.5 w-full max-w-sm">
                   <Label className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 font-condensed">Filter by Date</Label>
-                  <Input 
+                  <Input
                     type="date"
                     value={hotelReportFilterDate}
                     onChange={(e) => {
@@ -1141,9 +1139,9 @@ function Dashboard({ mode = 'hotel' }) {
                 )}
               </div>
               <div className="flex items-center justify-between mt-2">
-                <Button 
-                  variant="outline" 
-                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors" 
+                <Button
+                  variant="outline"
+                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors"
                   disabled={hotelReportPage <= 1}
                   onClick={() => setHotelReportPage(p => Math.max(1, p - 1))}
                 >
@@ -1152,9 +1150,9 @@ function Dashboard({ mode = 'hotel' }) {
                 <span className="text-xs text-zinc-600 font-condensed uppercase tracking-wider">
                   Page {hotelReportPage} of {hotelTotalReportPages}
                 </span>
-                <Button 
-                  variant="outline" 
-                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors" 
+                <Button
+                  variant="outline"
+                  className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none transition-colors"
                   disabled={hotelReportPage >= hotelTotalReportPages}
                   onClick={() => setHotelReportPage(p => Math.min(hotelTotalReportPages, p + 1))}
                 >
