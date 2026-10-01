@@ -77,7 +77,7 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
               <span className="text-xs uppercase tracking-[0.18em] font-extrabold text-white/90 block mb-1">
                 Marathon Klassics Hotel Loyalty
               </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-white leading-none">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-wide text-white leading-none">
                 Register Your Device
               </h1>
             </div>
@@ -132,7 +132,7 @@ function LoyalCustomerRegistration({ deviceId = '', standalone = false }) {
             <div>
               {/* Mustard Section Banner */}
               <div className="bg-brand-mustard text-white text-center py-2.5 px-4 mb-4">
-                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-wide text-white">
                   {customer ? 'Update Registration' : 'Register Now'}
                 </h2>
               </div>

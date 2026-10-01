@@ -132,7 +132,7 @@ function PhoneSheet({ open, busy, error, onSubmit, onNewUser }) {
         <p className="text-2xl mb-2" aria-hidden="true">📱</p>
         <h2
           id="sheet-title"
-          className="text-xl font-extrabold font-display uppercase tracking-tight text-foreground mb-2"
+          className="text-xl font-extrabold font-display uppercase tracking-wide text-foreground mb-2"
         >
           Enter your phone number
         </h2>
@@ -392,7 +392,7 @@ function ScanPage({ hotelId, initialToken }) {
         <div className="reward-glow w-full max-w-sm p-6 flex flex-col items-center text-center gap-5 bg-card">
           <ProductBottle product={productName} />
           <span className="brand-eyebrow">Reward unlocked</span>
-          <h1 className="text-3xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+          <h1 className="text-3xl font-extrabold font-display uppercase tracking-wide text-foreground leading-tight">
             Your free Marathon Klassics Cocktail is ready!
           </h1>
           <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
@@ -417,7 +417,7 @@ function ScanPage({ hotelId, initialToken }) {
         <div className="reward-glow w-full max-w-sm p-6 flex flex-col items-center text-center gap-5 bg-card">
           <ProductBottle product={productName} />
           <span className="brand-eyebrow">10 scans complete</span>
-          <h1 className="text-3xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+          <h1 className="text-3xl font-extrabold font-display uppercase tracking-wide text-foreground leading-tight">
             You made it!
           </h1>
           <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
@@ -445,7 +445,7 @@ function ScanPage({ hotelId, initialToken }) {
           <ProductBottle product={productName} compact />
           <span className="brand-eyebrow">{productName} loyalty progress</span>
           <ProgressRing count={currentCount} total={10} color="hsl(var(--primary))" />
-          <h1 className="text-3xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+          <h1 className="text-3xl font-extrabold font-display uppercase tracking-wide text-foreground leading-tight">
             Visit counted! ✓
           </h1>
           <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
@@ -465,7 +465,7 @@ function ScanPage({ hotelId, initialToken }) {
       <MobilePage>
         <div className="flex flex-col items-center text-center gap-6">
           <span style={{ fontSize: 56 }} aria-label="Phone">📋</span>
-          <h1 className="text-2xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+          <h1 className="text-2xl font-extrabold font-display uppercase tracking-wide text-foreground leading-tight">
             We need your phone number
           </h1>
           <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
@@ -509,7 +509,7 @@ function ScanPage({ hotelId, initialToken }) {
         <div className="w-full max-w-sm border border-yellow-500/50 bg-zinc-900 p-6 flex flex-col items-center text-center gap-6">
           <ProgressRing count={currentCount} total={10} color="hsl(var(--muted-foreground))" />
           <span style={{ fontSize: 48 }} aria-label="Clock">⏰</span>
-          <h1 className="text-2xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+          <h1 className="text-2xl font-extrabold font-display uppercase tracking-wide text-foreground leading-tight">
             Come back a bit later
           </h1>
           <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
@@ -530,7 +530,7 @@ function ScanPage({ hotelId, initialToken }) {
         <div className="w-full max-w-sm border border-red-600/70 bg-red-950/20 p-6 flex flex-col items-center text-center gap-6">
           <ProgressRing count={currentCount} total={10} color="hsl(var(--muted-foreground))" />
           <span style={{ fontSize: 48 }} aria-label="Moon">🌙</span>
-          <h1 className="text-2xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+          <h1 className="text-2xl font-extrabold font-display uppercase tracking-wide text-foreground leading-tight">
             See you tomorrow!
           </h1>
           <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
@@ -600,7 +600,7 @@ function StatusScreen({ emoji, title, subtitle, action }) {
   return (
     <div className="flex flex-col items-center text-center gap-5">
       <span style={{ fontSize: 56 }} aria-hidden="true">{emoji}</span>
-      <h1 className="text-2xl font-extrabold font-display uppercase tracking-tight text-foreground leading-tight">
+      <h1 className="text-2xl font-extrabold font-display uppercase tracking-wide text-foreground leading-tight">
         {title}
       </h1>
       <p className="text-muted-foreground text-base max-w-xs leading-relaxed">{subtitle}</p>

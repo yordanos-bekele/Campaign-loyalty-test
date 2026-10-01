@@ -93,7 +93,7 @@ function HotelLoginPage({
 
             {/* Right Column: Massive Headline & Two Action Buttons */}
             <div className="bg-black text-white p-6 sm:p-10 lg:p-12 flex flex-col justify-center items-start">
-              <h1 className="text-6xl sm:text-7xl lg:text-[84px] font-black font-condensed uppercase tracking-tight leading-[0.88] mb-8 sm:mb-10 select-none">
+              <h1 className="text-6xl sm:text-7xl lg:text-[84px] font-black font-condensed uppercase tracking-wide leading-[0.88] mb-8 sm:mb-10 select-none">
                 <span className="block text-white">SCAN.</span>
                 <span className="block text-white">COLLECT.</span>
                 <span className="block text-[#deb355]">CELEBRATE.</span>
@@ -138,7 +138,7 @@ function HotelLoginPage({
 
             {/* Mustard body */}
             <div className="bg-[#deb355] text-white p-6 sm:p-10 flex-1 flex flex-col justify-center">
-              <h2 className="text-3xl sm:text-4xl lg:text-[44px] font-black font-condensed uppercase tracking-tight text-white leading-tight mb-3 sm:mb-4">
+              <h2 className="text-3xl sm:text-4xl lg:text-[44px] font-black font-condensed uppercase tracking-wide text-white leading-tight mb-3 sm:mb-4">
                 HOTEL LOYALTY DASHBOARD
               </h2>
               <p className="text-xs sm:text-sm font-bold font-condensed uppercase tracking-wider text-white/95 leading-relaxed max-w-md">
@@ -176,7 +176,7 @@ function HotelLoginPage({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left side: Golden HOTEL LOGIN Title & Subtext */}
             <div>
-              <h3 className="text-5xl sm:text-6xl lg:text-7xl font-black font-condensed uppercase tracking-tight text-[#ecb461] mb-3 sm:mb-4 leading-none">
+              <h3 className="text-5xl sm:text-6xl lg:text-7xl font-black font-condensed uppercase tracking-wide text-[#ecb461] mb-3 sm:mb-4 leading-none">
                 HOTEL LOGIN
               </h3>
               <p className="text-xs sm:text-sm font-bold font-condensed uppercase tracking-wider text-white/95 leading-relaxed max-w-sm">

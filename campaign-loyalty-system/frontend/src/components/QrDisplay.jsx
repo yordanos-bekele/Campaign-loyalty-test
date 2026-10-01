@@ -216,7 +216,7 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true, hotels =
     <Card className="shadow-sm border-zinc-300 bg-white rounded-none overflow-hidden">
       <CardHeader className="bg-[#f2f2f2] border-b border-zinc-300 p-5 rounded-none">
         <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-1 font-condensed">Hotel QR Display</p>
-        <CardTitle className="uppercase font-condensed font-black tracking-tight text-xl text-black">Show a Fresh QR Code</CardTitle>
+        <CardTitle className="uppercase font-condensed font-black tracking-wide text-xl text-black">Show a Fresh QR Code</CardTitle>
         <CardDescription className="leading-relaxed mt-1 text-xs font-bold uppercase tracking-wider text-zinc-600 font-condensed">
           Use this screen on a front desk tablet, a reception monitor, or a hotel phone. The code refreshes automatically every 2 minutes.
         </CardDescription>
@@ -343,7 +343,7 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true, hotels =
         <Card className="flex flex-col items-center text-center p-6 bg-[#fafafa] border-dashed border-2 border-zinc-300 hover:border-[#deb355] rounded-none relative overflow-hidden transition-colors">
           <div className="absolute inset-x-0 top-0 h-1 bg-[#deb355]" style={{ transformOrigin: 'left', transform: `scaleX(${Math.min(secondsRemaining / 120, 1)})`, transition: 'transform 1s linear' }} />
           <Badge className="mb-3 bg-black text-white border-0 rounded-none uppercase font-condensed font-bold text-[10px] tracking-widest px-2.5 py-0.5">Guest-facing</Badge>
-          <h3 className="text-xl font-black text-black mb-1 uppercase font-condensed tracking-tight">Active QR Code</h3>
+          <h3 className="text-xl font-black text-black mb-1 uppercase font-condensed tracking-wide">Active QR Code</h3>
           <p className="text-xs font-bold uppercase tracking-wider text-zinc-600 mb-3 max-w-[280px] font-condensed">Guests scan this code on their phone and the loyalty scan is submitted automatically in their mobile browser.</p>
           {qrImage && <p className="font-mono font-bold text-[#b5811d] text-sm mb-4">Refreshes in {Math.floor(secondsRemaining / 60)}:{String(secondsRemaining % 60).padStart(2, '0')}</p>}
 

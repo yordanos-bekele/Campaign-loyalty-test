@@ -52,7 +52,7 @@ function StatCard({ label, value, accent, onClick, active = false }) {
       } : undefined}
     >
       <span className="block text-xs font-bold font-condensed uppercase tracking-wider text-zinc-500 mb-1.5">{label}</span>
-      <strong className="block text-3xl sm:text-4xl font-black font-condensed tracking-tight text-zinc-950">{value}</strong>
+      <strong className="block text-3xl sm:text-4xl font-black font-condensed tracking-wide text-zinc-950">{value}</strong>
     </article>
   );
 }
@@ -400,7 +400,7 @@ function Dashboard({ mode = 'hotel' }) {
           {/* Admin Login Form Section */}
           <section className="w-full bg-[#f2f2f2] px-4 sm:px-8 py-10 sm:py-14 text-center text-zinc-950">
             <div className="max-w-[590px] mx-auto w-full">
-              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black uppercase tracking-tight text-black mb-2 font-condensed">
+              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black uppercase tracking-wide text-black mb-2 font-condensed">
                 Admin Login
               </h1>
               <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-800 mb-8 sm:mb-9 leading-snug">
@@ -497,7 +497,7 @@ function Dashboard({ mode = 'hotel' }) {
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#deb355] block font-condensed">
                   Hotel Partner Portal
                 </span>
-                <h2 className="text-base sm:text-lg font-black uppercase tracking-tight text-white font-condensed">
+                <h2 className="text-base sm:text-lg font-black uppercase tracking-wide text-white font-condensed">
                   {sessionUser ? sessionUser.displayName : 'Hotel Partner'}
                 </h2>
               </div>
@@ -534,11 +534,11 @@ function Dashboard({ mode = 'hotel' }) {
                   <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 font-condensed">
                     Marathon Spirits Control Room
                   </span>
-                  <Badge variant="outline" className="bg-zinc-900 text-white border-transparent rounded-none uppercase text-[10px] font-condensed px-2 py-0.5 tracking-wider">
+                  <Badge variant="outline" className="bg-zinc-900 text-black border-transparent rounded-none uppercase text-[10px] font-condensed px-2 py-0.5 tracking-wider">
                     Admin Privileged
                   </Badge>
                 </div>
-                <span className="text-base sm:text-lg font-black uppercase tracking-tight text-black font-condensed">
+                <span className="text-base sm:text-lg font-black uppercase tracking-wide text-black font-condensed">
                   {sessionUser ? sessionUser.displayName : 'Authorized Admin'}
                 </span>
               </div>
@@ -593,7 +593,7 @@ function Dashboard({ mode = 'hotel' }) {
               <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
                 <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
+                    <h3 className="font-condensed font-black text-base uppercase tracking-wide text-black">
                       {sessionUser.displayName} Overview
                     </h3>
                     <p className="text-xs font-condensed text-zinc-600">
@@ -631,7 +631,7 @@ function Dashboard({ mode = 'hotel' }) {
               <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
                 <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex items-center justify-between">
                   <div>
-                    <h2 className="text-base font-black uppercase tracking-tight text-black font-condensed">
+                    <h2 className="text-base font-black uppercase tracking-wide text-black font-condensed">
                       Company-wide Overview
                     </h2>
                     <p className="text-xs font-condensed text-zinc-600">
@@ -665,7 +665,7 @@ function Dashboard({ mode = 'hotel' }) {
               <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
                 <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
+                    <h3 className="font-condensed font-black text-base uppercase tracking-wide text-black">
                       Registered Hotels
                     </h3>
                     <p className="text-xs font-condensed text-zinc-600">
@@ -734,7 +734,7 @@ function Dashboard({ mode = 'hotel' }) {
                 {/* Register a Hotel */}
                 <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
                   <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5">
-                    <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
+                    <h3 className="font-condensed font-black text-base uppercase tracking-wide text-black">
                       Register a Hotel
                     </h3>
                     <p className="text-xs font-condensed text-zinc-600">
@@ -794,7 +794,7 @@ function Dashboard({ mode = 'hotel' }) {
                 {/* Bulk Import from Excel */}
                 <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
                   <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5">
-                    <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
+                    <h3 className="font-condensed font-black text-base uppercase tracking-wide text-black">
                       Bulk Import from Excel
                     </h3>
                     <p className="text-xs font-condensed text-zinc-600">
@@ -864,7 +864,7 @@ function Dashboard({ mode = 'hotel' }) {
               <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
                 <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
+                    <h3 className="font-condensed font-black text-base uppercase tracking-wide text-black">
                       Registered Loyal Customers
                     </h3>
                     <p className="text-xs font-condensed text-zinc-600">
@@ -944,7 +944,7 @@ function Dashboard({ mode = 'hotel' }) {
           <div className="w-full max-w-lg bg-white border border-zinc-300 shadow-2xl rounded-none text-zinc-950 overflow-hidden">
             <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex items-center justify-between">
               <div>
-                <h3 className="font-condensed font-black tracking-tight uppercase text-lg text-black">
+                <h3 className="font-condensed font-black tracking-wide uppercase text-lg text-black">
                   {selectedHotelForStats.name} Stats
                 </h3>
                 <p className="text-xs font-condensed text-zinc-500 uppercase tracking-wider">
@@ -991,7 +991,7 @@ function Dashboard({ mode = 'hotel' }) {
           <div className="w-full max-w-4xl bg-white border border-zinc-300 shadow-2xl rounded-none text-zinc-950 overflow-hidden my-auto">
             <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex items-center justify-between">
               <div>
-                <h3 className="font-condensed font-black tracking-tight uppercase text-lg text-black">
+                <h3 className="font-condensed font-black tracking-wide uppercase text-lg text-black">
                   Hotel QR Code Generator
                 </h3>
                 <p className="text-xs font-condensed text-zinc-500 uppercase tracking-wider">
@@ -1025,7 +1025,7 @@ function Dashboard({ mode = 'hotel' }) {
           <div className="w-full max-w-5xl bg-white border border-zinc-300 shadow-2xl rounded-none text-zinc-950 max-h-[90vh] flex flex-col overflow-hidden">
             <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 shrink-0 flex items-center justify-between">
               <div>
-                <h3 className="font-condensed font-black tracking-tight uppercase text-lg text-black">
+                <h3 className="font-condensed font-black tracking-wide uppercase text-lg text-black">
                   Campaign Detailed Report
                 </h3>
                 <p className="text-xs font-condensed text-zinc-600">
@@ -1133,7 +1133,7 @@ function Dashboard({ mode = 'hotel' }) {
           <div className="w-full max-w-4xl bg-white border border-zinc-300 shadow-2xl rounded-none text-zinc-950 max-h-[90vh] flex flex-col overflow-hidden">
             <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 shrink-0 flex items-center justify-between">
               <div>
-                <h3 className="font-condensed font-black tracking-tight uppercase text-lg text-black">
+                <h3 className="font-condensed font-black tracking-wide uppercase text-lg text-black">
                   Hotel Detailed Report
                 </h3>
                 <p className="text-xs font-condensed text-zinc-600">

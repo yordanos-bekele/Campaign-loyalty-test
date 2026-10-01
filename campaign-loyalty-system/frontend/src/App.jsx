@@ -207,7 +207,7 @@ function App() {
 
             {/* Massive Display Title */}
             <div className="flex flex-col justify-center py-6">
-              <h1 className="text-6xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tight text-white leading-[0.9] space-y-1">
+              <h1 className="text-6xl sm:text-7xl lg:text-8xl font-black uppercase tracking-wide text-white leading-[0.9] space-y-1">
                 <span className="block">Scan.</span>
                 <span className="block">Collect.</span>
                 <span className="block text-[#deb355]">Celebrate.</span>
@@ -224,7 +224,7 @@ function App() {
               <span className="inline-block bg-brand-terracotta text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 mb-6">
                 Hotel Partner Portal
               </span>
-              <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white leading-tight mb-4">
+              <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-wide text-white leading-tight mb-4">
                 Hotel Loyalty Dashboard
               </h2>
               <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-white/90 leading-relaxed max-w-sm">

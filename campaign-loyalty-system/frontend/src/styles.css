@@ -108,16 +108,27 @@
   h4,
   h5,
   h6 {
-    @apply uppercase tracking-[0.02em];
+    @apply uppercase;
     font-family: Acumin, "Acumin Pro", "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
     font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  /* Provide subtle breathing room for bold, black, and condensed texts so they don't look compacted */
+  b,
+  strong,
+  .font-bold,
+  .font-semibold,
+  .font-extrabold,
+  .font-black {
+    letter-spacing: 0.035em;
   }
 }
 
 /* 4. Component Styles */
 @layer components {
   button.bg-primary {
-    @apply uppercase font-bold tracking-tight rounded-none;
+    @apply uppercase font-bold tracking-wider rounded-none;
   }
 
   input:focus-visible {
@@ -192,8 +203,16 @@
 }
 
 @layer components {
-  .font-display { font-family: Acumin, "Acumin Pro", "Arial Narrow", Arial, sans-serif; font-weight: 800; }
-  .font-condensed { font-family: "Barlow Condensed", "Arial Narrow", Impact, sans-serif; }
+  .font-display { font-family: Acumin, "Acumin Pro", "Arial Narrow", Arial, sans-serif; font-weight: 800; letter-spacing: 0.035em; }
+  .font-condensed { font-family: "Barlow Condensed", "Arial Narrow", Impact, sans-serif; letter-spacing: 0.03em; }
+  .font-condensed.font-bold,
+  .font-condensed.font-semibold,
+  .font-condensed.font-extrabold,
+  .font-condensed.font-black,
+  .font-condensed strong,
+  .font-condensed b {
+    letter-spacing: 0.045em;
+  }
   .text-brand-gold { color: #d4af37; }
   .brand-eyebrow { color: #d4af37; font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
   .brand-hero { background: linear-gradient(120deg, #000 0%, #09090b 60%, #181811 100%); }
