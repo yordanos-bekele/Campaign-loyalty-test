@@ -105,6 +105,16 @@ function Dashboard({ mode = 'hotel' }) {
   const [hotelReportFilterDate, setHotelReportFilterDate] = useState('');
   const [hotelReportPage, setHotelReportPage] = useState(1);
 
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrModalHotelId, setQrModalHotelId] = useState('1');
+
+  const handleOpenQrModal = (targetHotelId) => {
+    const idStr = String(targetHotelId || adminQrHotelId || '1');
+    setQrModalHotelId(idStr);
+    setAdminQrHotelId(idStr);
+    setShowQrModal(true);
+  };
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setReportFilterHotel(reportFilterHotelInput);
@@ -207,6 +217,13 @@ function Dashboard({ mode = 'hotel' }) {
         setAdminDashboard(dashboardResult.value);
         setAdminCustomers(customersResult.status === 'fulfilled' ? customersResult.value : []);
         setHotelStats(null);
+
+        if (dashboardResult.value?.hotels?.length > 0) {
+          setAdminQrHotelId((prev) => {
+            const exists = dashboardResult.value.hotels.some((h) => String(h.id) === String(prev));
+            return exists ? prev : String(dashboardResult.value.hotels[0].id);
+          });
+        }
 
         if (customersResult.status !== 'fulfilled') {
           setError('Admin dashboard loaded, but customer analytics are not available from this backend yet.');
@@ -530,6 +547,13 @@ function Dashboard({ mode = 'hotel' }) {
               <div className="flex gap-2 shrink-0 items-center">
                 <Button
                   variant="outline"
+                  className="bg-[#deb355] hover:bg-[#c98827] text-white border-transparent font-condensed font-bold uppercase tracking-wider text-xs px-4 py-2 h-9 rounded-none shadow-none transition-colors"
+                  onClick={() => handleOpenQrModal(adminDashboard?.hotels?.[0]?.id || adminQrHotelId || '1')}
+                >
+                  Generate QR Code
+                </Button>
+                <Button
+                  variant="outline"
                   className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-2 h-9 rounded-none shadow-none transition-colors"
                   onClick={() => loadDashboardData()}
                   disabled={busy}
@@ -637,8 +661,76 @@ function Dashboard({ mode = 'hotel' }) {
                 </div>
               </div>
 
-              {/* Two Column Section: Register Hotel + QR/Import */}
-              <div className="grid md:grid-cols-[1fr_1.5fr] gap-6 items-start">
+              {/* Registered Hotels List */}
+              <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
+                <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
+                      Registered Hotels
+                    </h3>
+                    <p className="text-xs font-condensed text-zinc-600">
+                      All partner venues currently onboarded in the campaign. Click any hotel to view specific statistics.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none shadow-none transition-colors"
+                    onClick={handleOpenDetailedReport}
+                  >
+                    Show Detailed Report
+                  </Button>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <div className="grid gap-3">
+                    {adminDashboard?.hotels?.length ? (
+                      adminDashboard.hotels.map((hotel) => (
+                        <div
+                          className="flex items-center justify-between p-4 bg-white border border-zinc-200 hover:border-zinc-400 rounded-none cursor-pointer transition-all hover:shadow-xs"
+                          key={hotel.id}
+                          onClick={() => handleHotelClick(hotel)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleHotelClick(hotel);
+                            }
+                          }}
+                        >
+                          <div>
+                            <strong className="block text-zinc-950 uppercase font-condensed font-bold text-base tracking-wide">
+                              {hotel.name}
+                            </strong>
+                            <span className="text-xs text-zinc-500 font-condensed uppercase tracking-wider">
+                              {hotel.location || 'Location not provided'}
+                            </span>
+                          </div>
+                          <Badge variant="outline" className="font-mono text-zinc-700 bg-zinc-100 border border-zinc-300 rounded-none uppercase text-xs">
+                            #{hotel.id}
+                          </Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-zinc-500 py-6 text-center border border-dashed border-zinc-300 rounded-none font-condensed text-sm uppercase tracking-wider">
+                        No hotels have been registered yet.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Dedicated Hotel QR Code Generator & Display Section */}
+              <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
+                <QrDisplay
+                  hotelId={adminQrHotelId}
+                  onHotelChange={setAdminQrHotelId}
+                  allowHotelCreation={false}
+                  hotels={adminDashboard?.hotels || []}
+                />
+              </div>
+
+              {/* Two Column Section: Register Hotel + Excel Bulk Import */}
+              <div className="grid md:grid-cols-2 gap-6 items-start">
                 {/* Register a Hotel */}
                 <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
                   <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5">
@@ -699,136 +791,70 @@ function Dashboard({ mode = 'hotel' }) {
                   </form>
                 </div>
 
-                {/* Right Column: QR Code + Excel Bulk Import */}
-                <div className="space-y-6">
-                  <QrDisplay
-                    hotelId={adminQrHotelId}
-                    onHotelChange={setAdminQrHotelId}
-                    allowHotelCreation={false}
-                  />
-
-                  <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
-                    <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5">
-                      <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
-                        Bulk Import from Excel
-                      </h3>
-                      <p className="text-xs font-condensed text-zinc-600">
-                        Upload spreadsheets to populate customer or hotel registries at scale.
-                      </p>
-                    </div>
-                    <div className="p-5 sm:p-6 space-y-4">
-                      <div className="text-xs font-condensed text-zinc-600 space-y-1 bg-zinc-50 border border-zinc-200 p-3">
-                        <p><strong className="text-zinc-900 uppercase">Customer Headers:</strong> <code className="bg-white px-1 border border-zinc-300">full name</code>, <code className="bg-white px-1 border border-zinc-300">phone number</code>, optional <code className="bg-white px-1 border border-zinc-300">email</code>, <code className="bg-white px-1 border border-zinc-300">device id</code>.</p>
-                        <p><strong className="text-zinc-900 uppercase">Hotel Headers:</strong> <code className="bg-white px-1 border border-zinc-300">name</code>, <code className="bg-white px-1 border border-zinc-300">password</code>, optional <code className="bg-white px-1 border border-zinc-300">location</code>.</p>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="customerImport" className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-1.5 block font-condensed">
-                          Import Loyal Customers (.xlsx)
-                        </Label>
-                        <Input
-                          id="customerImport"
-                          type="file"
-                          accept=".xlsx"
-                          onChange={(event) => handleImport('customers', event)}
-                          className="h-10 bg-white border border-zinc-300 text-zinc-950 rounded-none text-xs file:bg-zinc-100 file:text-zinc-900 file:border-0 file:border-r file:border-zinc-300 file:mr-3 file:px-3 file:py-2 file:font-condensed file:font-bold file:uppercase cursor-pointer"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="hotelImport" className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-1.5 block font-condensed">
-                          Import Hotels (.xlsx)
-                        </Label>
-                        <Input
-                          id="hotelImport"
-                          type="file"
-                          accept=".xlsx"
-                          onChange={(event) => handleImport('hotels', event)}
-                          className="h-10 bg-white border border-zinc-300 text-zinc-950 rounded-none text-xs file:bg-zinc-100 file:text-zinc-900 file:border-0 file:border-r file:border-zinc-300 file:mr-3 file:px-3 file:py-2 file:font-condensed file:font-bold file:uppercase cursor-pointer"
-                        />
-                      </div>
-
-                      {customerImportResult && (
-                        <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-none text-xs text-zinc-700 font-condensed">
-                          <strong className="block mb-1 text-zinc-900 font-bold uppercase">Customer Import Summary</strong>
-                          <span className="block mb-1">
-                            Processed {customerImportResult.processedCount}, created {customerImportResult.createdCount}, updated {customerImportResult.updatedCount}, skipped {customerImportResult.skippedCount}
-                          </span>
-                          {customerImportResult.errors?.slice(0, 5).map((item, idx) => (
-                            <div key={idx} className="text-[#c73f43] mt-0.5">• {item}</div>
-                          ))}
-                        </div>
-                      )}
-
-                      {hotelImportResult && (
-                        <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-none text-xs text-zinc-700 font-condensed">
-                          <strong className="block mb-1 text-zinc-900 font-bold uppercase">Hotel Import Summary</strong>
-                          <span className="block mb-1">
-                            Processed {hotelImportResult.processedCount}, created {hotelImportResult.createdCount}, updated {hotelImportResult.updatedCount}, skipped {hotelImportResult.skippedCount}
-                          </span>
-                          {hotelImportResult.errors?.slice(0, 5).map((item, idx) => (
-                            <div key={idx} className="text-[#c73f43] mt-0.5">• {item}</div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Registered Hotels List */}
-              <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
-                <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex flex-wrap items-center justify-between gap-2">
-                  <div>
+                {/* Bulk Import from Excel */}
+                <div className="bg-white border border-zinc-300 shadow-xs overflow-hidden flex flex-col">
+                  <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5">
                     <h3 className="font-condensed font-black text-base uppercase tracking-tight text-black">
-                      Registered Hotels
+                      Bulk Import from Excel
                     </h3>
                     <p className="text-xs font-condensed text-zinc-600">
-                      All partner venues currently onboarded in the campaign. Click any hotel to view specific statistics.
+                      Upload spreadsheets to populate customer or hotel registries at scale.
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 font-condensed font-bold uppercase tracking-wider text-xs px-4 py-1.5 h-8 rounded-none shadow-none transition-colors"
-                    onClick={handleOpenDetailedReport}
-                  >
-                    Show Detailed Report
-                  </Button>
-                </div>
-                <div className="p-5 sm:p-6">
-                  <div className="grid gap-3">
-                    {adminDashboard?.hotels?.length ? (
-                      adminDashboard.hotels.map((hotel) => (
-                        <div
-                          className="flex items-center justify-between p-4 bg-white border border-zinc-200 hover:border-zinc-400 rounded-none cursor-pointer transition-all hover:shadow-xs"
-                          key={hotel.id}
-                          onClick={() => handleHotelClick(hotel)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              handleHotelClick(hotel);
-                            }
-                          }}
-                        >
-                          <div>
-                            <strong className="block text-zinc-950 uppercase font-condensed font-bold text-base tracking-wide">
-                              {hotel.name}
-                            </strong>
-                            <span className="text-xs text-zinc-500 font-condensed uppercase tracking-wider">
-                              {hotel.location || 'Location not provided'}
-                            </span>
-                          </div>
-                          <Badge variant="outline" className="font-mono text-zinc-700 bg-zinc-100 border border-zinc-300 rounded-none uppercase text-xs">
-                            #{hotel.id}
-                          </Badge>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-zinc-500 py-6 text-center border border-dashed border-zinc-300 rounded-none font-condensed text-sm uppercase tracking-wider">
-                        No hotels have been registered yet.
-                      </p>
+                  <div className="p-5 sm:p-6 space-y-4">
+                    <div className="text-xs font-condensed text-zinc-600 space-y-1 bg-zinc-50 border border-zinc-200 p-3">
+                      <p><strong className="text-zinc-900 uppercase">Customer Headers:</strong> <code className="bg-white px-1 border border-zinc-300">full name</code>, <code className="bg-white px-1 border border-zinc-300">phone number</code>, optional <code className="bg-white px-1 border border-zinc-300">email</code>, <code className="bg-white px-1 border border-zinc-300">device id</code>.</p>
+                      <p><strong className="text-zinc-900 uppercase">Hotel Headers:</strong> <code className="bg-white px-1 border border-zinc-300">name</code>, <code className="bg-white px-1 border border-zinc-300">password</code>, optional <code className="bg-white px-1 border border-zinc-300">location</code>.</p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="customerImport" className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-1.5 block font-condensed">
+                        Import Loyal Customers (.xlsx)
+                      </Label>
+                      <Input
+                        id="customerImport"
+                        type="file"
+                        accept=".xlsx"
+                        onChange={(event) => handleImport('customers', event)}
+                        className="h-10 bg-white border border-zinc-300 text-zinc-950 rounded-none text-xs file:bg-zinc-100 file:text-zinc-900 file:border-0 file:border-r file:border-zinc-300 file:mr-3 file:px-3 file:py-2 file:font-condensed file:font-bold file:uppercase cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="hotelImport" className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-1.5 block font-condensed">
+                        Import Hotels (.xlsx)
+                      </Label>
+                      <Input
+                        id="hotelImport"
+                        type="file"
+                        accept=".xlsx"
+                        onChange={(event) => handleImport('hotels', event)}
+                        className="h-10 bg-white border border-zinc-300 text-zinc-950 rounded-none text-xs file:bg-zinc-100 file:text-zinc-900 file:border-0 file:border-r file:border-zinc-300 file:mr-3 file:px-3 file:py-2 file:font-condensed file:font-bold file:uppercase cursor-pointer"
+                      />
+                    </div>
+
+                    {customerImportResult && (
+                      <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-none text-xs text-zinc-700 font-condensed">
+                        <strong className="block mb-1 text-zinc-900 font-bold uppercase">Customer Import Summary</strong>
+                        <span className="block mb-1">
+                          Processed {customerImportResult.processedCount}, created {customerImportResult.createdCount}, updated {customerImportResult.updatedCount}, skipped {customerImportResult.skippedCount}
+                        </span>
+                        {customerImportResult.errors?.slice(0, 5).map((item, idx) => (
+                          <div key={idx} className="text-[#c73f43] mt-0.5">• {item}</div>
+                        ))}
+                      </div>
+                    )}
+
+                    {hotelImportResult && (
+                      <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-none text-xs text-zinc-700 font-condensed">
+                        <strong className="block mb-1 text-zinc-900 font-bold uppercase">Hotel Import Summary</strong>
+                        <span className="block mb-1">
+                          Processed {hotelImportResult.processedCount}, created {hotelImportResult.createdCount}, updated {hotelImportResult.updatedCount}, skipped {hotelImportResult.skippedCount}
+                        </span>
+                        {hotelImportResult.errors?.slice(0, 5).map((item, idx) => (
+                          <div key={idx} className="text-[#c73f43] mt-0.5">• {item}</div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -954,6 +980,40 @@ function Dashboard({ mode = 'hotel' }) {
                   Failed to load stats.
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hotel QR Code Modal */}
+      {showQrModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="w-full max-w-4xl bg-white border border-zinc-300 shadow-2xl rounded-none text-zinc-950 overflow-hidden my-auto">
+            <div className="bg-[#f2f2f2] border-b border-zinc-300 px-5 py-3.5 flex items-center justify-between">
+              <div>
+                <h3 className="font-condensed font-black tracking-tight uppercase text-lg text-black">
+                  Hotel QR Code Generator
+                </h3>
+                <p className="text-xs font-condensed text-zinc-500 uppercase tracking-wider">
+                  Generate, print, or copy guest loyalty QR codes
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                onClick={() => setShowQrModal(false)}
+                className="text-zinc-700 hover:text-black font-condensed font-bold uppercase text-xs rounded-none h-8 px-3"
+              >
+                Close
+              </Button>
+            </div>
+            <div className="p-4 sm:p-6">
+              <QrDisplay
+                hotelId={qrModalHotelId}
+                onHotelChange={setQrModalHotelId}
+                allowHotelCreation={false}
+                hotels={adminDashboard?.hotels || []}
+                autoGenerate
+              />
             </div>
           </div>
         </div>

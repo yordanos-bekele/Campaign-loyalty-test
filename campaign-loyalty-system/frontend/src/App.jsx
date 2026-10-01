@@ -170,20 +170,20 @@ function App() {
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                className="border-white/60 text-white hover:bg-white hover:text-black rounded-none uppercase font-bold text-xs tracking-wider px-5"
+              <button
+                type="button"
+                className="border-2 border-white bg-transparent hover:bg-white hover:text-black text-white font-condensed font-bold uppercase text-xs tracking-wider px-5 py-2.5 rounded-none transition-colors cursor-pointer"
                 onClick={() => window.location.assign('/register')}
               >
                 Register Device
-              </Button>
-              <Button
-                variant="outline"
-                className="border-white/60 text-white hover:bg-white hover:text-black rounded-none uppercase font-bold text-xs tracking-wider px-5"
+              </button>
+              <button
+                type="button"
+                className="border-2 border-white bg-transparent hover:bg-white hover:text-black text-white font-condensed font-bold uppercase text-xs tracking-wider px-5 py-2.5 rounded-none transition-colors cursor-pointer"
                 onClick={() => setView('hotel')}
               >
                 Hotel Staff Login
-              </Button>
+              </button>
             </div>
           </div>
 

@@ -27,7 +27,7 @@ const emptyHotelForm = {
   password: '',
 };
 
-function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
+function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true, hotels = [], autoGenerate = false }) {
   const [lookupHotel, setLookupHotel] = useState(null);
   const [hotelError, setHotelError] = useState('');
   const [loadingHotel, setLoadingHotel] = useState(false);
@@ -147,6 +147,12 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
     }
   };
 
+  useEffect(() => {
+    if (autoGenerate && hotelId) {
+      handleGenerateToken(hotelId);
+    }
+  }, [hotelId, autoGenerate]);
+
   const handleDownloadQr = () => {
     if (!qrImage) return;
     const a = document.createElement('a');
@@ -223,7 +229,34 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
         <div className="grid gap-6">
           <Card className="border border-zinc-300 bg-white shadow-none rounded-none">
             <CardContent className="p-5">
-              <Label className="block mb-2 text-xs font-bold uppercase tracking-wider text-zinc-700 font-condensed">Hotel ID</Label>
+              {hotels && hotels.length > 0 && (
+                <div className="mb-4">
+                  <Label className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-600 font-condensed">
+                    Select Registered Hotel
+                  </Label>
+                  <select
+                    className="w-full h-10 bg-white border border-zinc-400 text-zinc-950 font-condensed font-bold text-xs uppercase px-3 rounded-none focus:outline-none focus:ring-1 focus:ring-zinc-900 cursor-pointer"
+                    value={hotelId}
+                    onChange={(event) => {
+                      onHotelChange(event.target.value);
+                      if (event.target.value) {
+                        handleGenerateToken(event.target.value);
+                      }
+                    }}
+                  >
+                    <option value="">-- Choose Hotel --</option>
+                    {hotels.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.name} (#{h.id}) {h.location ? `- ${h.location}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <Label className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-700 font-condensed">
+                {hotels && hotels.length > 0 ? 'Or Custom Hotel ID' : 'Hotel ID'}
+              </Label>
               <div className="flex gap-2">
                 <Input
                   className="bg-white flex-1 rounded-none border border-zinc-400 text-zinc-950 font-condensed font-medium text-sm h-10 focus-visible:ring-1 focus-visible:ring-zinc-900"
@@ -232,7 +265,11 @@ function QrDisplay({ hotelId, onHotelChange, allowHotelCreation = true }) {
                   placeholder="Example: 1"
                   inputMode="numeric"
                 />
-                <Button variant="secondary" onClick={() => handleGenerateToken()} disabled={busy} className="bg-zinc-900 hover:bg-black text-white rounded-none font-condensed font-bold uppercase text-xs tracking-wider px-5 h-10">
+                <Button
+                  onClick={() => handleGenerateToken()}
+                  disabled={busy}
+                  className="bg-[#deb355] hover:bg-[#c98827] text-white rounded-none font-condensed font-black uppercase text-xs tracking-wider px-5 h-10 shadow-none transition-colors shrink-0"
+                >
                   {busy ? 'Generating...' : 'Generate QR'}
                 </Button>
               </div>

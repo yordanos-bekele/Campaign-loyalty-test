@@ -104,7 +104,7 @@ function HotelLoginPage({
                 <button
                   type="button"
                   onClick={() => window.location.assign('/register')}
-                  className="border border-white bg-transparent hover:bg-white hover:text-black text-white font-condensed font-bold uppercase text-xs tracking-wider px-5 py-2.5 rounded-none transition-colors"
+                  className="border-2 border-white bg-transparent hover:bg-white hover:text-black text-white font-condensed font-bold uppercase text-xs tracking-wider px-5 py-2.5 rounded-none transition-colors cursor-pointer"
                 >
                   REGISTER DEVICE
                 </button>
@@ -116,7 +116,7 @@ function HotelLoginPage({
                     const input = document.getElementById('hotelName');
                     if (input) input.focus();
                   }}
-                  className="border border-white bg-transparent hover:bg-white hover:text-black text-white font-condensed font-bold uppercase text-xs tracking-wider px-5 py-2.5 rounded-none transition-colors"
+                  className="border-2 border-white bg-transparent hover:bg-white hover:text-black text-white font-condensed font-bold uppercase text-xs tracking-wider px-5 py-2.5 rounded-none transition-colors cursor-pointer"
                 >
                   HOTEL STAFF LOGIN
                 </button>
